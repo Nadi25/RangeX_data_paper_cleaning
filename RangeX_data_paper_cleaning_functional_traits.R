@@ -2,8 +2,7 @@
 
 # RangeX data cleaning functional traits ----------------------------------
 
-## Data used: RangeX_raw_functional_traits_2023.csv
-## RangeX_Metadata.csv / RangeX_YearlyDemographics.csv
+## Data used: RangeX_raw_functional_traits_2023.csv and RangeX_Metadata.csv 
 ## Date: 11.11.24
 ## Author: Nadine Arzt
 ## Purpose: Clean the COMPLETE raw data file 
@@ -215,13 +214,37 @@ head(functional_traits_NOR_23)
 
 
 
+# add missing columns ----------------------------------------------------------
+colnames(functional_traits_NOR_23)
+
+functional_traits_NOR_23 <- functional_traits_NOR_23 %>%
+  dplyr::mutate(
+    sto_density_top = NA,
+    sto_density_bot = NA
+  )
 
 
+# mean of leaf thickness --------------------------------------------------
+functional_traits_NOR_23 <- functional_traits_NOR_23 %>%
+  mutate(leaf_thickness = rowMeans(select(., thickness_1, thickness_2, thickness_3), 
+                                        na.rm = TRUE))
 
 
+# SLA and LDMC ---------------------------------------------------------------------
 
+# calculate SLA (leaf area (mm2)/dry mass(mg)) and LDMC (dry mass (mg)/wet mass (g))
 
+# get right units
+# la in cm2 so far
+functional_traits_NOR_23 <- functional_traits_NOR_23 %>%
+  mutate(leaf_area = leaf_area * 100, # mm2
+         wet_mass_g = wet_mass, # needed for LDMC
+         wet_mass = wet_mass * 1000, # mg
+         dry_mass = dry_mass * 1000) # mg
 
+functional_traits_NOR_23 <- functional_traits_NOR_23 %>%
+  mutate(SLA = leaf_area/dry_mass,
+         LDMC = dry_mass/wet_mass_g) 
 
 
 
