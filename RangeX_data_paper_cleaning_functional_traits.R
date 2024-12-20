@@ -37,7 +37,7 @@ length(functional_traits$blockID) # 611 rows
 # comment: accidentally sampled 2, in fridge
 # no dry mass for 5 samples
 
-functional_traits <- functional_traits %>%
+functional_traits <- functional_traits |> 
   filter(!is.na(dry_mass))
 
 
@@ -72,7 +72,7 @@ dput(colnames(functional_traits_NOR))
 # rename columns and match with metadata ----------------------------------------------------------
 
 # to match metadata
-functional_traits_NOR <- functional_traits_NOR %>%
+functional_traits_NOR <- functional_traits_NOR |> 
   rename("block_ID_original" = "blockID",
          "plot_ID_original" = "plotID",
          "position_ID_original" = "positionID",
@@ -81,7 +81,7 @@ functional_traits_NOR <- functional_traits_NOR %>%
 
 
 # to match species
-functional_traits_NOR <- functional_traits_NOR %>%
+functional_traits_NOR <- functional_traits_NOR |> 
   mutate(species = case_when(
     species == "CC" ~ "cyncri",
     species == "SP" ~ "sucpra",
@@ -97,14 +97,14 @@ functional_traits_NOR <- functional_traits_NOR %>%
   ))
 
 # to match site
-functional_traits_NOR <- functional_traits_NOR %>%
+functional_traits_NOR <- functional_traits_NOR |> 
   mutate(site = case_when(
     site == "LS" ~ "lo",
     site == "HS" ~ "hi"
   ))
 
 # to match plot_ID_original
-functional_traits_NOR <- functional_traits_NOR %>%
+functional_traits_NOR <- functional_traits_NOR |> 
   mutate(plot_ID_original = case_when(
     plot_ID_original == "A" ~ "a",
     plot_ID_original == "B" ~ "b",
@@ -115,7 +115,7 @@ functional_traits_NOR <- functional_traits_NOR %>%
   ))
 
 # to match treat_warming
-functional_traits_NOR <- functional_traits_NOR %>%
+functional_traits_NOR <- functional_traits_NOR |> 
   mutate(treat_warming = case_when(
     site == "lo" & treat_warming == "" ~ "ambi",  # For site "lo" and empty cells
     treat_warming == "warm" ~ "warm",  
@@ -145,33 +145,33 @@ print(duplicates_1)
 
 # FUZ6303 and FVG1548 from same plant but FUZ6303 has no rep height
 # delete FUZ6303 as it was probably a second leaf
-functional_traits_NOR <- functional_traits_NOR %>%
+functional_traits_NOR <- functional_traits_NOR |> 
   filter(ID != "FUZ6303")
 
 # FQJ0469 and FOA7524: same plant
 # delete FOA7524 since it was eaten more
-functional_traits_NOR <- functional_traits_NOR %>%
+functional_traits_NOR <- functional_traits_NOR |> 
   filter(ID != "FOA7524")
 
 
 # FPN3919 and FQX8412:
 # delete FPN3919 since it looks like the sheath of the leaf was included
-functional_traits_NOR <- functional_traits_NOR %>%
+functional_traits_NOR <- functional_traits_NOR |> 
   filter(ID != "FPN3919")
 
 # FPR5674 and FPF9043:
 # can't decide which to delete, so random: FPF9043
-functional_traits_NOR <- functional_traits_NOR %>%
+functional_traits_NOR <- functional_traits_NOR |> 
   filter(ID != "FPF9043")
 
 # FPJ6661 (little bit folded) and FPB1557 (little whole):
 # delete FPJ6661 because weight and la match for the other one
-functional_traits_NOR <- functional_traits_NOR %>%
+functional_traits_NOR <- functional_traits_NOR |> 
   filter(ID != "FPJ6661")
 
 # FRB0226 and FRF6726
 # delete FRF6726 because it looks less healthy
-functional_traits_NOR <- functional_traits_NOR %>%
+functional_traits_NOR <- functional_traits_NOR |> 
   filter(ID != "FRF6726")
 
 # FTN5712 and FRR6902
@@ -179,13 +179,13 @@ functional_traits_NOR <- functional_traits_NOR %>%
 # FTN5712 is hypmac not leuvul
 # delete FTN5712 for now because it is wrong
 # how can I find out what plant it actually is?
-functional_traits_NOR <- functional_traits_NOR %>%
+functional_traits_NOR <- functional_traits_NOR |> 
   filter(ID != "FTN5712")
 
 
 # FRJ0854 and FRN2659
 # delete FRN2659 because it looks less healthy
-functional_traits_NOR <- functional_traits_NOR %>%
+functional_traits_NOR <- functional_traits_NOR |> 
   filter(ID != "FRN2659")
 
 
@@ -217,7 +217,7 @@ head(functional_traits_NOR_23)
 # add missing columns ----------------------------------------------------------
 colnames(functional_traits_NOR_23)
 
-functional_traits_NOR_23 <- functional_traits_NOR_23 %>%
+functional_traits_NOR_23 <- functional_traits_NOR_23 |> 
   dplyr::mutate(
     sto_density_top = NA,
     sto_density_bot = NA
@@ -225,9 +225,9 @@ functional_traits_NOR_23 <- functional_traits_NOR_23 %>%
 
 
 # mean of leaf thickness --------------------------------------------------
-functional_traits_NOR_23 <- functional_traits_NOR_23 %>%
-  mutate(leaf_thickness = rowMeans(select(., thickness_1, thickness_2, thickness_3), 
-                                        na.rm = TRUE))
+functional_traits_NOR_23 <- functional_traits_NOR_23 |> 
+  mutate(leaf_thickness = rowMeans(cbind(thickness_1, thickness_2, thickness_3), 
+                                   na.rm = TRUE))
 
 
 # SLA and LDMC ---------------------------------------------------------------------
@@ -242,11 +242,19 @@ functional_traits_NOR_23 <- functional_traits_NOR_23 %>%
          wet_mass = wet_mass * 1000, # mg
          dry_mass = dry_mass * 1000) # mg
 
-functional_traits_NOR_23 <- functional_traits_NOR_23 %>%
+functional_traits_NOR_23 <- functional_traits_NOR_23 |> 
   mutate(SLA = leaf_area/dry_mass,
          LDMC = dry_mass/wet_mass_g) 
 
 
+
+# keep columns from meta data ---------------------------------------------
+
+functional_leaf_traits_NOR_23 <- functional_traits_NOR_23 |> 
+  select(unique_plant_ID, species, date, wet_mass, dry_mass, leaf_thickness, leaf_area, SLA, LDMC)
+
+functional_leaf_traits_NOR_23 <- functional_leaf_traits_NOR_23 |> 
+  rename("date_collected" = "date")
 
 
 
