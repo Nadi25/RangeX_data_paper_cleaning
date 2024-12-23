@@ -2,10 +2,12 @@
 
 # RangeX data cleaning functional traits ----------------------------------
 
-## Data used: RangeX_raw_functional_traits_2023.csv and RangeX_Metadata.csv 
+## Data used: RangeX_raw_functional_traits_2023.csv,
+## RangeX_raw_functional_traits_leaf_area_NOR_2023.csv and RangeX_Metadata.csv 
 ## Date: 11.11.24
 ## Author: Nadine Arzt
-## Purpose: Clean the COMPLETE raw data file 
+## Purpose: Clean the COMPLETE raw data file of functional traits
+## and combine with leaf area
 
 
 # load packages -----------------------------------------------------------
@@ -235,7 +237,7 @@ functional_traits_NOR_23 <- functional_traits_NOR_23 |>
 # calculate SLA (leaf area (mm2)/dry mass(mg)) and LDMC (dry mass (mg)/wet mass (g))
 
 # get right units
-# la in cm2 so far
+# leaf area in cm2 so far
 functional_traits_NOR_23 <- functional_traits_NOR_23 %>%
   mutate(leaf_area = leaf_area * 100, # mm2
          wet_mass_g = wet_mass, # needed for LDMC
@@ -247,30 +249,48 @@ functional_traits_NOR_23 <- functional_traits_NOR_23 |>
          LDMC = dry_mass/wet_mass_g) 
 
 
-
-# keep columns from meta data ---------------------------------------------
-
+# delete columns for matching meta data ---------------------------------------------
 functional_leaf_traits_NOR_23 <- functional_traits_NOR_23 |> 
-  select(unique_plant_ID, species, date, wet_mass, dry_mass, leaf_thickness, leaf_area, SLA, LDMC)
+  select(unique_plant_ID, species, date, wet_mass, dry_mass, leaf_thickness, leaf_area, SLA, LDMC, sto_density_top, sto_density_bot)
 
 functional_leaf_traits_NOR_23 <- functional_leaf_traits_NOR_23 |> 
   rename("date_collected" = "date")
 
+# date format -------------------------------------------------------------
+functional_leaf_traits_NOR_23 <- functional_leaf_traits_NOR_23 |> 
+  mutate(date_collected  = as.Date(date_collected ))
+
+# save clean file ---------------------------------------------------------
+# write.csv(functional_leaf_traits_NOR_23, file = "Data/RangeX_clean_functional_traits_NOR_2023.csv")
+
+
+str(functional_leaf_traits_NOR_23)
+
+
+
+# delete columns with NA?  ------------------------------------------------
 
 
 
 
+# control plotting --------------------------------------------------------
+
+# wet mass (mg) vs dry mass (mg)
+ggplot(functional_traits_NOR_23, aes(x = dry_mass, y = wet_mass))+
+  geom_point()
+
+functional_traits_NOR_23$dry_mass
+
+# SLA vs LDMC
+ggplot(functional_traits_NOR_23, aes(x = SLA, y = LDMC))+
+  geom_point()
+
+ggplot(functional_traits_NOR_23, aes(x = species, y = SLA, fill = species)) +
+  geom_boxplot(outlier.color = "red", outlier.shape = 1) +
+  theme_minimal()+
+  geom_jitter()
 
 
-
-
-
-
-
-
-
-
-
-
-
+ggplot(functional_traits_NOR_23, aes(x = species , y = SLA))+
+  geom_point()
 
