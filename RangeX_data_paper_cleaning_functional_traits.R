@@ -198,10 +198,31 @@ functional_traits_NOR <- functional_traits_NOR |>
 functional_traits_NOR <- functional_traits_NOR |> 
   filter(ID != "FRN2659")
 
+length(functional_traits_NOR$ID)
 # 598 samples now
+
+sum(is.na(functional_traits_NOR$leaf_area))
 # 6 samples have no leaf area but mass and thickness --> keep
 
-sum(is.na(functional_traits_NOR$date_collected))
+sum(is.na(functional_traits_NOR$date))
+
+
+# fix what can be fixed about typos ---------------------------------------
+
+
+# 29 and 30: positions switched
+# lo 9b f7 = sucpra
+# lo 9b f9 = leuvul
+functional_traits_NOR <- functional_traits_NOR |> 
+  mutate(position_ID_original = case_when(
+    site == "lo" & treat_warming == "ambi" & treat_competition == "bare" & species == "leuvul" & block_ID_original == "9" & plot_ID_original == "b" ~ "f9",
+    TRUE ~ position_ID_original  # Keep the rest unchanged
+  ))
+functional_traits_NOR <- functional_traits_NOR |> 
+  mutate(position_ID_original = case_when(
+    site == "lo" & treat_warming == "ambi" & treat_competition == "bare" & species == "sucpra" & block_ID_original == "9" & plot_ID_original == "b" ~ "f7",
+    TRUE ~ position_ID_original  # Keep the rest unchanged
+  ))
 
 
 
@@ -231,6 +252,28 @@ sum(is.na(functional_traits_NOR_23$date)) # 1232
 length(functional_traits_NOR_23$date) # 1800
 
 # this means already here 30 samples are missing?
+# why?
+
+# what goes wrong with matching? ------------------------------------------
+
+# join: TRUE when matching worked
+joined_data <- functional_traits_NOR |> 
+  left_join(metadata_NOR, 
+            by = c("site", "block_ID_original", "plot_ID_original",
+                   "position_ID_original", "species", "treat_warming", "treat_competition")) |> 
+  mutate(matched = ifelse(is.na(unique_plant_ID), FALSE, TRUE))
+
+sum(!joined_data$matched) # 30 didn't match
+
+# something must be wrong with the position of the plants
+# hopefully typos
+unmatched_rows <- joined_data %>%
+  filter(!matched)
+
+# need to fix these before matching with metadata
+
+
+
 
 # add missing columns ----------------------------------------------------------
 colnames(functional_traits_NOR_23)
