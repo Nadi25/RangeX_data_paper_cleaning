@@ -10,6 +10,13 @@
 ## and combine with leaf area
 
 
+# Questions ---------------------------------------------------------------
+
+# 1. delete rows with NAs, so that data set is only 600 plants not 1800?
+# 2. delete outliers? How to define them
+# 3. why does functional_traits_NOR_23 has 598 rows and when I delete 
+# rows with na in date of functional_leaf_traits_NOR_23 it has 568?
+
 # load packages -----------------------------------------------------------
 
 library(tidyverse)
@@ -28,7 +35,8 @@ dput(colnames(functional_traits))
 
 # delete empty rows
 ## remove rows at the end, which have only NAs or nothing in it
-functional_traits <- functional_traits %>% drop_na(blockID)
+functional_traits <- functional_traits |> 
+  drop_na(blockID)
 length(functional_traits$blockID) # 611 rows
 
 ## but why, it should be only 600
@@ -41,7 +49,7 @@ length(functional_traits$blockID) # 611 rows
 
 functional_traits <- functional_traits |> 
   filter(!is.na(dry_mass))
-
+# 606 rows
 
 
 # import leaf area data ---------------------------------------------------
@@ -59,7 +67,7 @@ functional_traits_NOR
 
 # check structure of data set ---------------------------------------------
 str(functional_traits_NOR)
-length(functional_traits_NOR) ## 18 columns
+length(functional_traits_NOR) ## 22 columns
 
 ## get column names
 dput(colnames(functional_traits_NOR))
@@ -143,7 +151,7 @@ duplicates_1 <- functional_traits_NOR[duplicated(functional_traits_NOR$unique_id
                                       duplicated(functional_traits_NOR$unique_id, fromLast = TRUE), ]
 
 # View the duplicated rows
-print(duplicates_1)
+print(duplicates_1) # 16
 
 # FUZ6303 and FVG1548 from same plant but FUZ6303 has no rep height
 # delete FUZ6303 as it was probably a second leaf
@@ -190,6 +198,12 @@ functional_traits_NOR <- functional_traits_NOR |>
 functional_traits_NOR <- functional_traits_NOR |> 
   filter(ID != "FRN2659")
 
+# 598 samples now
+# 6 samples have no leaf area but mass and thickness --> keep
+
+sum(is.na(functional_traits_NOR$date_collected))
+
+
 
 # Import metadata ---------------------------------------------------------
 metadata <- read.csv2("RangeX_Metadata_NOR.csv")
@@ -213,8 +227,10 @@ functional_traits_NOR_23 <- left_join(metadata_NOR, functional_traits_NOR,
 
 head(functional_traits_NOR_23)
 
+sum(is.na(functional_traits_NOR_23$date)) # 1232
+length(functional_traits_NOR_23$date) # 1800
 
-
+# this means already here 30 samples are missing?
 
 # add missing columns ----------------------------------------------------------
 colnames(functional_traits_NOR_23)
@@ -249,7 +265,7 @@ functional_traits_NOR_23 <- functional_traits_NOR_23 |>
          LDMC = dry_mass/wet_mass_g) 
 
 
-# delete columns for matching meta data ---------------------------------------------
+# select columns to match meta data ---------------------------------------------
 functional_leaf_traits_NOR_23 <- functional_traits_NOR_23 |> 
   select(unique_plant_ID, species, date, wet_mass, dry_mass, leaf_thickness, leaf_area, SLA, LDMC, sto_density_top, sto_density_bot)
 
@@ -267,30 +283,221 @@ functional_leaf_traits_NOR_23 <- functional_leaf_traits_NOR_23 |>
 str(functional_leaf_traits_NOR_23)
 
 
+# check whether dry mass is heavier than the wet mass ---------------------
+dry_wet <- functional_leaf_traits_NOR_23 %>%
+  filter(dry_mass > wet_mass)
+dry_wet # all good
 
-# delete columns with NA?  ------------------------------------------------
+functional_leaf_traits_NOR_23_clean <- functional_leaf_traits_NOR_23 |> 
+  filter(!is.na(date_collected))
+length(functional_leaf_traits_NOR_23_clean$date_collected)# 568
+# but why was it before 598 in functional_traits_NOR
 
+sum(is.na(functional_leaf_traits_NOR_23$date_collected))
 
+str(functional_leaf_traits_NOR_23_clean)
 
+# functional_leaf_traits_NOR_23_clean <- functional_leaf_traits_NOR_23 |> 
+#   filter(!is.na(wet_mass) | !is.na(dry_mass) | !is.na(SLA) | !is.na(leaf_thickness)| !is.na(LDMC)| !is.na(leaf_area))
 
 # control plotting --------------------------------------------------------
 
+# create treat column -----------------------------------------------------
+
+functional_traits_NOR_23 <- functional_traits_NOR_23 |> 
+  mutate(treat = paste(site, treat_warming, treat_competition, sep = "_"))
+
+
+# prepare plotting data set -----------------------------------------------
+
+traits_plotting <- functional_traits_NOR_23 |> 
+  select(unique_plant_ID, ID, site, treat, species, date, wet_mass, wet_mass_g, dry_mass, leaf_thickness, leaf_area, SLA, LDMC, sto_density_top, sto_density_bot)
+
+traits_plotting_long <- traits_plotting |> 
+  pivot_longer(cols = c(wet_mass, dry_mass, leaf_thickness, leaf_area,
+                        SLA, LDMC, sto_density_top, sto_density_bot),
+               names_to = "trait_variable", values_to = "values")
+
+
+
+# plotting overview ----------------------------------------------------------------
+#  
+ggplot(data = traits_plotting_long[traits_plotting_long$site == "lo",], aes(x = trait_variable, y = values)) +
+  geom_boxplot() +
+  facet_grid(species~treat, scales = "free")
+
+ggplot(data = traits_plotting_long[traits_plotting_long$site == "hi",], aes(x = trait_variable, y = values, fill = treat)) +
+  geom_boxplot() +
+  geom_jitter()+
+  facet_wrap(~species, scales = "free") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+ggplot(data = traits_plotting_long[traits_plotting_long$site == "hi",], aes(x = trait_variable, y = values, colour = treat)) +
+  geom_point() +
+  facet_wrap(~species, scales = "free") +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust=1))
+
+
+
+# plotting details --------------------------------------------------------
+
 # wet mass (mg) vs dry mass (mg)
-ggplot(functional_traits_NOR_23, aes(x = dry_mass, y = wet_mass))+
+ggplot(traits_plotting, aes(x = dry_mass, y = wet_mass, colour = treat))+
   geom_point()
 
-functional_traits_NOR_23$dry_mass
+traits_plotting$dry_mass
+
+# leaf thickness vs leaf area
+ggplot(traits_plotting, aes(x = leaf_thickness, y = leaf_area, colour = treat))+
+  geom_point()
 
 # SLA vs LDMC
-ggplot(functional_traits_NOR_23, aes(x = SLA, y = LDMC))+
+ggplot(traits_plotting, aes(x = SLA, y = LDMC))+
   geom_point()
 
-ggplot(functional_traits_NOR_23, aes(x = species, y = SLA, fill = species)) +
+# SLA
+ggplot(traits_plotting, aes(x = species, y = SLA, fill = species)) +
+  geom_boxplot(outlier.color = "red", outlier.shape = 1) +
+  theme_minimal()+
+  geom_jitter()
+
+# dry mass
+ggplot(traits_plotting, aes(x = species, y = dry_mass, fill = species)) +
+  geom_boxplot(outlier.color = "red", outlier.shape = 1) +
+  theme_minimal()+
+  geom_jitter()
+
+# wet mass
+ggplot(traits_plotting, aes(x = species, y = wet_mass, fill = species)) +
+  geom_boxplot(outlier.color = "red", outlier.shape = 1) +
+  theme_minimal()+
+  geom_jitter()
+
+# leaf thickness
+ggplot(traits_plotting, aes(x = species, y = leaf_thickness, fill = site)) +
+  geom_boxplot(outlier.color = "red", outlier.shape = 1) +
+  theme_minimal()+
+  geom_jitter()
+
+# leaf area
+ggplot(traits_plotting[traits_plotting$site == "lo",], aes(x = species, y = leaf_area, fill = species)) +
   geom_boxplot(outlier.color = "red", outlier.shape = 1) +
   theme_minimal()+
   geom_jitter()
 
 
-ggplot(functional_traits_NOR_23, aes(x = species , y = SLA))+
+# LDMC
+ggplot(traits_plotting, aes(x = species, y = LDMC, fill = site)) +
+  geom_boxplot(outlier.color = "red", outlier.shape = 1) +
+  theme_minimal()+
+  geom_jitter()
+
+
+# leaf area vs SLA
+ggplot(traits_plotting, aes(x = leaf_area, y = SLA))+
   geom_point()
+
+
+
+# leuvul ------------------------------
+leuvul <- traits_plotting |> 
+  filter(species == "leuvul")
+
+# wet mass (mg) vs dry mass (mg)
+ggplot(leuvul, aes(x = dry_mass, y = wet_mass, colour = treat))+
+  geom_point()
+
+# dry_mass
+ggplot(leuvul, aes(x = species, y = dry_mass, fill = treat)) +
+  geom_boxplot(outlier.color = "red", outlier.shape = 1) +
+  theme_minimal()+
+  geom_jitter()
+
+# wet_mass
+ggplot(leuvul, aes(x = species, y = wet_mass, fill = treat)) +
+  geom_boxplot(outlier.color = "red", outlier.shape = 1) +
+  theme_minimal()+
+  geom_jitter()
+
+# LDMC
+ggplot(leuvul, aes(x = species, y = LDMC, fill = treat)) +
+  geom_boxplot(outlier.color = "red", outlier.shape = 1) +
+  theme_minimal()+
+  geom_jitter()
+
+# SLA
+ggplot(leuvul, aes(x = species, y = SLA, fill = treat)) +
+  geom_boxplot(outlier.color = "red", outlier.shape = 1) +
+  theme_minimal()+
+  geom_jitter()
+
+# leaf area
+ggplot(leuvul, aes(x = species, y = leaf_area, fill = treat)) +
+  geom_boxplot(outlier.color = "red", outlier.shape = 1) +
+  theme_minimal()+
+  geom_jitter()
+
+ggplot(leuvul, aes(x = species, y = leaf_area, fill = treat)) +
+  geom_boxplot(outlier.color = "red", outlier.shape = 1) +
+  theme_minimal()+
+  geom_jitter()
+
+# plalan ------------------------------
+plalan <- traits_plotting |> 
+  filter(species == "plalan")
+
+# wet mass (mg) vs dry mass (mg)
+ggplot(plalan, aes(x = dry_mass, y = wet_mass, colour = site))+
+  geom_point()
+
+# leaf area
+ggplot(plalan, aes(x = species, y = leaf_area, fill = treat)) +
+  geom_boxplot(outlier.color = "red", outlier.shape = 1) +
+  theme_minimal()+
+  geom_jitter()
+
+# dry_mass
+ggplot(plalan, aes(x = species, y = dry_mass, fill = treat)) +
+  geom_boxplot(outlier.color = "red", outlier.shape = 1) +
+  theme_minimal()+
+  geom_jitter()
+
+# wet_mass
+ggplot(plalan, aes(x = species, y = wet_mass, fill = treat)) +
+  geom_boxplot(outlier.color = "red", outlier.shape = 1) +
+  theme_minimal()+
+  geom_jitter()
+
+# LDMC
+ggplot(plalan, aes(x = species, y = LDMC, fill = treat)) +
+  geom_boxplot(outlier.color = "red", outlier.shape = 1) +
+  theme_minimal()+
+  geom_jitter()
+
+# SLA
+ggplot(plalan, aes(x = species, y = SLA, fill = treat)) +
+  geom_boxplot(outlier.color = "red", outlier.shape = 1) +
+  theme_minimal()+
+  geom_jitter()
+
+# leaf_thickness
+ggplot(plalan, aes(x = species, y = leaf_thickness, fill = treat)) +
+  geom_boxplot(outlier.color = "red", outlier.shape = 1) +
+  theme_minimal()+
+  geom_jitter()
+
+
+# write function to go through all species --------------------------------
+
+radius <- function(r){
+  2*pi*r
+}
+
+radius(3)
+2*pi*3
+
+
+
+
+
 
