@@ -207,17 +207,55 @@ sum(is.na(functional_traits_NOR$leaf_area))
 sum(is.na(functional_traits_NOR$date))
 
 
-# fix what can be fixed about typos ---------------------------------------
+# fix what can be fixed: typos in position or treat ---------------------------------------
+
+# 1: hi 1b cyncri f5 (not g5)
+functional_traits_NOR <- functional_traits_NOR |> 
+  mutate(position_ID_original = case_when(
+    site == "hi" & treat_warming == "ambi" & treat_competition == "vege" & species == "cyncri" & block_ID_original == "1" & plot_ID_original == "b" ~ "f5",
+    TRUE ~ position_ID_original  # Keep the rest unchanged
+  ))
+
+# 2-18: hi 2e warm
+functional_traits_NOR <- functional_traits_NOR |> 
+  mutate(treat_warming = case_when(
+    site == "hi" & treat_competition == "bare" & block_ID_original == "2" & plot_ID_original == "e" ~ "warm",
+    TRUE ~ treat_warming  # Keep the rest unchanged
+  ))
+
+# 2-18: hi 2f ambi
+functional_traits_NOR <- functional_traits_NOR |> 
+  mutate(treat_warming = case_when(
+    site == "hi" & treat_competition == "bare" & block_ID_original == "2" & plot_ID_original == "f" ~ "ambi",
+    TRUE ~ treat_warming  # Keep the rest unchanged
+  ))
+
+# 19: 3e is bare
+functional_traits_NOR <- functional_traits_NOR |> 
+  mutate(treat_competition = case_when(
+    site == "hi" & treat_warming == "warm" & block_ID_original == "3" & plot_ID_original == "e" ~ "bare",
+    TRUE ~ treat_competition  # Keep the rest unchanged
+  ))
+
+# 20: hi 4a tripra i2 (not i1)
+functional_traits_NOR <- functional_traits_NOR |> 
+  mutate(position_ID_original = case_when(
+    site == "hi" & treat_warming == "warm" & treat_competition == "vege" & species == "tripra" & block_ID_original == "4" & plot_ID_original == "a" ~ "i2",
+    TRUE ~ position_ID_original  # Keep the rest unchanged
+  ))
+
+
 
 
 # 29 and 30: positions switched
-# lo 9b f7 = sucpra
-# lo 9b f9 = leuvul
+# 29: lo 9b f7 = sucpra
 functional_traits_NOR <- functional_traits_NOR |> 
   mutate(position_ID_original = case_when(
     site == "lo" & treat_warming == "ambi" & treat_competition == "bare" & species == "leuvul" & block_ID_original == "9" & plot_ID_original == "b" ~ "f9",
     TRUE ~ position_ID_original  # Keep the rest unchanged
   ))
+
+# 30: lo 9b f9 = leuvul
 functional_traits_NOR <- functional_traits_NOR |> 
   mutate(position_ID_original = case_when(
     site == "lo" & treat_warming == "ambi" & treat_competition == "bare" & species == "sucpra" & block_ID_original == "9" & plot_ID_original == "b" ~ "f7",
