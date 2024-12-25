@@ -6,7 +6,7 @@
 ## RangeX_raw_functional_traits_leaf_area_NOR_2023.csv and RangeX_Metadata.csv 
 ## Date: 11.11.24
 ## Author: Nadine Arzt
-## Purpose: Clean the COMPLETE raw data file of functional traits
+## Purpose: Clean the complete raw data file of functional traits
 ## and combine with leaf area
 
 
@@ -16,6 +16,8 @@
 # 2. delete outliers? How to define them
 # 3. why does functional_traits_NOR_23 has 598 rows and when I delete 
 # rows with na in date of functional_leaf_traits_NOR_23 it has 568?
+# 4. GCW2731 hi luzmul warm bare 5e g2 is not from this plot --> check 
+
 
 # load packages -----------------------------------------------------------
 
@@ -233,7 +235,7 @@ functional_traits_NOR <- functional_traits_NOR |>
 # 19: 3e is bare
 functional_traits_NOR <- functional_traits_NOR |> 
   mutate(treat_competition = case_when(
-    site == "hi" & treat_warming == "warm" & block_ID_original == "3" & plot_ID_original == "e" ~ "bare",
+    site == "hi" & treat_warming == "warm" & block_ID_original == "3" & plot_ID_original == "e" & species == "hypmac" ~ "bare",
     TRUE ~ treat_competition  # Keep the rest unchanged
   ))
 
@@ -244,8 +246,62 @@ functional_traits_NOR <- functional_traits_NOR |>
     TRUE ~ position_ID_original  # Keep the rest unchanged
   ))
 
+# 21: hi 4b luzmul f5 (not f9)
+functional_traits_NOR <- functional_traits_NOR |> 
+  mutate(position_ID_original = case_when(
+    site == "hi" & treat_warming == "ambi" & treat_competition == "vege" & species == "luzmul" & block_ID_original == "4" & plot_ID_original == "b" ~ "f5",
+    TRUE ~ position_ID_original  # Keep the rest unchanged
+  ))
+
+# 22: hi 4e e8 warm bare (not vege)
+functional_traits_NOR <- functional_traits_NOR |> 
+  mutate(treat_competition = case_when(
+    site == "hi" & treat_warming == "warm" & block_ID_original == "4" & plot_ID_original == "e" & species == "leuvul"  ~ "bare",
+    TRUE ~ treat_competition  # Keep the rest unchanged
+  ))
+
+# 23: GCW2731 hi luzmul warm bare 5e g2 is not from this plot
+# see comment as well
+# check if there is a luzmul missing somewhere
+# delete for now 
+functional_traits_NOR <- functional_traits_NOR |> 
+  filter(ID != "GCW2731")
+
+# 24: hi ambi vege 10b b3 sucpra (not hypmac)
+functional_traits_NOR <- functional_traits_NOR |> 
+  mutate(species = case_when(
+    site == "hi" & treat_warming == "ambi" & treat_competition == "vege" & block_ID_original == "10" & plot_ID_original == "b" & ID == "GMA3984" ~ "sucpra",
+    TRUE ~ species  # Keep the rest unchanged
+  ))
+
+# 25: hi cennig ambi vege 10b c4 (not e4)
+functional_traits_NOR <- functional_traits_NOR |> 
+  mutate(position_ID_original = case_when(
+    site == "hi" & treat_warming == "ambi" & treat_competition == "vege" & species == "cennig" & block_ID_original == "10" & plot_ID_original == "b" & ID == "GMI6448" ~ "c4",
+    TRUE ~ position_ID_original  # Keep the rest unchanged
+  ))
 
 
+# 26: lo pimsax ambi bare 3b h9 (not vege)
+functional_traits_NOR <- functional_traits_NOR |> 
+  mutate(treat_competition = case_when(
+    site == "lo" & treat_warming == "ambi" & block_ID_original == "3" & plot_ID_original == "b" & species == "pimsax" ~ "bare",
+    TRUE ~ treat_competition  # Keep the rest unchanged
+  ))
+
+# 27: lo sildio ambi bare 4b b5 (not vege)
+functional_traits_NOR <- functional_traits_NOR |> 
+  mutate(treat_competition = case_when(
+    site == "lo" & treat_warming == "ambi" & block_ID_original == "4" & plot_ID_original == "b" & species == "sildio" ~ "bare",
+    TRUE ~ treat_competition  # Keep the rest unchanged
+  ))
+
+# 28: lo tripra ambi vege 8a h7 (not b)
+functional_traits_NOR <- functional_traits_NOR |> 
+  mutate(plot_ID_original = case_when(
+    site == "lo" & treat_warming == "ambi" & treat_competition == "vege" & species == "tripra" & block_ID_original == "8" & ID == "FUP6969" ~ "a",
+    TRUE ~ plot_ID_original  # Keep the rest unchanged
+  ))
 
 # 29 and 30: positions switched
 # 29: lo 9b f7 = sucpra
@@ -262,7 +318,7 @@ functional_traits_NOR <- functional_traits_NOR |>
     TRUE ~ position_ID_original  # Keep the rest unchanged
   ))
 
-
+# 597 samples
 
 # Import metadata ---------------------------------------------------------
 metadata <- read.csv2("RangeX_Metadata_NOR.csv")
@@ -280,14 +336,16 @@ head(metadata_NOR)
 dput(colnames(metadata_NOR))
 dput(colnames(functional_traits_NOR))
 
-functional_traits_NOR_23 <- left_join(metadata_NOR, functional_traits_NOR, 
-                         by = c("site", "block_ID_original", "plot_ID_original",
-                                "position_ID_original", "species","treat_warming", "treat_competition"))
+functional_traits_NOR_23 <- left_join(metadata_NOR, functional_traits_NOR,
+                                      by = c( "site", "block_ID_original",
+                                              "plot_ID_original", 
+                                              "position_ID_original", "species", 
+                                              "treat_warming", "treat_competition"))
 
 head(functional_traits_NOR_23)
 
-sum(is.na(functional_traits_NOR_23$date)) # 1232
-length(functional_traits_NOR_23$date) # 1800
+sum(is.na(functional_traits_NOR_23$date)) # 1206
+length(functional_traits_NOR_23$date) # 1803
 
 # this means already here 30 samples are missing?
 # why?
@@ -305,10 +363,23 @@ sum(!joined_data$matched) # 30 didn't match
 
 # something must be wrong with the position of the plants
 # hopefully typos
-unmatched_rows <- joined_data %>%
+unmatched_rows_2 <- joined_data %>%
   filter(!matched)
 
+# 30 samples FALSE
 # need to fix these before matching with metadata
+# in "fix what can be fixed: typos in position or treat"
+# everything fixed and 1 row deleted
+# but why is it 1803 now
+
+
+# check for duplicates in unique_plant_ID ---------------------------------
+duplicates_2 <- functional_traits_NOR_23 |> 
+  group_by(unique_plant_ID) |> 
+  filter(n() > 1)
+
+# Display duplicates
+duplicates_2 # 6
 
 
 
