@@ -17,7 +17,11 @@
 # 3. why does functional_traits_NOR_23 has 598 rows and when I delete 
 # rows with na in date of functional_leaf_traits_NOR_23 it has 568?
 # 4. GCW2731 hi luzmul warm bare 5e g2 is not from this plot --> check 
-
+# 5. GHZ1788 (warm bare) and GAV1827 (ambi bare): hypmac hi 2e h5 twice --> check 
+# 6. GID4537 hi 2f i6 leuvul warm bare --> was corrected to ambi --> check 
+#   GAM4208 hi 2f i6 leuvul ambi bare
+# 7. FYP9768 hi sildio warm bare 2f c8 --> was corrected to ambi --> check 
+#   GAT6555 hi sildio ambi bare 2f c8
 
 # load packages -----------------------------------------------------------
 
@@ -381,8 +385,15 @@ duplicates_2 <- functional_traits_NOR_23 |>
 # Display duplicates
 duplicates_2 # 6
 
+# GHZ1788 (warm bare) and GAV1827 (ambi bare): hypmac hi 2e h5 twice
+# but GAV1827 was corrected above to warm
 
+# GID4537 hi 2f i6 leuvul warm bare --> was corrected to ambi
+# GAM4208 hi 2f i6 leuvul ambi bare
 
+# FYP9768 hi sildio warm bare 2f c8 --> was corrected to ambi
+# GAT6555 hi sildio ambi bare 2f c8
+# 
 
 # add missing columns ----------------------------------------------------------
 colnames(functional_traits_NOR_23)
