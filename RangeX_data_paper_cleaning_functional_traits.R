@@ -439,10 +439,6 @@ functional_leaf_traits_NOR_23 <- functional_leaf_traits_NOR_23 |>
 functional_leaf_traits_NOR_23 <- functional_leaf_traits_NOR_23 |> 
   mutate(date_collected  = as.Date(date_collected ))
 
-# save clean file ---------------------------------------------------------
-# write.csv(functional_leaf_traits_NOR_23, file = "Data/RangeX_clean_functional_traits_NOR_2023.csv")
-
-
 str(functional_leaf_traits_NOR_23)
 
 
@@ -451,17 +447,20 @@ dry_wet <- functional_leaf_traits_NOR_23 %>%
   filter(dry_mass > wet_mass)
 dry_wet # all good
 
+
+# delete samples without measurements -------------------------------------
 functional_leaf_traits_NOR_23_clean <- functional_leaf_traits_NOR_23 |> 
   filter(!is.na(date_collected))
-length(functional_leaf_traits_NOR_23_clean$date_collected)# 568
-# but why was it before 598 in functional_traits_NOR
+length(functional_leaf_traits_NOR_23_clean$date_collected)# 597
 
-sum(is.na(functional_leaf_traits_NOR_23$date_collected))
+sum(is.na(functional_leaf_traits_NOR_23$date_collected)) # 1206
 
 str(functional_leaf_traits_NOR_23_clean)
 
-# functional_leaf_traits_NOR_23_clean <- functional_leaf_traits_NOR_23 |> 
-#   filter(!is.na(wet_mass) | !is.na(dry_mass) | !is.na(SLA) | !is.na(leaf_thickness)| !is.na(LDMC)| !is.na(leaf_area))
+
+# save clean file ---------------------------------------------------------
+# write.csv(functional_leaf_traits_NOR_23_clean, file = "Data/RangeX_clean_functional_traits_NOR_2023.csv")
+
 
 # control plotting --------------------------------------------------------
 
