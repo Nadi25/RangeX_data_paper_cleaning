@@ -210,12 +210,60 @@ ggplot(plalan, aes(x = species, y = leaf_thickness, fill = treat)) +
 
 
 
-# write function to go through all species --------------------------------
-
-radius <- function(r){
-  2*pi*r
+# write function to get subset per species --------------------------------
+# filter per species and only rows with values
+filter_species <- function(traits_plotting, species_name, date) {
+  print(paste("Filtering for species:", species_name))
+  filtered_data <- traits_plotting |> 
+    filter(species == species_name &
+             !is.na(date))
+  print(paste("Number of rows after filtering:", nrow(filtered_data)))
+  return(filtered_data)
 }
+sucpra <- filter_species(traits_plotting, "sucpra")
+leuvul <- filter_species(traits_plotting, "leuvul")
 
-radius(3)
-2*pi*3
+
+# lapply to loop through function to filter datasets per species ----------
+# Get a list of unique species
+unique_species <- unique(traits_plotting$species)
+
+# Create a list to store the filtered datasets
+filtered_datasets <- list()
+
+# loop through all 10 species
+filtered_species_datasets <- lapply(unique_species[1:10], function(species_name) {
+  filter_species(traits_plotting, species_name)
+})
+
+# Name the list elements with the species names
+names(filtered_species_datasets) <- unique_species[1:10]
+
+# Print the names of the datasets created
+print(names(filtered_datasets))
+
+
+# Access a specific dataset by species name -------------------------------
+sucpra <- filtered_species_datasets[["sucpra"]]
+leuvul <- filtered_species_datasets[["leuvul"]]
+cennig <- filtered_species_datasets[["cennig"]]
+cyncri <- filtered_species_datasets[["cyncri"]]
+pimsax <- filtered_species_datasets[["pimsax"]]
+luzmul <- filtered_species_datasets[["luzmul"]]
+plalan <- filtered_species_datasets[["plalan"]]
+sildio <- filtered_species_datasets[["sildio"]]
+tripra <- filtered_species_datasets[["tripra"]]
+hypmac <- filtered_species_datasets[["hypmac"]]
+
+
+
+
+
+
+
+
+
+
+
+
 
