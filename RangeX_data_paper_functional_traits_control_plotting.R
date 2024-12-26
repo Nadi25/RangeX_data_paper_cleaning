@@ -8,6 +8,9 @@
 ## Purpose: Control plotting of data
 
 
+# load library ------------------------------------------------------------
+library(purrr)
+
 # source clean functional trait data file from cleaning R script ---------------------------------
 source("RangeX_data_paper_cleaning_functional_traits.R")
 
@@ -215,13 +218,12 @@ ggplot(plalan, aes(x = species, y = leaf_thickness, fill = treat)) +
 filter_species <- function(traits_plotting, species_name, date) {
   print(paste("Filtering for species:", species_name))
   filtered_data <- traits_plotting |> 
-    filter(species == species_name &
-             !is.na(date))
+    filter(species == species_name & !is.na(date))
   print(paste("Number of rows after filtering:", nrow(filtered_data)))
   return(filtered_data)
 }
-sucpra <- filter_species(traits_plotting, "sucpra")
-leuvul <- filter_species(traits_plotting, "leuvul")
+# sucpra <- filter_species(traits_plotting, "sucpra")
+# leuvul <- filter_species(traits_plotting, "leuvul")
 
 
 # lapply to loop through function to filter datasets per species ----------
@@ -229,7 +231,7 @@ leuvul <- filter_species(traits_plotting, "leuvul")
 unique_species <- unique(traits_plotting$species)
 
 # Create a list to store the filtered datasets
-filtered_datasets <- list()
+filtered_species_datasets <- list()
 
 # loop through all 10 species
 filtered_species_datasets <- lapply(unique_species[1:10], function(species_name) {
@@ -240,7 +242,7 @@ filtered_species_datasets <- lapply(unique_species[1:10], function(species_name)
 names(filtered_species_datasets) <- unique_species[1:10]
 
 # Print the names of the datasets created
-print(names(filtered_datasets))
+print(names(filtered_species_datasets))
 
 
 # Access a specific dataset by species name -------------------------------
@@ -256,14 +258,98 @@ tripra <- filtered_species_datasets[["tripra"]]
 hypmac <- filtered_species_datasets[["hypmac"]]
 
 
+# Use map to create a list of filtered datasets ---------------------------
+# Get a list of unique species
+unique_species <- unique(traits_plotting$species)
+
+# map to loop through 10 species
+filtered_datasets_species <- map(unique_species[1:10], ~ filter_species(traits_plotting, .x))
+
+# Name the list elements with the species names
+names(filtered_datasets_species) <- unique_species[1:10]
+
+# Print the names of the datasets created
+print(names(filtered_datasets_species))
+
+# Access a specific dataset by species name -------------------------------
+sucpra <- filtered_datasets_species[["sucpra"]]
+leuvul <- filtered_datasets_species[["leuvul"]]
+cennig <- filtered_datasets_species[["cennig"]]
+cyncri <- filtered_datasets_species[["cyncri"]]
+pimsax <- filtered_datasets_species[["pimsax"]]
+luzmul <- filtered_datasets_species[["luzmul"]]
+plalan <- filtered_datasets_species[["plalan"]]
+sildio <- filtered_datasets_species[["sildio"]]
+tripra <- filtered_datasets_species[["tripra"]]
+hypmac <- filtered_datasets_species[["hypmac"]]
 
 
 
+# function and loop for plots per species --------------------------------------------------------
+
+filter_plot_species <- function(traits_plotting, species_name) {
+  filtered_data <- traits_plotting |> 
+    filter(species == species_name & !is.na(date))
+  
+  # Create plots
+  plots <- list(
+    leaf_area = ggplot(filtered_data, aes(x = species, y = leaf_area, fill = treat)) +
+      geom_boxplot(outlier.color = "red", outlier.shape = 1) +
+      theme_bw() +
+      geom_jitter(),
+    
+    dry_mass = ggplot(filtered_data, aes(x = species, y = dry_mass, fill = treat)) +
+      geom_boxplot(outlier.color = "red", outlier.shape = 1) +
+      theme_bw() +
+      geom_jitter(),
+    
+    wet_mass = ggplot(filtered_data, aes(x = species, y = wet_mass, fill = treat)) +
+      geom_boxplot(outlier.color = "red", outlier.shape = 1) +
+      theme_bw() +
+      geom_jitter(),
+    
+    LDMC = ggplot(filtered_data, aes(x = species, y = LDMC, fill = treat)) +
+      geom_boxplot(outlier.color = "red", outlier.shape = 1) +
+      theme_bw() +
+      geom_jitter(),
+    
+    SLA = ggplot(filtered_data, aes(x = species, y = SLA, fill = treat)) +
+      geom_boxplot(outlier.color = "red", outlier.shape = 1) +
+      theme_bw() +
+      geom_jitter(),
+    
+    leaf_thickness = ggplot(filtered_data, aes(x = species, y = leaf_thickness, 
+                                                fill = treat)) +
+      geom_boxplot(outlier.color = "red", outlier.shape = 1) +
+      theme_bw() +
+      geom_jitter()
+  )
+  
+  return(list(data = filtered_data, plots = plots))
+}
 
 
+# Get a list of unique species
+unique_species <- unique(traits_plotting$species)
 
+# Use map to create a list of filtered datasets and plots
+filtered_datasets <- map(unique_species[1:10], ~ filter_plot_species(traits_plotting, .x))
 
+# Name the list elements with the species names
+names(filtered_datasets) <- unique_species[1:10]
 
+# Print the names of the datasets created
+print(names(filtered_datasets))
+
+# Access a specific dataset and its plots by species name
+sucpra_data <- filtered_datasets[["sucpra"]]$data
+sucpra_plots <- filtered_datasets[["sucpra"]]$plots
+
+# Display leaf area plot
+print(sucpra_plots$leaf_area)
+
+# SLA
+print(sucpra_plots$SLA)
 
 
 
