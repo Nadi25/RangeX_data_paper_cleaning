@@ -293,36 +293,54 @@ filter_plot_species <- function(traits_plotting, species_name) {
   
   # Create plots
   plots <- list(
-    leaf_area = ggplot(filtered_data, aes(x = species, y = leaf_area, fill = treat)) +
+    leaf_area = ggplot(filtered_data, aes(x = treat, y = leaf_area, fill = treat)) +
       geom_boxplot(outlier.color = "red", outlier.shape = 1) +
       theme_bw() +
-      geom_jitter(),
+      geom_jitter(width = 0.2)+
+      theme(legend.position = "none",
+            axis.text.x = element_text(angle = 45, hjust = 1)),
     
-    dry_mass = ggplot(filtered_data, aes(x = species, y = dry_mass, fill = treat)) +
+    dry_mass = ggplot(filtered_data, aes(x = treat, y = dry_mass, fill = treat)) +
       geom_boxplot(outlier.color = "red", outlier.shape = 1) +
       theme_bw() +
-      geom_jitter(),
+      geom_jitter(width = 0.2)+
+      theme(legend.position = "none",
+            axis.text.x = element_text(angle = 45, hjust = 1)),
     
-    wet_mass = ggplot(filtered_data, aes(x = species, y = wet_mass, fill = treat)) +
+    wet_mass = ggplot(filtered_data, aes(x = treat, y = wet_mass, fill = treat)) +
       geom_boxplot(outlier.color = "red", outlier.shape = 1) +
       theme_bw() +
-      geom_jitter(),
+      geom_jitter(width = 0.2)+
+      theme(legend.position = "none",
+            axis.text.x = element_text(angle = 45, hjust = 1)),
     
-    LDMC = ggplot(filtered_data, aes(x = species, y = LDMC, fill = treat)) +
+    LDMC = ggplot(filtered_data, aes(x = treat, y = LDMC, fill = treat)) +
       geom_boxplot(outlier.color = "red", outlier.shape = 1) +
       theme_bw() +
-      geom_jitter(),
+      geom_jitter(width = 0.2)+
+      theme(legend.position = "none",
+            axis.text.x = element_text(angle = 45, hjust = 1)),
     
-    SLA = ggplot(filtered_data, aes(x = species, y = SLA, fill = treat)) +
+    SLA = ggplot(filtered_data, aes(x = treat, y = SLA, fill = treat)) +
       geom_boxplot(outlier.color = "red", outlier.shape = 1) +
       theme_bw() +
-      geom_jitter(),
+      geom_jitter(width = 0.2)+
+      theme(legend.position = "none",
+            axis.text.x = element_text(angle = 45, hjust = 1)),
     
-    leaf_thickness = ggplot(filtered_data, aes(x = species, y = leaf_thickness, 
+    leaf_thickness = ggplot(filtered_data, aes(x = treat, y = leaf_thickness, 
                                                 fill = treat)) +
       geom_boxplot(outlier.color = "red", outlier.shape = 1) +
       theme_bw() +
-      geom_jitter()
+      geom_jitter(width = 0.2)+
+      theme(legend.position = "none",
+            axis.text.x = element_text(angle = 45, hjust = 1)),
+    
+    # wet mass (mg) vs dry mass (mg)
+    wetmass_drymass = ggplot(filtered_data, aes(x = dry_mass, y = wet_mass, 
+                                                colour = treat))+
+      geom_point()+
+      theme_bw()
   )
   
   return(list(data = filtered_data, plots = plots))
@@ -341,15 +359,85 @@ names(filtered_datasets) <- unique_species[1:10]
 # Print the names of the datasets created
 print(names(filtered_datasets))
 
-# Access a specific dataset and its plots by species name
+
+# sucpra: access dataset and its plots by species name ---------------------
 sucpra_data <- filtered_datasets[["sucpra"]]$data
 sucpra_plots <- filtered_datasets[["sucpra"]]$plots
 
 # Display leaf area plot
 print(sucpra_plots$leaf_area)
+# FPT2142: 6188.1 looks correct --> checked with shiny_leaf
+
+# dry mass
+print(sucpra_plots$dry_mass)
+
+# wet mass
+print(sucpra_plots$wet_mass)
+
+# LDMC
+print(sucpra_plots$LDMC)
 
 # SLA
 print(sucpra_plots$SLA)
+
+# leaf_thickness
+print(sucpra_plots$leaf_thickness)
+
+# wet_mass vs dry_mass
+print(sucpra_plots$wetmass_drymass)
+
+
+# leuvul ---------------------
+leuvul_data <- filtered_datasets[["leuvul"]]$data
+leuvul_plots <- filtered_datasets[["leuvul"]]$plots
+
+# Display leaf area plot
+print(leuvul_plots$leaf_area)
+# FSA3216: 1157.0 looks correct --> checked with shiny_leaf
+
+# dry mass
+print(leuvul_plots$dry_mass)
+
+# wet mass
+print(leuvul_plots$wet_mass)
+
+# LDMC
+print(leuvul_plots$LDMC)
+
+# SLA
+print(leuvul_plots$SLA)
+
+# leaf_thickness
+print(leuvul_plots$leaf_thickness)
+
+# wet_mass vs dry_mass
+print(leuvul_plots$wetmass_drymass)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
