@@ -8,6 +8,18 @@
 ## Purpose: Control plotting of data
 
 
+# Check these! ------------------------------------------------------------
+# GMJ6176: cyncri: drymass: 77.60 but wet mass: 77.60
+# FVX6947: cyncri: leaf_thickness: 0.09933333
+# FMX1959: plalan: wetmass and drymass
+# FNW0998: luzmul: wetmass: 326.50 but dry mass: 7.88
+# FNN3644: luzmul: wetmass: 310.50 but dry mass: 7.99
+# FOI4279: luzmul: wetmass: 205.10 but dry mass: 5.10
+# FVN2828: tripra: LDMC: 20.89034
+# FVN2828: tripra: low dry mass: 10.23 but high wet mass: 489.70
+# GGL5838: sildio: high wet mass: 953.00 but normal dry mass: 15.21
+
+
 # load library ------------------------------------------------------------
 library(purrr)
 
@@ -414,16 +426,223 @@ print(leuvul_plots$leaf_thickness)
 print(leuvul_plots$wetmass_drymass)
 
 
+# cennig ---------------------
+cennig_data <- filtered_datasets[["cennig"]]$data
+cennig_plots <- filtered_datasets[["cennig"]]$plots
+
+# Display leaf area plot
+print(cennig_plots$leaf_area)
+
+# dry mass
+print(cennig_plots$dry_mass)
+
+# wet mass
+print(cennig_plots$wet_mass)
+
+# LDMC
+print(cennig_plots$LDMC)
+
+# SLA
+print(cennig_plots$SLA)
+
+# leaf_thickness
+print(cennig_plots$leaf_thickness)
+
+# wet_mass vs dry_mass
+print(cennig_plots$wetmass_drymass)
+
+
+# pimsax ---------------------
+pimsax_data <- filtered_datasets[["pimsax"]]$data
+pimsax_plots <- filtered_datasets[["pimsax"]]$plots
+
+# Display leaf area plot
+print(pimsax_plots$leaf_area)
+
+# dry mass
+print(pimsax_plots$dry_mass)
+
+# wet mass
+print(pimsax_plots$wet_mass)
+
+# LDMC
+print(pimsax_plots$LDMC)
+
+# SLA
+print(pimsax_plots$SLA)
+
+# leaf_thickness
+print(pimsax_plots$leaf_thickness)
+
+# wet_mass vs dry_mass
+print(pimsax_plots$wetmass_drymass)
+
+# hypmac ---------------------
+hypmac_data <- filtered_datasets[["hypmac"]]$data
+hypmac_plots <- filtered_datasets[["hypmac"]]$plots
+
+# Display leaf area plot
+print(hypmac_plots$leaf_area)
+
+# dry mass
+print(hypmac_plots$dry_mass)
+
+# wet mass
+print(hypmac_plots$wet_mass)
+
+# LDMC
+print(hypmac_plots$LDMC)
+
+# SLA
+print(hypmac_plots$SLA)
+
+# leaf_thickness
+print(hypmac_plots$leaf_thickness)
+
+# wet_mass vs dry_mass
+print(hypmac_plots$wetmass_drymass)
+
+
+# plalan ---------------------
+plalan_data <- filtered_datasets[["plalan"]]$data
+plalan_plots <- filtered_datasets[["plalan"]]$plots
+
+# Display leaf area plot
+print(plalan_plots$leaf_area)
+
+# dry mass
+print(plalan_plots$dry_mass)
+
+# wet mass
+print(plalan_plots$wet_mass)
+
+# LDMC
+print(plalan_plots$LDMC)
+
+# SLA
+print(plalan_plots$SLA)
+
+# leaf_thickness
+print(plalan_plots$leaf_thickness)
+
+# wet_mass vs dry_mass
+print(plalan_plots$wetmass_drymass)
+# 2 points fall a bit out of the "line"
+# check: FMX1959
+
+
+# cyncri ---------------------
+cyncri_data <- filtered_datasets[["cyncri"]]$data
+cyncri_plots <- filtered_datasets[["cyncri"]]$plots
+
+# Display leaf area plot
+print(cyncri_plots$leaf_area)
+
+# dry mass
+print(cyncri_plots$dry_mass)
+# GMJ6176: 77.60 but wet mass: 77.60
+
+# wet mass
+print(cyncri_plots$wet_mass)
+
+# LDMC
+print(cyncri_plots$LDMC)
+# GMJ6176: 10000
+
+# SLA
+print(cyncri_plots$SLA)
+
+# leaf_thickness
+print(cyncri_plots$leaf_thickness)
+# FVX6947: 0.09933333
+
+# wet_mass vs dry_mass
+print(cyncri_plots$wetmass_drymass)
+
+
+# luzmul ---------------------
+luzmul_data <- filtered_datasets[["luzmul"]]$data
+luzmul_plots <- filtered_datasets[["luzmul"]]$plots
+
+# Display leaf area plot
+print(luzmul_plots$leaf_area)
+
+# dry mass
+print(luzmul_plots$dry_mass)
+
+# wet mass
+print(luzmul_plots$wet_mass)
+# FNW0998: 326.50 but dry mass: 7.88
+# FNN3644: 310.50 but dry mass: 7.99
+# FOI4279: 205.10 but dry mass: 5.10
+
+# LDMC
+print(luzmul_plots$LDMC)
+
+# SLA
+print(luzmul_plots$SLA)
+
+# leaf_thickness
+print(luzmul_plots$leaf_thickness)
+
+# wet_mass vs dry_mass
+print(luzmul_plots$wetmass_drymass)
 
 
 
+# tripra ---------------------
+tripra_data <- filtered_datasets[["tripra"]]$data
+tripra_plots <- filtered_datasets[["tripra"]]$plots
 
+# Display leaf area plot
+print(tripra_plots$leaf_area)
 
+# dry mass
+print(tripra_plots$dry_mass)
 
+# wet mass
+print(tripra_plots$wet_mass)
 
+# LDMC
+print(tripra_plots$LDMC)
+# FVN2828: 20.89034
 
+# SLA
+print(tripra_plots$SLA)
 
+# leaf_thickness
+print(tripra_plots$leaf_thickness)
 
+# wet_mass vs dry_mass
+print(tripra_plots$wetmass_drymass)
+# FVN2828: low dry mass: 10.23 but high wet mass: 489.70
+ 
+
+# sildio ---------------------
+sildio_data <- filtered_datasets[["sildio"]]$data
+sildio_plots <- filtered_datasets[["sildio"]]$plots
+
+# Display leaf area plot
+print(sildio_plots$leaf_area)
+
+# dry mass
+print(sildio_plots$dry_mass)
+
+# wet mass
+print(sildio_plots$wet_mass)
+# GGL5838: high wet mass: 953.00 but normal dry mass
+
+# LDMC
+print(sildio_plots$LDMC)
+
+# SLA
+print(sildio_plots$SLA)
+
+# leaf_thickness
+print(sildio_plots$leaf_thickness)
+
+# wet_mass vs dry_mass
+print(sildio_plots$wetmass_drymass)
 
 
 
