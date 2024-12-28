@@ -20,11 +20,13 @@
 # GGL5838: sildio: high wet mass: 953.00 but normal dry mass: 15.21
 # sucpra: NOR.lo.ambi.vege.wf.01.21: dry mass = 468.18
 # sucpra: NOR.lo.ambi.vege.wf.02.09: dry mass = 421.72
+# FSF6631: hypmac: only drymass, no wet mass --> delete?
 
 
 
 # load library ------------------------------------------------------------
 library(purrr)
+library(openxlsx)
 
 # source clean functional trait data file from cleaning R script ---------------------------------
 source("RangeX_data_paper_cleaning_functional_traits.R")
@@ -262,6 +264,9 @@ print(pimsax_plots$wetmass_drymass)
 hypmac_data <- filtered_datasets[["hypmac"]]$data
 hypmac_plots <- filtered_datasets[["hypmac"]]$plots
 
+# save hypmac dataset
+# write.xlsx(hypmac_data, "Data/RangeX_functional_traits_hypmac.xlsx")
+
 # Display leaf area plot
 print(hypmac_plots$leaf_area)
 
@@ -270,6 +275,7 @@ print(hypmac_plots$dry_mass)
 
 # wet mass
 print(hypmac_plots$wet_mass)
+# FSF6631: wet mass missing
 
 # LDMC
 print(hypmac_plots$LDMC)
