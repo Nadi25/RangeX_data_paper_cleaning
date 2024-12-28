@@ -1,5 +1,5 @@
 
-# RangeX functional traits data exploration ----------------------------------
+# RangeX functional traits data exploration old without function ----------------------------------
 
 ## Data used: RangeX_raw_functional_traits_2023.csv,
 ## RangeX_raw_functional_traits_leaf_area_NOR_2023.csv and RangeX_Metadata.csv 
