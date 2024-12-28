@@ -22,11 +22,13 @@
 #   GAM4208 hi 2f i6 leuvul ambi bare
 # 7. FYP9768 hi sildio warm bare 2f c8 --> was corrected to ambi --> check 
 #   GAT6555 hi sildio ambi bare 2f c8
+# 8. hypmac: some have small extra leaves --> reweigh + recolor?
+# 9. hypmac: what if part of stem is not cut?
+# 10. make folder without overlapping scans for OSF? --> do leaf area again?
 
 # load packages -----------------------------------------------------------
 
 library(tidyverse)
-
 
 # load data 2023 functional traits  ---------------------------------------------------------------
 functional_traits <- read.csv2("Data/RangeX_raw_functional_traits_2023.csv")
