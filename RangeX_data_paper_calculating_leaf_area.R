@@ -2,11 +2,12 @@
 # RangeX functional traits calculating leaf area --------------------------
 
 ## Leaf scans raw in: C:\Users\naart3294\OneDrive - University of Bergen\PhD_RangeX\R codes\RangeX_data_paper_cleaning\Data\Leaf_area_scans\RangeX_leaf_scans_all
-## Code used: Calculate leaf area with ImaeJ function 
-##            in Leaf_area_calculation_function.R
-## Date:      11.11.24
-## Author:    Nadine Arzt
-## Purpose:   Calculate leaf area of focal species
+## Code used:    Calculate leaf area with ImageJ function 
+##               in Leaf_area_calculation_function.R
+## Leaf area in: Data/RangeX_raw_functional_traits_leaf_area_all.csv
+## Date:         11.11.24
+## Author:       Nadine Arzt
+## Purpose:      Calculate leaf area of focal species
 
 
 # load packages -----------------------------------------------------------
