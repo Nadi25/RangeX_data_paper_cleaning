@@ -30,6 +30,8 @@
 # load packages -----------------------------------------------------------
 
 library(tidyverse)
+library(conflicted)
+conflict_prefer_all("dplyr", quiet = TRUE)
 
 # load data 2023 functional traits  ---------------------------------------------------------------
 functional_traits <- read.csv2("Data/RangeX_raw_functional_traits_2023.csv")
@@ -63,7 +65,7 @@ functional_traits <- functional_traits |>
 
 # import leaf area data ---------------------------------------------------
 
-leaf_area_NOR <- read.csv("Data/RangeX_raw_functional_traits_leaf_area_NOR_2023.csv")
+leaf_area_NOR <- read.csv("Data/RangeX_raw_functional_traits_leaf_area_all.csv")
 leaf_area_NOR
 
 
@@ -81,7 +83,7 @@ length(functional_traits_NOR) ## 22 columns
 ## get column names
 dput(colnames(functional_traits_NOR))
 
-# need to find out why 606 leaves but 601 scans
+# need to find out why 606 leaves but 600 scans
 # 6 leaves have no leaf area
 # FPI1781, FMQ6120, FSK5791, GDR8049 are in "bad_scans" folder because these scans stopped the code
 
@@ -328,7 +330,7 @@ functional_traits_NOR <- functional_traits_NOR |>
 # 597 samples
 
 # Import metadata ---------------------------------------------------------
-metadata <- read.csv2("RangeX_Metadata_NOR.csv")
+metadata <- read.csv2("Data/RangeX_Metadata.csv")
 head(metadata)
 dput(colnames(metadata))
 
@@ -366,7 +368,7 @@ joined_data <- functional_traits_NOR |>
                    "position_ID_original", "species", "treat_warming", "treat_competition")) |> 
   mutate(matched = ifelse(is.na(unique_plant_ID), FALSE, TRUE))
 
-sum(!joined_data$matched) # 30 didn't match
+sum(!joined_data$matched) # 30 didn't match # now 0
 
 # something must be wrong with the position of the plants
 # hopefully typos
