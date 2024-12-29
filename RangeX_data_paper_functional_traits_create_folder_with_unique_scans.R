@@ -1,12 +1,17 @@
 
-
 # Create one folder with leaf area images ---------------------------------
+
+## Data used: RangeX_leaf_scans_DarthVader, RangeX_leaf_scans_high_28.07.23.
+##            RangeX_leaf_scans_low_06.07.23, RangeX_leaf_scans_low_07.07.23
+## Output in: RangeX_leaf_scans_all
+## Date:      29.12.2024
+## Author:    Nadine Arzt
+## Purpose:   Have one folder with unique images instead of 4 with overlap
 
 
 # load library ------------------------------------------------------------
 library(fs)
 library(purrr)
-
 
 # create folder paths -----------------------------------------------------
 folder_paths <- c("Data/Leaf_area_scans/RangeX_leaf_scans_DarthVader/",
@@ -25,7 +30,7 @@ output_folder <- "Data/Leaf_area_scans/RangeX_leaf_scans_all/"
 image_files <- folder_paths |> 
   lapply(list.files, pattern = "\\.jpe?g$", full.names = TRUE) |> 
   unlist()
-# 911
+# 910
 
 
 # extract just the file names ---------------------------------------------
@@ -34,7 +39,7 @@ image_filenames <- basename(image_files)
 
 
 # get unique file names ---------------------------------------------------
-unique_filenames <- unique(image_filenames) # 601
+unique_filenames <- unique(image_filenames) # 600
 
 
 # map unique file names back to their full paths --------------------------
@@ -43,7 +48,6 @@ unique_images <- unique_filenames |>
     # Find the first occurrence of the file in the original list of paths
     image_files[which(image_filenames == file)[1]]
   })
-
 
 
 # copy unique images to the output folder using walk() --------------------
@@ -63,7 +67,7 @@ unique_images |>
 cat("Total unique images:", length(unique_images), "\n")
 cat("Images successfully copied to:", output_folder, "\n")
 
-# IHW4848 is just a test scan of an envelope -> delete
+# IHW4848 is just a test scan of an envelope -> deleted in Darth Vader folder
 
 
 # would go faster then walk
