@@ -1,13 +1,14 @@
 
 
-# RangeX data cleaning functional traits ----------------------------------
+# RangeX data combine functional traits with leaf area and clean raw data file----------------------------------
 
-## Data used: RangeX_raw_functional_traits_2023.csv,
-## RangeX_raw_functional_traits_leaf_area_NOR_2023.csv and RangeX_Metadata.csv 
-## Date: 11.11.24
-## Author: Nadine Arzt
-## Purpose: Clean the complete raw data file of functional traits
-## and combine with leaf area
+## Data used: RangeX_raw_functional_traits_2023.csv, 
+##            RangeX_raw_functional_traits_leaf_area_NOR_2023.csv,
+##            RangeX_Metadata.csv 
+## Date:      11.11.24
+## Author:    Nadine Arzt
+## Purpose:   Combine functional traits with leaf area 
+##            and clean the complete raw data file of functional traits
 
 
 # Questions ---------------------------------------------------------------
