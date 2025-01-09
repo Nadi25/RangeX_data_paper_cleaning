@@ -1,0 +1,130 @@
+
+
+# RangeX phenology 2023 data cleaning -------------------------------------
+
+## Data used: RangeX_raw_phenology_low_2023.xlsx, RangeX_raw_phenology_high_2023.xlsx
+##            RangeX_Metadata.csv 
+## Date:      09.01.2025
+## Author:    Nadine Arzt
+## Purpose:   Cleaning of the complete raw data files of phenology
+
+
+# load library ------------------------------------------------------------
+
+#library(tidyr)
+library(dplyr)
+library(readxl)
+library(readr)
+library(conflicted)
+library(janitor)
+library(lubridate)
+library(here)
+
+conflict_prefer_all("dplyr", quiet = TRUE)
+
+
+# Import data low + high --------------------------------------------------
+## use read_delim from reader package
+phenology_low_raw <- read_excel(here("Data/Data_phenology/RangeX_raw_phenology_low_2023.xlsx"),sheet = 2)
+head(phenology_low_raw)
+dput(colnames(phenology_low_raw))
+str(phenology_low_raw)
+
+phenology_high_raw <- read_excel(here("Data/Data_phenology/RangeX_raw_phenology_high_2023.xlsx"), sheet = 2)
+head(phenology_high_raw)
+dput(colnames(phenology_high_raw))
+glimpse(phenology_high_raw)
+
+
+
+# combine low and high site -----------------------------------------------
+rangex_phenology_raw <- bind_rows(phenology_low_raw, phenology_high_raw)
+
+head(rangex_phenology_raw)
+str(rangex_phenology_raw)
+
+length(rangex_phenology_raw)
+dput(colnames(rangex_phenology_raw))
+
+# check for rows that only have NAs
+na_rows <- rangex_phenology_raw[rowSums(is.na(rangex_phenology_raw)) == ncol(rangex_phenology_raw), ]
+na_rows # 0
+
+
+# clean column names ------------------------------------------------------
+rangex_phenology_raw <- clean_names(rangex_phenology_raw)
+colnames(rangex_phenology_raw)
+
+## rename column names to match with RangeX metadata file
+rangex_phenology_raw <- rangex_phenology_raw %>%
+  rename("block_id_original" = "block_id",
+         "plot_id_original" = "plot_id",
+         "position_id_original" = "position_id")
+
+
+# change data format ------------------------------------------------------
+rangex_phenology_raw <- rangex_phenology_raw |> 
+  mutate(date = as.Date(date))
+
+
+# replace NAs with 0 ------------------------------------------------------
+rangex_phenology_raw <- rangex_phenology_raw |> 
+  mutate_at(vars(number_buds, number_flowers, number_infructescences, seeds_collected), ~replace(., is.na(.), 0))
+
+
+# import meta data file ---------------------------------------------------
+metadata <- read.csv2(here("Data/RangeX_Metadata.csv"))
+head(metadata)
+colnames(metadata)
+
+## clean column names
+metadata <- clean_names(metadata)
+
+## filter only NOR
+metadata_NOR <- metadata %>%
+  dplyr::filter(grepl('NOR', region))
+head(metadata_NOR)
+str(metadata_NOR)
+
+
+# merge metadata and phenology --------------------------------------------
+rangex_phenology_raw <- left_join(rangex_phenology_raw, metadata,
+                                  by = c("region", "site", "block_id_original", "plot_id_original", "position_id_original", "species"))
+
+
+# combined treatment column -----------------------------------------------
+rangex_phenology_raw$treatment <- paste(rangex_phenology_raw$site, rangex_phenology_raw$treat_warming, rangex_phenology_raw$treat_competition, sep = "_")
+
+colnames(rangex_phenology_raw)
+
+
+# Problems to fix ---------------------------------------------------------
+# 1. For cennig, we only counted stems and not flowers. So this is different to the rest.
+# --> We know how many flowers we have per stem at peak season, when we did the demographic trait measurements.
+# 
+# 2. Cennig: can have more seeds collected then infructescences, because one stem has multiple flowers
+# 
+# 3. Seeds collected:
+#   --> When seeds have been collected, they obviously can't be counted as infructescences anymore next time.
+# --> So we have to add the number of collected seeds to the number of infructescences for the next date.
+# --> If 3 seeds have been collected on 27.09.23, we have to add 3 to infructescences on 10.10.23
+# --> Can we specify that when the last seed has been collected, the next date does not get more seeds added to the infructescences? Because then the plant is completely done
+# 
+# 4. Sometimes we have several data points for e.g. buds very close, when not all plots have been observed at the same date
+# --> create new date column with same date for one block of observations
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
