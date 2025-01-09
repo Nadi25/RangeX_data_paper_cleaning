@@ -80,7 +80,7 @@ traits_high_22 <- traits_high_22 %>%
 
 # load data 2022 traits low ---------------------------------------------------------------
 
-traits_low_22 <- read.csv2("RangeX_raw_traits_low_2022.csv")
+traits_low_22 <- read.csv2("Data/Data_demographic_traits/RangeX_raw_traits_low_2022.csv")
 head(traits_low_22)
 
 # check structure of data set ---------------------------------------------
@@ -154,7 +154,7 @@ class(traits_22$year)
 
 
 # load metadata file for all countries ------------------------------------------------------
-metadata <- read.csv2("RangeX_Metadata.csv")
+metadata <- read.csv2("Data/RangeX_Metadata.csv")
 head(metadata)
 dput(colnames(metadata))
 
@@ -395,7 +395,7 @@ ggplot(data = pimsax_eliminated, aes(leaf_length, leaf_width, color = treatment)
 
 # load metadata for data entry Yearly demographics ----------------------------------------------------------
 
-yearly_demographics <- read.csv("RangeX_YearlyDemographics.csv")
+yearly_demographics <- read.csv("Data/Data_demographic_traits/RangeX_YearlyDemographics.csv")
 head(yearly_demographics)
 dput(colnames(yearly_demographics))
 

@@ -110,7 +110,7 @@ length(traits_high_21)
 
 # load data 2021 traits low ---------------------------------------------------------------
 
-traits_low_21 <- read.csv2("RangeX_raw_traits_low_2021.csv")
+traits_low_21 <- read.csv2("Data/Data_demographic_traits/RangeX_raw_traits_low_2021.csv")
 head(traits_low_21)
 
 # check structure of data set ---------------------------------------------
@@ -195,7 +195,7 @@ traits_21 <- traits_21 %>%
 summary(traits_21)
 
 # load metadata file for all countries ------------------------------------------------------
-metadata <- read.csv2("RangeX_Metadata.csv")
+metadata <- read.csv2("Data/RangeX_Metadata.csv")
 head(metadata)
 dput(colnames(metadata))
 
@@ -377,7 +377,7 @@ ggplot(data = plalan21, aes(treatment,leaf_length1, color = treatment))+
 
 # load metadata for data entry Yearly demographics ----------------------------------------------------------
 
-yearly_demographics <- read.csv("RangeX_YearlyDemographics.csv")
+yearly_demographics <- read.csv("Data/Data_demographic_traits/RangeX_YearlyDemographics.csv")
 head(yearly_demographics)
 dput(colnames(yearly_demographics))
 

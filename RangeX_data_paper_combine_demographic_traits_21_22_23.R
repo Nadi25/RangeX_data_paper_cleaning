@@ -1,6 +1,6 @@
 
 
-## RangeX combine trait data from 2021, 2022 and 2023
+## RangeX combine demographic trait data from 2021, 2022 and 2023
 
 ## Data used: RangeX_clean_traits_2021.csv,
 ##            RangeX_clean_traits_2022.csv,
@@ -70,8 +70,8 @@ head(rangex_traits)
 
 # save as csv for google drive yearly demographics -------------------------------------------------------------
 
-write.csv(rangex_traits_NOR, "C:/Users/naart3294/OneDrive - University of Bergen/PhD_RangeX/R codes/RangeX_data_cleaning/Data_traits/RangeX_clean_yearly_size_2021_2022_2023_NOR.csv",
-          row.names = FALSE)
+# write.csv(rangex_traits_NOR, "C:/Users/naart3294/OneDrive - University of Bergen/PhD_RangeX/R codes/RangeX_data_cleaning/Data_traits/RangeX_clean_yearly_size_2021_2022_2023_NOR.csv",
+#           row.names = FALSE)
 
 
 

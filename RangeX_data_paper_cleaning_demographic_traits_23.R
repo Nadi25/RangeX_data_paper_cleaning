@@ -52,7 +52,7 @@ traits_low_23 <- traits_low_23 %>%
 
 # change column names -----------------------------------
 ## read yearly demographics table for right column names
-yearly_demographic <- read.csv2("RangeX_YearlyDemographics.csv", sep = ",")
+yearly_demographic <- read.csv2("Data/Data_demographic_traits/RangeX_YearlyDemographics.csv", sep = ",")
 ## get column names
 dput(colnames(yearly_demographic))
 
@@ -200,7 +200,7 @@ traits_low_23 <- subset(traits_low_23, select = -tillers_yes_no)
 
 
 # load data 2023 traits high ---------------------------------------------------------------
-traits_high_23 <- read.csv2("RangeX_raw_traits_high_2023.csv")
+traits_high_23 <- read.csv2("Data/Data_demographic_traits/RangeX_raw_traits_high_2023.csv")
 head(traits_high_23)
 
 
@@ -447,7 +447,7 @@ class(traits_23$year)
 
 
 # load metadata file for all countries ------------------------------------------------------
-metadata <- read.csv2("RangeX_Metadata.csv")
+metadata <- read.csv2("Data/RangeX_Metadata.csv")
 head(metadata)
 dput(colnames(metadata))
 
