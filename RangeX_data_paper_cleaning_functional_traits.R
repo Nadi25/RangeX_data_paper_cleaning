@@ -3,7 +3,7 @@
 # RangeX data combine functional traits with leaf area and clean raw data file----------------------------------
 
 ## Data used: RangeX_raw_functional_traits_2023.csv, 
-##            RangeX_raw_functional_traits_leaf_area_NOR_2023.csv,
+##            RangeX_raw_functional_traits_leaf_area_final.csv,
 ##            RangeX_Metadata.csv 
 ## Date:      11.11.24
 ## Author:    Nadine Arzt
@@ -34,7 +34,7 @@ library(conflicted)
 conflict_prefer_all("dplyr", quiet = TRUE)
 
 # load data 2023 functional traits  ---------------------------------------------------------------
-functional_traits <- read.csv2("Data/RangeX_raw_functional_traits_2023.csv")
+functional_traits <- read.csv2("Data/Data_functional_traits/RangeX_raw_functional_traits_2023.csv")
 head(functional_traits)
 
 # check structure of data set ---------------------------------------------
@@ -65,7 +65,7 @@ functional_traits <- functional_traits |>
 
 # import leaf area data ---------------------------------------------------
 
-leaf_area_NOR <- read.csv("Data/RangeX_raw_functional_traits_leaf_area_all.csv")
+leaf_area_NOR <- read.csv("Data/Data_functional_traits/RangeX_raw_functional_traits_leaf_area_all_final.csv")
 leaf_area_NOR
 
 
@@ -227,6 +227,12 @@ functional_traits_NOR <- functional_traits_NOR |>
     TRUE ~ position_ID_original  # Keep the rest unchanged
   ))
 
+# new: GAV1827 hypmac hi 2e h5 is actually hi 2f e8, veg height 16
+functional_traits_NOR <- functional_traits_NOR |> 
+  mutate(plot_ID_original = case_when(ID == "GAV1827" ~ "f", TRUE ~ plot_ID_original)) |> 
+  mutate(position_ID_original = case_when(ID == "GAV1827" ~ "e8", TRUE ~ position_ID_original)) |> 
+  mutate(veg_height = case_when(ID == "GAV1827" ~ 16, TRUE ~ veg_height))
+
 # 2-18: hi 2e warm
 functional_traits_NOR <- functional_traits_NOR |> 
   mutate(treat_warming = case_when(
@@ -368,7 +374,7 @@ joined_data <- functional_traits_NOR |>
                    "position_ID_original", "species", "treat_warming", "treat_competition")) |> 
   mutate(matched = ifelse(is.na(unique_plant_ID), FALSE, TRUE))
 
-sum(!joined_data$matched) # 30 didn't match # now 0
+sum(!joined_data$matched) # 30 didn't match --> fixed above # now 0
 
 # something must be wrong with the position of the plants
 # hopefully typos
@@ -391,7 +397,9 @@ duplicates_2 <- functional_traits_NOR_23 |>
 duplicates_2 # 6
 
 # GHZ1788 (warm bare) and GAV1827 (ambi bare): hypmac hi 2e h5 twice
-# but GAV1827 was corrected above to warm
+# but GAV1827 was corrected wrong first
+# GHZ1788 correct on envelope
+# GAV1827: is probably 2f ambi, bare, veg height 16 (checked on data sheet and changed above)
 
 # GID4537 hi 2f i6 leuvul warm bare --> was corrected to ambi
 # GAM4208 hi 2f i6 leuvul ambi bare
@@ -464,7 +472,7 @@ str(functional_leaf_traits_NOR_23_clean)
 
 
 # save clean file ---------------------------------------------------------
-# write.csv(functional_leaf_traits_NOR_23_clean, file = "Data/RangeX_clean_functional_traits_NOR_2023.csv")
+# write.csv(functional_leaf_traits_NOR_23_clean, file = "Data/Data_functional_traits/RangeX_clean_functional_traits_NOR_2023.csv")
 
 
 

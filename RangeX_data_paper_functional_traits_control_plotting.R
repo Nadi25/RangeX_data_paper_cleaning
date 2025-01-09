@@ -2,10 +2,10 @@
 # RangeX functional traits data exploration & control plotting ----------------------------------
 
 ## Data used: RangeX_raw_functional_traits_2023.csv,
-## RangeX_raw_functional_traits_leaf_area_NOR_2023.csv and RangeX_Metadata.csv 
-## Date: 26.12.2024
-## Author: Nadine Arzt
-## Purpose: Control plotting of data
+##            RangeX_raw_functional_traits_leaf_area_NOR_2023.csv, ##            RangeX_Metadata.csv 
+## Date:      26.12.2024
+## Author:    Nadine Arzt
+## Purpose:   Control plotting of data
 
 
 # Check these! ------------------------------------------------------------
@@ -279,6 +279,7 @@ print(hypmac_plots$wet_mass)
 
 # LDMC
 print(hypmac_plots$LDMC)
+# GFF4648: low LDMC: 166.4865
 
 # SLA
 print(hypmac_plots$SLA)

@@ -102,7 +102,7 @@ dim(leaf_area)
 head(leaf_area)
 table(leaf_area$ID)
 
-area <- read.csv("Data/RangeX_raw_functional_traits_leaf_area_all.csv")
+area <- read.csv("Data/Data_functional_traits/RangeX_raw_functional_traits_leaf_area_all.csv")
 
 
 # check for duplicates ----------------------------------------------------
@@ -140,9 +140,9 @@ leaf_area_recolored <- LA_2 |>
   summarise(n = n(),
             leaf_area = sum(LeafArea))
 # save data as csv
-# write.csv(leaf_area_recolored, file = "Data/RangeX_raw_functional_traits_leaf_area_recolored.csv")
+# write.csv(leaf_area_recolored, file = "Data/Data_functional_traits/RangeX_raw_functional_traits_leaf_area_recolored.csv")
 
-LA_recolored <- read.csv("Data/RangeX_raw_functional_traits_leaf_area_recolored.csv")
+LA_recolored <- read.csv("Data/Data_functional_traits/RangeX_raw_functional_traits_leaf_area_recolored.csv")
 
 
 # hypmac recolored again ------------------------------------
@@ -163,9 +163,9 @@ leaf_area_hypmac_recolored <- LA_3 |>
   summarise(n = n(),
             leaf_area = sum(LeafArea))
 # save data as csv
-# write.csv(leaf_area_hypmac_recolored, file = "Data/RangeX_raw_functional_traits_leaf_area_hypmac_recolored.csv")
+# write.csv(leaf_area_hypmac_recolored, file = "Data/Data_functional_traits/RangeX_raw_functional_traits_leaf_area_hypmac_recolored.csv")
 
-LA_hypmac_recolored <- read.csv("Data/RangeX_raw_functional_traits_leaf_area_hypmac_recolored.csv")
+LA_hypmac_recolored <- read.csv("Data/Data_functional_traits/RangeX_raw_functional_traits_leaf_area_hypmac_recolored.csv")
 
 
 
@@ -181,9 +181,9 @@ leaf_area_final <- leaf_area |>
 
 
 # save as csv
-# write.csv(leaf_area_final, file = "Data/RangeX_raw_functional_traits_leaf_area_all_final.csv")
+# write.csv(leaf_area_final, file = "Data/Data_functional_traits/RangeX_raw_functional_traits_leaf_area_all_final.csv")
 
-leaf_area_NOR <- read.csv("Data/RangeX_raw_functional_traits_leaf_area_all_final.csv")
+leaf_area_NOR <- read.csv("Data/Data_functional_traits/RangeX_raw_functional_traits_leaf_area_all_final.csv")
 
 
 
