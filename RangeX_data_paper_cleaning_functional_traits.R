@@ -13,10 +13,10 @@
 
 # Questions ---------------------------------------------------------------
 
-# 1. delete rows with NAs, so that data set is only 600 plants not 1800?
+# 1. delete rows with NAs, so that data set is only 600 plants not 1800? --> did it
 # 2. delete outliers? How to define them
 # 3. why does functional_traits_NOR_23 has 598 rows and when I delete 
-# rows with na in date of functional_leaf_traits_NOR_23 it has 568?
+# rows with na in date of functional_leaf_traits_NOR_23 it has 568? --> fixed mismatches
 # 4. GCW2731 hi luzmul warm bare 5e g2 is not from this plot --> check 
 # 5. GHZ1788 (warm bare) and GAV1827 (ambi bare): hypmac hi 2e h5 twice --> check 
 # 6. GID4537 hi 2f i6 leuvul warm bare --> was corrected to ambi --> check 
@@ -25,13 +25,13 @@
 #   GAT6555 hi sildio ambi bare 2f c8
 # 8. hypmac: some have small extra leaves --> reweigh + recolor?
 # 9. hypmac: what if part of stem is not cut?
-# 10. make folder without overlapping scans for OSF? --> do leaf area again?
+# 10. make folder without overlapping scans for OSF? --> do leaf area again? --> did it
 
 # load packages -----------------------------------------------------------
 
-library(tidyverse)
 library(conflicted)
 conflict_prefer_all("dplyr", quiet = TRUE)
+library(tidyverse)
 
 # load data 2023 functional traits  ---------------------------------------------------------------
 functional_traits <- read.csv2("Data/Data_functional_traits/RangeX_raw_functional_traits_2023.csv")
@@ -227,11 +227,26 @@ functional_traits_NOR <- functional_traits_NOR |>
     TRUE ~ position_ID_original  # Keep the rest unchanged
   ))
 
-# new: GAV1827 hypmac hi 2e h5 is actually hi 2f e8, veg height 16
+# 9 new: GAV1827 hypmac hi 2e h5 is actually hi 2f e8, veg height 16
 functional_traits_NOR <- functional_traits_NOR |> 
   mutate(plot_ID_original = case_when(ID == "GAV1827" ~ "f", TRUE ~ plot_ID_original)) |> 
   mutate(position_ID_original = case_when(ID == "GAV1827" ~ "e8", TRUE ~ position_ID_original)) |> 
   mutate(veg_height = case_when(ID == "GAV1827" ~ 16, TRUE ~ veg_height))
+
+# 18 new: GID4537 leuvul hi 2f i6 is actually hi 2e i6, veg height 5,
+# rep height 45
+functional_traits_NOR <- functional_traits_NOR |> 
+  mutate(plot_ID_original = case_when(ID == "GID4537" ~ "e", TRUE ~ plot_ID_original)) |> 
+  mutate(veg_height = case_when(ID == "GID4537" ~ 5, TRUE ~ veg_height)) |> 
+  mutate(repr_height = case_when(ID == "GID4537" ~ 45, TRUE ~ repr_height))
+
+# 11 new: FYP9768 sildio hi 2f c8 is actually hi 2e i4 
+# no veg height on data sheet
+functional_traits_NOR <- functional_traits_NOR |> 
+  mutate(position_ID_original = case_when(ID == "FYP9768" ~ "i4", TRUE ~ position_ID_original)) |> 
+  mutate(plot_ID_original = case_when(ID == "FYP9768" ~ "e", TRUE ~ plot_ID_original)) |> 
+  mutate(veg_height = case_when(ID == "FYP9768" ~ NA, TRUE ~ veg_height))
+
 
 # 2-18: hi 2e warm
 functional_traits_NOR <- functional_traits_NOR |> 
@@ -278,6 +293,7 @@ functional_traits_NOR <- functional_traits_NOR |>
 # 23: GCW2731 hi luzmul warm bare 5e g2 is not from this plot
 # see comment as well
 # check if there is a luzmul missing somewhere
+# 10 e has two tripra but no luzmul
 # delete for now 
 functional_traits_NOR <- functional_traits_NOR |> 
   filter(ID != "GCW2731")
@@ -295,7 +311,6 @@ functional_traits_NOR <- functional_traits_NOR |>
     site == "hi" & treat_warming == "ambi" & treat_competition == "vege" & species == "cennig" & block_ID_original == "10" & plot_ID_original == "b" & ID == "GMI6448" ~ "c4",
     TRUE ~ position_ID_original  # Keep the rest unchanged
   ))
-
 
 # 26: lo pimsax ambi bare 3b h9 (not vege)
 functional_traits_NOR <- functional_traits_NOR |> 
@@ -335,6 +350,13 @@ functional_traits_NOR <- functional_traits_NOR |>
 
 # 597 samples
 
+
+# more fixing of mistakes after control plotting --------------------------
+
+# GMJ6176 cyncri hi, 5b, f3: dry mass = 0.02398
+functional_traits_NOR <- functional_traits_NOR |> 
+  mutate(dry_mass = case_when(ID == "GMJ6176" ~ 0.02398, TRUE ~ dry_mass))
+
 # Import metadata ---------------------------------------------------------
 metadata <- read.csv2("Data/RangeX_Metadata.csv")
 head(metadata)
@@ -359,8 +381,8 @@ functional_traits_NOR_23 <- left_join(metadata_NOR, functional_traits_NOR,
 
 head(functional_traits_NOR_23)
 
-sum(is.na(functional_traits_NOR_23$date)) # 1206
-length(functional_traits_NOR_23$date) # 1803
+sum(is.na(functional_traits_NOR_23$date)) # 1203
+length(functional_traits_NOR_23$date) # 1800
 
 # this means already here 30 samples are missing?
 # why?
@@ -378,14 +400,14 @@ sum(!joined_data$matched) # 30 didn't match --> fixed above # now 0
 
 # something must be wrong with the position of the plants
 # hopefully typos
-unmatched_rows_2 <- joined_data %>%
-  filter(!matched)
+unmatched_rows_2 <- joined_data |> 
+  filter(!matched) # now 0
 
 # 30 samples FALSE
 # need to fix these before matching with metadata
 # in "fix what can be fixed: typos in position or treat"
 # everything fixed and 1 row deleted
-# but why is it 1803 now
+# but why is it 1803
 
 
 # check for duplicates in unique_plant_ID ---------------------------------
@@ -394,17 +416,18 @@ duplicates_2 <- functional_traits_NOR_23 |>
   filter(n() > 1)
 
 # Display duplicates
-duplicates_2 # 6
+duplicates_2 # 6, now 0
 
 # GHZ1788 (warm bare) and GAV1827 (ambi bare): hypmac hi 2e h5 twice
 # but GAV1827 was corrected wrong first
 # GHZ1788 correct on envelope
 # GAV1827: is probably 2f ambi, bare, veg height 16 (checked on data sheet and changed above)
 
-# GID4537 hi 2f i6 leuvul warm bare --> was corrected to ambi
-# GAM4208 hi 2f i6 leuvul ambi bare
+# GID4537 hi 2f i6 leuvul warm bare --> was corrected to ambi but that's wrong
+# it's actually hi 2e i6 warm bare veg h = 5, rep = 45
+# GAM4208 hi 2f i6 leuvul ambi bare is correct
 
-# FYP9768 hi sildio warm bare 2f c8 --> was corrected to ambi
+# FYP9768 hi sildio warm bare 2f c8 --> was wrong corrected to ambi
 # GAT6555 hi sildio ambi bare 2f c8
 # 
 
@@ -466,8 +489,8 @@ functional_leaf_traits_NOR_23_clean <- functional_leaf_traits_NOR_23 |>
   filter(!is.na(date_collected))
 length(functional_leaf_traits_NOR_23_clean$date_collected)# 597
 
-sum(is.na(functional_leaf_traits_NOR_23$date_collected)) # 1206
-
+sum(is.na(functional_leaf_traits_NOR_23$date_collected)) # 1206 now 1203
+# that's fine, 1203 na + 597 with date = 1800
 str(functional_leaf_traits_NOR_23_clean)
 
 
