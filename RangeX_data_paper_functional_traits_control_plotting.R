@@ -1,26 +1,27 @@
 
 # RangeX functional traits data exploration & control plotting ----------------------------------
 
-## Data used: RangeX_raw_functional_traits_2023.csv,
-##            RangeX_raw_functional_traits_leaf_area_NOR_2023.csv, ##            RangeX_Metadata.csv 
+## Data used: RangeX_raw_functional_traits_NOR_2023.csv,
+##            RangeX_raw_functional_traits_leaf_area_NOR_2023.csv, 
+##            RangeX_Metadata.csv 
 ## Date:      26.12.2024
 ## Author:    Nadine Arzt
 ## Purpose:   Control plotting of data
 
 
 # Check these! ------------------------------------------------------------
-# GMJ6176: cyncri: drymass: 77.60 but wet mass: 77.60
-# FVX6947: cyncri: leaf_thickness: 0.09933333
-# FMX1959: plalan: wetmass and drymass
-# FNW0998: luzmul: wetmass: 326.50 but dry mass: 7.88
-# FNN3644: luzmul: wetmass: 310.50 but dry mass: 7.99
-# FOI4279: luzmul: wetmass: 205.10 but dry mass: 5.10
+# GMJ6176: cyncri: drymass: 77.60 but wet mass: 77.60 --> dry = 0.02398 --> fixed
+# FVX6947: cyncri: leaf_thickness: 0.09933333 --> correct on envelope 
+# FMX1959: plalan: wetmass and drymass --> correct on envelope 
+# FNW0998: luzmul: wetmass: 326.50 but dry mass: 7.88 --> correct on envelope 
+# FNN3644: luzmul: wetmass: 310.50 but dry mass: 7.99 --> correct on envelope 
+# FOI4279: luzmul: wetmass: 205.10 but dry mass: 5.10 --> correct on envelope 
 # FVN2828: tripra: LDMC: 20.89034
-# FVN2828: tripra: low dry mass: 10.23 but high wet mass: 489.70
+# FVN2828: tripra: low dry mass: 10.23 but high wet mass: 489.70 --> correct on envelope 
 # GGL5838: sildio: high wet mass: 953.00 but normal dry mass: 15.21
 # sucpra: NOR.lo.ambi.vege.wf.01.21: dry mass = 468.18
 # sucpra: NOR.lo.ambi.vege.wf.02.09: dry mass = 421.72
-# FSF6631: hypmac: only drymass, no wet mass --> delete?
+# FSF6631: hypmac: only drymass, no wet mass, no thickness --> delete?
 
 
 
