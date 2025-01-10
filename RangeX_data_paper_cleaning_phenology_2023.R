@@ -6,7 +6,7 @@
 ##            RangeX_Metadata.csv 
 ## Date:      09.01.2025
 ## Author:    Nadine Arzt
-## Purpose:   Cleaning of the complete raw data files of phenology
+## Purpose:   Cleaning of the complete raw data files of phenology 2023
 
 
 # load library ------------------------------------------------------------
