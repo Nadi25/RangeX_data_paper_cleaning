@@ -12,11 +12,6 @@
 
 # load packages -----------------------------------------------------------
 library(tidyverse) ## if you use this you dont need dplyr and stringr, tidyr
-# library(dplyr)
-# library(tidyr) # data manipulation
-# library(ggplot2) # test-plotting
-# library(stringr) # working with regex
-# library(ggstatsplot)
 
 # load data 2023 traits low ---------------------------------------------------------------
 traits_low_23 <- read.csv2("Data/Data_demographic_traits/RangeX_raw_traits_low_2023.csv")
