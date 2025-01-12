@@ -173,9 +173,13 @@ rangex_phenology_clean <- rangex_phenology_clean |>
 
 # Fix Centaurea problem ---------------------------------------------------
 
-# Import demographic traits low and high 23 -------------------------------
+# Source demographic traits low and high 23 -------------------------------
+source("RangeX_data_paper_cleaning_demographic_traits_23.R")
 
-demographic_traits_23 <- read.csv("Data/Data_demographic_traits/RangeX_clean_traits_2023.csv")
+demographic_traits_23 <- traits_2023
+
+
+# demographic_traits_23 <- read.csv("Data/Data_demographic_traits/RangeX_clean_traits_2023.csv")
 
 # Merge phenology with demographic traits ---------------------------------
 # rename unique_plant_ID to match
@@ -187,8 +191,49 @@ rangex_phenology_demo_traits <- left_join(rangex_phenology_clean, demographic_tr
 
 
 
+# Calculate number of flowers per stem ------------------------------------
+
+rangex_phenology_demo_traits <- rangex_phenology_demo_traits |> 
+  mutate(number_flowers_per_stem = number_flowers.y / no_rep_stems)
 
 
+
+# Replace number_flowers with number_flowers_per_stem for cennig ----------
+
+## rename column number of flowers to old
+rangex_phenology_demo_traits <- rangex_phenology_demo_traits |> 
+  rename("number_flowers_old" = "number_flowers.x")
+
+## for cennig I want to have number_flowers_old (= no_stems) * number_flower_per_stem to get the actual number of flowers
+rangex_phenology_demo_traits <- rangex_phenology_demo_traits |> 
+  mutate(number_flowers.y = case_when( species == "cennig"  & number_flowers_old != 0 ~ number_flowers_per_stem*number_flowers_old,
+                                     # For all other cases, keep the original no flowers
+                                     .default = number_flowers_old
+  ))
+
+
+# keep only necessary columns for phenology ----------------------------
+dput(colnames(rangex_phenology_demo_traits))
+rangex_phenology_clean <- rangex_phenology_demo_traits |>
+  select(unique_plant_ID, species, date.x, recorder,
+         number_buds, number_flowers.y,
+         number_infructescences, seeds_collected, comment)
+
+
+
+# rename columns ----------------------------------------------------------
+rangex_phenology_clean <- rangex_phenology_clean |> 
+  rename("date_measurement" = "date.x",
+         "collector" = "recorder",
+         "number_flowers" =  "number_flowers.y")
+
+
+
+# Pivot longer the data ---------------------------------------------------
+rangex_phenology_clean_long <- rangex_phenology_clean |> 
+  pivot_longer(cols = c(number_buds, number_flowers, number_infructescences, seeds_collected),
+               names_to = "phenology_stage",
+               values_to = "value")
 
 
 
