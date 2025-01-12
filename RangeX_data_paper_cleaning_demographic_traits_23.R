@@ -11,13 +11,12 @@
 ## Purpose:   Transform the raw data in the format we agreed on
 
 # load packages -----------------------------------------------------------
-
-library(dplyr)
-library(tidyr) # data manipulation
-library(ggplot2) # test-plotting
-library(stringr) # working with regex
-library("tidyverse") ## if you use this you dont need dplyr and stringr, tidyr
-library(ggstatsplot)
+library(tidyverse) ## if you use this you dont need dplyr and stringr, tidyr
+# library(dplyr)
+# library(tidyr) # data manipulation
+# library(ggplot2) # test-plotting
+# library(stringr) # working with regex
+# library(ggstatsplot)
 
 # load data 2023 traits low ---------------------------------------------------------------
 traits_low_23 <- read.csv2("Data/Data_demographic_traits/RangeX_raw_traits_low_2023.csv")
@@ -91,10 +90,10 @@ traits_low_23$number_leaves <- ifelse(traits_low_23$sampled_quarter == "yes",
                                       traits_low_23$no_leaves * 4, traits_low_23$no_leaves)
 
 traits_low_23$number_leaves
-View(traits_low_23)
-View(traits_low_23[, 1:66])  # Display the first 66 columns --> does not work
+# View(traits_low_23)
+# View(traits_low_23[, 1:66])  # Display the first 66 columns --> does not work
 
-utils::View(traits_low_23)
+# utils::View(traits_low_23)
 
 traits_low_23$no_flowers_col40
 
@@ -154,7 +153,7 @@ traits_low_23$number_flowers <- rowSums(traits_low_23[, c("no_flowers_col1", "no
                                                           "no_flowers_col32", "no_flowers_col33", "no_flowers_col34", "no_flowers_col35", 
                                                           "no_flowers_col36", "no_flowers_col37", "no_flowers_col38", "no_flowers_col39", "no_flowers_col40")], na.rm = TRUE)
 
-utils::View(traits_low_23)
+# utils::View(traits_low_23)
 traits_low_23$number_flowers
 
 dput(colnames(traits_low_23))
@@ -304,7 +303,7 @@ traits_high_23$number_flowers <- rowSums(traits_high_23[, c("no_flowers_col1", "
                                                             "no_flowers_col20", "no_flowers_col21", "no_flowers_col22", "no_flowers_col23", 
                                                             "no_flowers_col24", "no_flowers_col25", "no_flowers_col26")], na.rm = TRUE)
 
-utils::View(traits_high_23)
+# utils::View(traits_high_23)
 traits_high_23$number_flowers
 
 # delete columns with flower number ---------------------------------------
@@ -548,7 +547,7 @@ dput(colnames(yearly_demographic))
 #            row.names = FALSE)
 
 ## read cleaned data
-data_23 <- read.csv("RangeX_clean_traits_2023.csv")
+data_23 <- read.csv("Data/Data_demographic_traits/RangeX_clean_traits_2023.csv")
 
 
 
