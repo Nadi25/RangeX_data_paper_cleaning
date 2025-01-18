@@ -68,10 +68,22 @@ rangex_traits_NOR <- rbind(rangex_traits_2021, rangex_traits_2022, rangex_traits
 head(rangex_traits)
 
 
+
+# names to initials -------------------------------------------------------
+rangex_traits_NOR <- rangex_traits_NOR |>
+  mutate(collector = case_when(
+    collector %in% c("Dagmar") ~ "DE",
+    collector %in% c("Nadine") ~ "NA",
+    collector %in% c("Malo") ~ "MF", # Malo Le Fur
+    collector %in% c("Dagmar_Nadine_Lizzy") ~ "DE/NA/ED",
+    collector %in% c("DE, NA, MF") ~ "DE/NA/MF",
+    TRUE ~ collector
+  ))
+
+
 # save as csv for google drive yearly demographics -------------------------------------------------------------
 
-# write.csv(rangex_traits_NOR, "C:/Users/naart3294/OneDrive - University of Bergen/PhD_RangeX/R codes/RangeX_data_cleaning/Data_traits/RangeX_clean_yearly_size_2021_2022_2023_NOR.csv",
-#           row.names = FALSE)
+# write.csv(rangex_traits_NOR, "C:/Users/naart3294/OneDrive - University of Bergen/PhD_RangeX/R codes/RangeX_data_paper_cleaning/Data/Data_demographic_traits/RangeX_clean_yearly_size_2021_2022_2023_NOR.csv", row.names = FALSE)
 
 
 
