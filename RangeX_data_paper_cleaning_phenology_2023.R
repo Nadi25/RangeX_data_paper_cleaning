@@ -2,8 +2,10 @@
 
 # RangeX phenology 2023 data cleaning -------------------------------------
 
-## Data used: RangeX_raw_phenology_low_2023.xlsx, RangeX_raw_phenology_high_2023.xlsx
-##            RangeX_Metadata.csv 
+## Data used: RangeX_raw_phenology_low_2023.xlsx, 
+##            RangeX_raw_phenology_high_2023.xlsx,
+##            RangeX_Metadata.csv,
+##            RangeX_data_paper_cleaning_demographic_traits_23.R
 ## Date:      09.01.2025
 ## Author:    Nadine Arzt
 ## Purpose:   Cleaning of the complete raw data files of phenology 2023
@@ -237,6 +239,32 @@ rangex_phenology_clean_long <- rangex_phenology_clean |>
 
 
 
+# make names to initials --------------------------------------------------
+rangex_phenology_clean_long <- rangex_phenology_clean_long |>
+  mutate(collector = case_when(
+    collector %in% c("Dagmar") ~ "DE",
+    collector %in% c("Nadine") ~ "NA",
+    collector %in% c("Lucas") ~ "LP", # Lucas Parra
+    collector %in% c("Ingrid") ~ "IE", # Ingrid Espeland
+    collector %in% c("Malo") ~ "MF", # Malo Le Fur
+    collector %in% c("Aleksandra", "Ola") ~ "AP", # Aleksandra Posłuszny
+    collector %in% c("Julia Filetti") ~ "JF",
+    collector %in% c("Julia") ~ "JS", # Julia Schlick-Steiner
+    collector %in% c("Lizzy") ~ "ED", # Elizabeth Duke-Moe
+    collector %in% c("Nadine / Ingrid") ~ "NA/IE",
+    collector %in% c("Dagmar / Julia Filetti") ~ "DE/JF",
+    collector %in% c("Malo / Lucas") ~ "MF/LP",
+    collector %in% c("Dagmar / Lizzy") ~ "DE/ED",
+    collector %in% c("Ingrid / Aleksandra") ~ "IE/AP",
+    collector %in% c("Dagmar / Ingrid") ~ "DE/IE",
+    collector %in% c("Dagmar /Alexandra") ~ "DE/AP",
+      TRUE ~ collector
+    ))
+
+
+
+# save the clean data -----------------------------------------------------
+# write.csv(rangex_phenology_clean_long, file = "Data/RangeX_clean_phenology_NOR_2023.csv")
 
 
 
