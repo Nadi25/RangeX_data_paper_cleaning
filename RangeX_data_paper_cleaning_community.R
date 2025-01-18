@@ -20,6 +20,8 @@ library(purrr)
 library(readxl)
 library(janitor)
 
+# remotes::install_github("Between-the-Fjords/turfmapper")
+library(turfmapper)
 
 # things to fix -----------------------------------------------------------
 # it's Chinese style 2023-24
@@ -216,7 +218,6 @@ community_data_raw <- community_data_raw |>
   )
 
 
-
 # make column collector out of recorder and scribe
 community_data_raw$collector <- paste(community_data_raw$recorder, 
                                       community_data_raw$scribe,
@@ -262,25 +263,92 @@ rx_com_cov_21 <- left_join(com_cov_21, metadata_NOR_com,
                                   by = c("site", "block_id_original", 
                                          "plot_id_original"))
 
-
-
-
-
 # merge metadata with veg data 23 ---------------------------------------------------
 rx_com_cov_23 <- left_join(com_cov_23, metadata_NOR_com,
                                by = c("site", "block_id_original", 
                                       "plot_id_original"))
 
-
-
-
 # keep only relevant columns for OSF --------------------------------------
 
 rx_com_cov_raw_21 <- rx_com_cov_21 |> 
   select(unique_plot_id, date, species, total_cover,
-         recorder, scribe, added_focals) |> 
+         collector, added_focals) |> 
   rename("date_measurement" = "date",
          "cover" = "total_cover")
+
+# merge metadata with all years veg data ----------------------------------
+
+community_data_raw_NOR <- left_join(community_data_raw, metadata_NOR_com,
+                                    by = c("site", "block_id_original", 
+                                           "plot_id_original"))
+  
+
+
+# turfmapper --------------------------------------------------------------
+# lange tabelle mit jahr species cover subturf presence 
+community_data_raw_NOR_long <- community_data_raw_NOR |>
+  pivot_longer(
+    cols = "1":"16",
+    names_to = "subturf",
+    values_to = "cover"
+  ) |>
+  filter(cover != 0) # only want presences
+
+# set up subturf grid
+grid <- make_grid(ncol = 4)
+
+# plot NOR.hi.warm.vege.wf.01
+community_data_raw_NOR_long |>
+  mutate(subturf = as.numeric(subturf)) |> 
+  filter(unique_plot_id %in% c("NOR.hi.warm.vege.wf.01")) |> 
+  mutate(subturf = as.numeric(subturf)) |> 
+  mutate(cover = as.numeric(cover)) |> 
+  make_turf_plot(
+    data = _,
+    year = year, species = species, cover = cover, subturf = subturf,
+    site_id = site,
+    turf_id = unique_plot_id,
+    grid_long = grid
+  )
+
+
+
+# rx_com_cov_21_long <- rx_com_cov_21 |>
+#   pivot_longer(
+#     cols = "1":"16",
+#     names_to = "subturf",
+#     values_to = "cover"
+#   ) |>
+#   filter(cover != 0) # only want presences
+# 
+# # set up subturf grid
+# grid <- make_grid(ncol = 4)
+# 
+# # lange tabelle mit jahr species cover subturf preesence 
+# 
+# rx_com_cov_21_long |>
+#   mutate(subturf = as.numeric(subturf)) |> 
+#   filter(unique_plot_id %in% c("NOR.hi.warm.vege.wf.01")) |> 
+#   bind_rows(rx_com_cov_21_long |>
+#               mutate(subturf = as.numeric(subturf)) |> 
+#               filter(unique_plot_id %in% c("NOR.hi.warm.vege.wf.01")) |> 
+#               mutate(year = 2023)) |> 
+#   #mutate(year = if_else(unique_plot_id == "NOR.hi.warm.vege.wf.02", 2022, year)) |> 
+#   make_turf_plot(
+#     data = _,
+#     year = year, species = species, cover = cover, subturf = subturf,
+#     site_id = site,
+#     turf_id = unique_plot_id,
+#     grid_long = grid
+#   )
+# 
+# # make map to go through all of them
+
+
+
+
+
+
 
 
 
