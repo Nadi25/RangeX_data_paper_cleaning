@@ -22,6 +22,7 @@ library(janitor)
 
 # remotes::install_github("Between-the-Fjords/turfmapper")
 library(turfmapper)
+library(glue)
 
 # things to fix -----------------------------------------------------------
 # it's Chinese style 2023-24
@@ -314,16 +315,9 @@ community_data_NA <- community_data_raw_NOR |>
 sum(is.na(community_data_raw_NOR$unique_plot_id)) # 0
 
 
-# fix Chinese reading style of 2023 ---------------------------------------
-
-
-
-
-
-
 # turfmapper --------------------------------------------------------------
 # lange tabelle mit jahr species cover subturf presence 
-
+# make extra column "reproductive_capacity" with f in cover
 community_data_raw_NOR_long <- community_data_raw_NOR |> 
   pivot_longer(
     cols = "1":"16",
@@ -336,23 +330,52 @@ community_data_raw_NOR_long <- community_data_raw_NOR |>
   mutate(cover = as.numeric(cover)) 
   
 
-community_data_raw_NOR_long <- community_data_raw_NOR |>
-  pivot_longer(
-    cols = "1":"16",
-    names_to = "subturf",
-    values_to = "cover") |>
-  mutate(subturf = as.numeric(subturf)) |> 
-  mutate(cover = as.numeric(cover)) |> 
-  filter(cover != 0)  # only want presences  
-  # mutate(reproductive_capacity = if_else(str_detect(cover, "f"), 1, 0),
-  #         cover = str_remove(cover, "f")) 
-  # mutate(subturf = as.numeric(subturf)) |> 
-  # mutate(cover = as.numeric(cover)) # make cover numeric
+# fix Chinese reading style of 2023 ---------------------------------------
+# extra table with translation
+match_21_23_subplots <- data.frame(
+  subturf_2021 = 1:16,
+  subturf_2023 = c(1, 5, 9, 13,   # Column 1
+                   2, 6, 10, 14,  # Column 2
+                   3, 7, 11, 15,  # Column 3
+                   4, 8, 12, 16)  # Column 4
+)
+
+# Filter the 2023 data
+community_data_raw_23 <- community_data_raw_NOR_long |> 
+  filter(year == "2023")
+
+# Join the mapping table to align the 2023 subturf with the 2021 layout
+community_data_raw_23 <- community_data_raw_23 |> 
+  left_join(match_21_23_subplots, by = c("subturf" = "subturf_2023")) |> 
+  mutate(
+    subturf = subturf_2021 # Replace 2023 subturf with 2021 equivalent
+  ) |> 
+  select(-subturf_2021) # Drop unnecessary columns
+
+# Combine updated 2023 data with the rest of the dataset
+community_data_raw_NOR_long <- community_data_raw_NOR_long |> 
+  filter(year != "2023") |> # Exclude the old 2023 data
+  bind_rows(community_data_raw_23) # Add the updated 2023 data
+
+
+# community_data_raw_NOR_long <- community_data_raw_NOR |>
+#   pivot_longer(
+#     cols = "1":"16",
+#     names_to = "subturf",
+#     values_to = "cover") |>
+#   mutate(subturf = as.numeric(subturf)) |> 
+#   mutate(cover = as.numeric(cover)) |> 
+#   filter(cover != 0)  # only want presences  
+#   # mutate(reproductive_capacity = if_else(str_detect(cover, "f"), 1, 0),
+#   #         cover = str_remove(cover, "f")) 
+#   # mutate(subturf = as.numeric(subturf)) |> 
+#   # mutate(cover = as.numeric(cover)) # make cover numeric
 
 # set up subturf grid
 grid <- make_grid(ncol = 4)
 
-# plot NOR.hi.warm.vege.wf.01
+
+# test with plot NOR.hi.warm.vege.wf.01 -----------------------------------
 community_data_raw_NOR_long |>
   mutate(subturf = as.numeric(subturf)) |> 
   filter(unique_plot_id %in% c("NOR.hi.warm.vege.wf.01")) |> 
@@ -385,26 +408,62 @@ community_data_raw_NOR_long |>
 
 # loops through all plots -------------------------------------------------
 
-x <- CommunitySubplot %>%
-  mutate(subplot = as.numeric(subplot),
-         year_recorder = paste(year, recorder, sep = "_")) %>%
-  select(-year) %>%
-  arrange(destSiteID, destPlotID, turfID) %>%
-  group_by(destSiteID, destPlotID, turfID) %>%
-  nest() %>%
-  {map2(
-    .x = .$data,
-    .y = glue::glue("Site {.$destSiteID}: plot {.$destPlotID}: turf {.$turfID}"),
-    .f = ~make_turf_plot(
-      data = .x,
-      year = year_recorder,
-      species = species,
-      cover = cover,
-      subturf = subplot,
-      title = glue::glue(.y),
-      grid_long = grid)
-  )} %>%
-  walk(print)
+# Open a single PDF document
+pdf("Data/Data_community/Turfmapper_21_23_all_plots_comparison.pdf", width = 8, height = 12)
+
+# Group, nest, and prepare data for plotting
+nested_data <- community_data_raw_NOR_long |> 
+  group_by(site, plot_id_original, unique_plot_id) |> # Group by plot-level identifiers only
+  nest() |> 
+  mutate(
+    plot_title = glue("Plot {plot_id_original}: Turf {unique_plot_id} - Comparison 2021 vs 2023")
+  )
+
+# Loop through the plots and add them to the PDF
+walk2(
+  .x = nested_data$data,
+  .y = nested_data$plot_title,
+  .f = ~{
+    # Ensure .x contains data for both years for the plot comparison
+    if (length(unique(.x$year)) > 1) {
+      plot <- make_turf_plot(
+        data = .x,
+        year = .x$year,          # Pass the year column from the nested data
+        species = .x$species,    # Pass the species column
+        cover = .x$cover,        # Pass the cover column
+        subturf = .x$subturf,    # Pass the subturf column
+        title = .y,              # Use the title from glue
+        grid_long = grid         # Assuming grid is predefined
+      )
+      print(plot) # Add the plot to the PDF
+    }
+  }
+)
+
+# Close the PDF 
+dev.off()
+
+
+# x <- CommunitySubplot %>%
+#   mutate(subplot = as.numeric(subplot),
+#          year_recorder = paste(year, recorder, sep = "_")) %>%
+#   select(-year) %>%
+#   arrange(destSiteID, destPlotID, turfID) %>%
+#   group_by(destSiteID, destPlotID, turfID) %>%
+#   nest() %>%
+#   {map2(
+#     .x = .$data,
+#     .y = glue::glue("Site {.$destSiteID}: plot {.$destPlotID}: turf {.$turfID}"),
+#     .f = ~make_turf_plot(
+#       data = .x,
+#       year = year_recorder,
+#       species = species,
+#       cover = cover,
+#       subturf = subplot,
+#       title = glue::glue(.y),
+#       grid_long = grid)
+#   )} %>%
+#   walk(print)
 
 
 
