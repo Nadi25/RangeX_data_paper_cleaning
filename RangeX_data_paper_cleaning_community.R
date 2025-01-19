@@ -65,6 +65,43 @@ metadata_NOR_com <- metadata_NOR_com |>
   distinct(unique_plot_id, .keep_all = TRUE)
 # 60 plots
 
+
+# add metadata for c and d control plots ----------------------------------
+missing_plots <- expand.grid(
+  site = "hi",
+  block_id_original = as.character(1:10), # Convert to character
+  plot_id_original = c("c", "d"),
+  treat_competition = "vege",
+  added_focals = "nf"
+) |> 
+  # Assign treat_warming based on plot_id_original
+  mutate(
+    treat_warming = if_else(plot_id_original == "c", "warm", "ambi"), 
+    block_id = as.integer(block_id_original), # Ensure block_id matches block_id_original
+    unique_plot_id = paste0(
+      "NOR.", site, ".", treat_warming, ".", treat_competition, ".", added_focals, ".",
+      sprintf("%02d", block_id) # Format block_id as two digits
+    )
+  )
+
+names(missing_plots)
+
+# correct order
+missing_plots <- missing_plots |> 
+  select(site, block_id_original, plot_id_original, treat_warming, 
+         treat_competition, added_focals, block_id, unique_plot_id)
+
+
+# join with metadata
+metadata_NOR_com <- bind_rows(metadata_NOR_com, missing_plots)
+
+
+# we don't need bare plots here
+metadata_NOR_com <- metadata_NOR_com |> 
+  filter(treat_competition != "bare")
+
+
+
 # import community metadata -----------------------------------------------
 files <- dir(path = "Data/Data_community/", pattern = "\\.xlsx$", full.names = TRUE, recursive = TRUE)
 
@@ -173,6 +210,7 @@ community_data_raw <- community_data_raw |>
 #                   height_4, height_5)), as.numeric())
 
 
+
 # names to initials -------------------------------------------------------
 unique(community_data_raw$recorder)
 unique(community_data_raw$scribe)
@@ -249,35 +287,67 @@ community_data_raw_NOR <- left_join(community_data_raw, metadata_NOR_com,
   
 
 
-# delete rows with cover per subplot in species column --------------------
+# delete obviously wrong species names ----------------------------------------------
+species <- sort(unique(community_data_raw_NOR$species))
+species
+
 community_data_raw_NOR <- community_data_raw_NOR |> 
   filter(species != "Cover per subplot") |> 
+  filter(species != "Cover per plot") |> 
   filter(species != "Tomst") |> 
   filter(species != "tomst")
 
 
 # dealing with f = fertile in 2023 data -------------------------------------------
-community_data_raw_NOR_long <- community_data_raw_NOR_long |> 
-  mutate(reproductive_capacity = if_else(str_detect(cover, "f"), 1, 0),
-    cover = str_remove(cover, "f") # Optional: Remove the "f" from `cover`
-  )
+# make new column
+# community_data_raw_NOR <- community_data_raw_NOR |> 
+#   mutate(reproductive_capacity = if_else(str_detect(cover, "f"), 1, 0),
+#     cover = str_remove(cover, "f") # Optional: Remove the "f" from `cover`
+#   )
 
 
-# make cover numeric ------------------------------------------------------
+# check NAs in unique_plot_id ---------------------------------------------
+
+community_data_NA <- community_data_raw_NOR |> 
+  filter(is.na(unique_plot_id))
+
+sum(is.na(community_data_raw_NOR$unique_plot_id)) # 0
+
+
+# fix Chinese reading style of 2023 ---------------------------------------
+
+
 
 
 
 
 # turfmapper --------------------------------------------------------------
 # lange tabelle mit jahr species cover subturf presence 
+
+community_data_raw_NOR_long <- community_data_raw_NOR |> 
+  pivot_longer(
+    cols = "1":"16",
+    names_to = "subturf",
+    values_to = "cover") |>
+  filter(cover != 0) |> 
+  mutate(reproductive_capacity = if_else(str_detect(cover, "f"), 1, 0),
+         cover = str_remove(cover, "f")) |> 
+  mutate(subturf = as.numeric(subturf)) |> 
+  mutate(cover = as.numeric(cover)) 
+  
+
 community_data_raw_NOR_long <- community_data_raw_NOR |>
   pivot_longer(
     cols = "1":"16",
     names_to = "subturf",
     values_to = "cover") |>
-  filter(cover != 0) |> # only want presences
   mutate(subturf = as.numeric(subturf)) |> 
-  mutate(cover = as.numeric(cover))
+  mutate(cover = as.numeric(cover)) |> 
+  filter(cover != 0)  # only want presences  
+  # mutate(reproductive_capacity = if_else(str_detect(cover, "f"), 1, 0),
+  #         cover = str_remove(cover, "f")) 
+  # mutate(subturf = as.numeric(subturf)) |> 
+  # mutate(cover = as.numeric(cover)) # make cover numeric
 
 # set up subturf grid
 grid <- make_grid(ncol = 4)
@@ -297,7 +367,7 @@ community_data_raw_NOR_long |>
   )
 
 
-# plot NOR.hi.warm.vege.wf.02
+# plot NOR.lo.ambi.vege.wf.01
 community_data_raw_NOR_long |>
   mutate(subturf = as.numeric(subturf)) |> 
   filter(unique_plot_id %in% c("NOR.hi.warm.vege.wf.02")) |> 
@@ -310,6 +380,40 @@ community_data_raw_NOR_long |>
     turf_id = unique_plot_id,
     grid_long = grid
   )
+
+
+
+# loops through all plots -------------------------------------------------
+
+x <- CommunitySubplot %>%
+  mutate(subplot = as.numeric(subplot),
+         year_recorder = paste(year, recorder, sep = "_")) %>%
+  select(-year) %>%
+  arrange(destSiteID, destPlotID, turfID) %>%
+  group_by(destSiteID, destPlotID, turfID) %>%
+  nest() %>%
+  {map2(
+    .x = .$data,
+    .y = glue::glue("Site {.$destSiteID}: plot {.$destPlotID}: turf {.$turfID}"),
+    .f = ~make_turf_plot(
+      data = .x,
+      year = year_recorder,
+      species = species,
+      cover = cover,
+      subturf = subplot,
+      title = glue::glue(.y),
+      grid_long = grid)
+  )} %>%
+  walk(print)
+
+
+
+
+
+
+
+
+
 
 
 # filter by 2021 and change <1 with 1 --------------------------------------------------------
