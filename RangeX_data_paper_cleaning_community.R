@@ -100,7 +100,7 @@ metadata_NOR_com <- bind_rows(metadata_NOR_com, missing_plots)
 # we don't need bare plots here
 metadata_NOR_com <- metadata_NOR_com |> 
   filter(treat_competition != "bare")
-
+# 50 plots now
 
 
 # import community metadata -----------------------------------------------
@@ -407,17 +407,20 @@ community_data_raw_NOR_long |>
 
 
 # loops through all plots -------------------------------------------------
-
 # Open a single PDF document
 pdf("Data/Data_community/Turfmapper_21_23_all_plots_comparison.pdf", width = 8, height = 12)
 
 # Group, nest, and prepare data for plotting
 nested_data <- community_data_raw_NOR_long |> 
+  # mutate(
+  #   year_collector = paste(year, collector, sep = "_") # Combine year and collector
+  # ) |> 
   group_by(site, plot_id_original, unique_plot_id) |> # Group by plot-level identifiers only
   nest() |> 
   mutate(
-    plot_title = glue("Plot {plot_id_original}: Turf {unique_plot_id} - Comparison 2021 vs 2023")
+    plot_title = glue("Site {site} : Turf {unique_plot_id} - Comparison 2021 vs 2023")
   )
+
 
 # Loop through the plots and add them to the PDF
 walk2(
@@ -428,20 +431,23 @@ walk2(
     if (length(unique(.x$year)) > 1) {
       plot <- make_turf_plot(
         data = .x,
-        year = .x$year,          # Pass the year column from the nested data
-        species = .x$species,    # Pass the species column
-        cover = .x$cover,        # Pass the cover column
-        subturf = .x$subturf,    # Pass the subturf column
-        title = .y,              # Use the title from glue
-        grid_long = grid         # Assuming grid is predefined
+        year = .x$year,  # Pass year_collector instead of just year
+        species = .x$species,     # Pass the species column
+        cover = .x$cover,         # Pass the cover column
+        subturf = .x$subturf,     # Pass the subturf column
+        title = .y,               # Use the title from glue
+        grid_long = grid          # Assuming grid is predefined
       )
       print(plot) # Add the plot to the PDF
     }
   }
 )
 
-# Close the PDF 
+# Close the PDF device
 dev.off()
+
+
+
 
 
 # x <- CommunitySubplot %>%
@@ -467,53 +473,55 @@ dev.off()
 
 
 
-
-
-
-
-
-
-
-
-# filter by 2021 and change <1 with 1 --------------------------------------------------------
-com_cov_21 <- community_data_raw |> 
-  filter(year == "2021") |> 
-  mutate(across(c(19:34), as.numeric)) |>  # not total cover
-  # mutate(total_cover = case_when(total_cover == "<1" ~ "1",
-  #                                TRUE ~ total_cover)) |> 
-  # mutate(across(c(35:36), as.numeric))
-  
-  # actually leave it as <1, CHE has that as well
-  
-  
-  # filter by 2023 --------------------------------------------------------
-com_cov_23 <- community_data_raw |> 
-  filter(year == "2023")
-
-
-
-# merge metadata with veg data 21 ---------------------------------------------------
-rx_com_cov_21 <- left_join(com_cov_21, metadata_NOR_com,
-                           by = c("site", "block_id_original", 
-                                  "plot_id_original"))
-
-# merge metadata with veg data 23 ---------------------------------------------------
-rx_com_cov_23 <- left_join(com_cov_23, metadata_NOR_com,
-                           by = c("site", "block_id_original", 
-                                  "plot_id_original"))
-
 # keep only relevant columns for OSF --------------------------------------
-
-rx_com_cov_raw_21 <- rx_com_cov_21 |> 
+community_data_clean_NOR <- community_data_raw_NOR |> 
   select(unique_plot_id, date, species, total_cover,
-         collector, added_focals) |> 
+         collector, added_focals)|> 
   rename("date_measurement" = "date",
          "cover" = "total_cover")
 
 
+# there is a lot of plots where it's more then one day
+# 
+
+# fix date ----------------------------------------------------------------
+# these need fixing
+# 16.08.2023 - 17.08.2023
+# 17.08.23 - 18.08.23
+# 26.07.23/14.08.23
+# 14.08./16.08.23
+# 22.08./23.08.23
+# 18.08./19.08.23
+# 22.08/23.08.23
+# 21.08/22.08.23
+# 23.08./24.08.23
+# 24.08./28.08.23
+# 23.07./25.07./26.07.23
+# 28.08./29.08.23
+# 29.08./30.08.23
+# 4.8./9.8. 23
+# 3.8./4.8.23
 
 
+community_data_clean_NOR <- community_data_clean_NOR |> 
+  mutate(date_measurement = as.character(date_measurement)) |> 
+  mutate(date_measurement = case_when(
+    date_measurement ==  "16.08.2023 - 17.08.2023" ~ "17.08.2023",
+    date_measurement ==  "17.08.23 - 18.08.23" ~ "18.08.2023",
+    date_measurement ==  "16.08.2023 - 17.08.2023" ~ "17.08.2023",
+    date_measurement ==  "26.07.23/14.08.2" ~ "14.08.2023",
+    date_measurement ==  "14.08./16.08.23" ~ "16.08.2023",
+    date_measurement ==  "22.08./23.08.23" ~ "23.08.2023",
+    date_measurement ==  "21.08/22.08.23" ~ "22.08.2023",
+    date_measurement ==  "23.08./24.08.23" ~ "24.08.2023",
+    date_measurement ==  "24.08./28.08.23" ~ "28.08.2023",
+    date_measurement ==  "23.07./25.07./26.07.23" ~ "26.07.2023",
+    date_measurement ==  "28.08./29.08.23" ~ "29.08.2023",
+    date_measurement ==  "29.08./30.08.23" ~ "30.08.2023",
+    date_measurement ==  "4.8./9.8. 23" ~ "09.08.2023",
+    date_measurement ==  "3.8./4.8.23" ~ "04.08.2023",
+    TRUE ~ date_measurement
+  )) |> 
+  mutate(date_measurement = as.Date(date_measurement))
 
-
-
-
+unique(community_data_clean_NOR$date_measurement)
