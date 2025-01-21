@@ -36,71 +36,20 @@ library(glue)
 
 
 # import general metadata file -------------------------------------------------
-metadata <- read.csv2("Data/RangeX_Metadata.csv")
-head(metadata)
-colnames(metadata)
 
-## clean column names
-metadata <- clean_names(metadata)
+metadata_plot <- read.csv("Data/RangeX_metadata_plot_NOR.csv", header = TRUE)
 
-## filter only NOR
-metadata_NOR <- metadata |> 
-  dplyr::filter(grepl('NOR', region))
-head(metadata_NOR)
-str(metadata_NOR)
-
-metadata_NOR <- metadata_NOR |> 
-  mutate(across(block_id_original, as.character))
-
-metadata_NOR_com <- metadata_NOR |> 
-  select(site, block_id_original, plot_id_original, treat_warming, 
-         treat_competition, added_focals, block_id,
-         unique_plot_id)
-
-# filter out duplicates
-duplicates <- metadata_NOR_com[duplicated(metadata_NOR_com$unique_plot_id), ]
-duplicates
-
-# keep only unique rows
-metadata_NOR_com <- metadata_NOR_com |> 
-  distinct(unique_plot_id, .keep_all = TRUE)
-# 60 plots
-
-
-# add metadata for c and d control plots ----------------------------------
-missing_plots <- expand.grid(
-  site = "hi",
-  block_id_original = as.character(1:10), # Convert to character
-  plot_id_original = c("c", "d"),
-  treat_competition = "vege",
-  added_focals = "nf"
-) |> 
-  # Assign treat_warming based on plot_id_original
-  mutate(
-    treat_warming = if_else(plot_id_original == "c", "warm", "ambi"), 
-    block_id = as.integer(block_id_original), # Ensure block_id matches block_id_original
-    unique_plot_id = paste0(
-      "NOR.", site, ".", treat_warming, ".", treat_competition, ".", added_focals, ".",
-      sprintf("%02d", block_id) # Format block_id as two digits
-    )
-  )
-
-names(missing_plots)
-
-# correct order
-missing_plots <- missing_plots |> 
-  select(site, block_id_original, plot_id_original, treat_warming, 
+metadata_plot <- metadata_plot |> 
+  select(region, site, block_id_original, plot_id_original, treat_warming, 
          treat_competition, added_focals, block_id, unique_plot_id)
 
-
-# join with metadata
-metadata_NOR_com <- bind_rows(metadata_NOR_com, missing_plots)
-
-
 # we don't need bare plots here
-metadata_NOR_com <- metadata_NOR_com |> 
+metadata_NOR_com <- metadata_plot |> 
   filter(treat_competition != "bare")
 # 50 plots now
+
+metadata_NOR_com <- metadata_NOR_com |> 
+  mutate(block_id_original = as.character(block_id_original))
 
 
 # import community metadata -----------------------------------------------
@@ -204,12 +153,6 @@ community_data_raw <- community_data |>
 community_data_raw <- community_data_raw |> 
   mutate_at(vars(19:36),
             ~replace(., is.na(.), 0))
-
-
-# mutate(across(c(`total cover (%)`, `bare ground (%)`, `litter (%)`,
-#                   `cryptogams (%)`, height_1, height_2, height_3,
-#                   height_4, height_5)), as.numeric())
-
 
 
 # names to initials -------------------------------------------------------
@@ -525,3 +468,16 @@ community_data_clean_NOR <- community_data_clean_NOR |>
   mutate(date_measurement = as.Date(date_measurement))
 
 unique(community_data_clean_NOR$date_measurement)
+
+# cover should stay character because of <1 
+# or should we change <1 to 1? or 0.1?
+
+
+
+
+
+
+
+
+
+
