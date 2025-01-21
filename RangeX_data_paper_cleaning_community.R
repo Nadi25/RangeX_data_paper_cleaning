@@ -24,11 +24,13 @@ library(janitor)
 library(turfmapper)
 library(glue)
 
+
 # things to fix -----------------------------------------------------------
 # it's Chinese style 2023-24
 # change the subplots to match with 2021-22
 # who is cris?
 # who is JT?
+# wrong spelled species: Hypericum maculata
 
 # comments on sheets ----------------------------------------------------------------
 ## 21 high 2B: *Started using Agr cap (didn't in Blocks 3-6)...likely confused with Ant odo and Ple alp
@@ -471,6 +473,50 @@ unique(community_data_clean_NOR$date_measurement)
 
 # cover should stay character because of <1 
 # or should we change <1 to 1? or 0.1?
+
+
+
+# only focals column ------------------------------------------------------
+species <- sort(unique(community_data_clean_NOR$species))
+species
+
+# added focals is in general in the plot
+# only focals says if the cover is only based on planted individuals 
+# of a focal or if there are naturally occurring individuals taken into 
+# account as well
+
+# we distinguished between focal and wild in the field
+# focals are indicated with *
+# therefore all focal should be yes and all others NA
+
+# change column name to only_focals
+
+community_data_clean_NOR <- community_data_clean_NOR |> 
+  rename("only_focals" = "added_focals")
+
+community_data_clean_NOR <- community_data_clean_NOR |> 
+  mutate(only_focals = case_when(species == "Cynosurus cristatus*" ~ "yes",
+                                 species == "Centaurea nigra*" ~ "yes",
+                                 species == "Hypericum maculatum*" ~ "yes",
+                                 species == "Leucanthemum vulgaris*" ~ "yes",
+                                 species == "Luzula multiflora*" ~ "yes",
+                                 species == "Pimpinella saxifraga*" ~ "yes",
+                                 species == "Plantago lanceolata*" ~ "yes",
+                                 species == "Silene dioica*" ~ "yes",
+                                 species == "Succisa pratensis*" ~ "yes",
+                                 species == "Trifolium pratense*" ~ "yes",
+                                 TRUE ~ NA_character_))
+
+
+
+
+
+# check spelling of species names -----------------------------------------
+
+# https://bien.nceas.ucsb.edu/bien/tools/tnrs/tnrs-api/
+# https://github.com/ojalaquellueva/TNRSapi/blob/master/example_scripts/tnrs_api_example.R
+
+
 
 
 
