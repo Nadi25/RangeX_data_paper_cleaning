@@ -5,7 +5,7 @@
 ##            RangeX_raw_seeds_germination_uneven_NOR_2023.xlsx
 ## Date:      05.02.2025
 ## Author:    Nadine Arzt
-## Purpose:   
+## Purpose:   Clean seed data
 
 
 # comments ----------------------------------------------------------------
