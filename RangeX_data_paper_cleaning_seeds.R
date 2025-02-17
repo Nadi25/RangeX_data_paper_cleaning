@@ -13,7 +13,9 @@
 # weight_odd: and odd doesn't have number_infructescence
 # weight_odd: date in odd: not transfered correct
 # weight_odd: not sure what why we have 2 seeds_number_4
-#
+# weight_odd: FYG5543: e6 (and c4?)	3 of e6, 2 of other?
+
+
 
 
 # load library ------------------------------------------------------------
@@ -25,6 +27,7 @@ library(openxlsx)
 
 # import data -------------------------------------------------------------
 seed_weight_odd <- read.xlsx("Data/Data_seeds/RangeX_raw_seed_weight_odd_NOR_2023.xlsx", sheet = 1)
+seed_weight_odd <- read.csv2("Data/Data_seeds/RangeX_raw_seed_weight_odd_NOR_2023.csv")
 
 seed_weight_even <- read.xlsx("Data/Data_seeds/RangeX_raw_seed_weight_even_NOR_2023.xlsx", sheet = 1)
 
@@ -41,7 +44,7 @@ names(seed_weight_odd)
 names(seed_weight_even)
 
 
-# rename column names to match --------------------------------------------
+# rename column names in weight even to match odd --------------------------------------------
 
 # Rename columns automatically to make them unique
 colnames(seed_weight_odd) <- make.names(colnames(seed_weight_odd), unique = TRUE)
@@ -70,14 +73,13 @@ seed_weight_odd <- seed_weight_odd |>
 colnames(seed_weight_odd)
 # not sure what why we have 2 seeds_number_4
 
-# delete "seeds", "weight.2", "collected.2" because empty      
-seed_weight_odd <- seed_weight_odd %>%
+# delete "seeds_number_4", "weight_4", "collected_4"? not actually empty!    
+seed_weight_odd <- seed_weight_odd |> 
   select(where(~ any(!is.na(.))))
 
-
-seed_weight_even <- seed_weight_even |> 
-  rename("positionID_old" = "positionID",
-         "positionID" = "positionID_clean")
+# delete empty rows
+seed_weight_odd <- seed_weight_odd |> 
+  filter(if_any(everything(), ~ !is.na(.) & . != ""))
 
 
 
@@ -92,6 +94,62 @@ seed_weight_odd <- seed_weight_odd %>%
   )
 
 
+# fix date columns ----------------------------------------------------------------
+
+seed_weight_odd$date_agar_1
+
+
+# Define a function to clean and standardize dates
+clean_dates <- function(date_column) {
+  case_when(
+    str_detect(date_column, "^\\d{1,2}\\.\\d{1,2}\\.\\d{2,4}$") ~ dmy(date_column),  # Full format (DD.MM.YYYY)
+    str_detect(date_column, "^\\d{1,2}\\.\\d{1,2}$") ~ {  
+      # Extract day and month
+      parts <- str_split_fixed(date_column, "\\.", 2)
+      day <- as.numeric(parts[, 1])
+      month <- as.numeric(parts[, 2])
+      
+      # Assign correct year based on the month
+      date_final <- make_date(
+        year = ifelse(month >= 12, 2023, 2024),  # December and earlier → 2023, otherwise → 2024
+        month = month,
+        day = day
+      )
+      
+      date_final
+    },
+    date_column == "" ~ NA_Date_,  # Convert empty strings to NA
+    TRUE ~ as.Date(NA)  # Handle unexpected cases
+  )
+}
+
+# apply function to all date columns
+seed_weight_odd <- seed_weight_odd %>%
+  mutate(across(c(date_agar_1, date_agar_2, date_agar_3, 
+                  collected_1, collected_2, collected_3, collected_4), clean_dates))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# clean names weight_even -------------------------------------------------
+
+seed_weight_even <- seed_weight_even |> 
+  rename("positionID_old" = "positionID",
+         "positionID" = "positionID_clean")
 
 
 
