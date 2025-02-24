@@ -77,6 +77,18 @@ metadata_NOR <- metadata_NOR |>
          unique_plot_id, unique_plant_id)
 
 
+
+# rename id to ID ---------------------------------------------------------
+metadata_NOR <- metadata_NOR |> 
+  rename(block_ID_original = block_id_original,
+         plot_ID_original = plot_id_original,
+         position_ID_original = position_id_original,
+         block_ID = block_id,
+         position_ID = position_id,
+         unique_plot_ID = unique_plot_id,
+         unique_plant_ID = unique_plant_id)
+
+
 # save clean meta data file for focals ------------------------------------
 # write.csv(metadata_NOR, file =  "Data/RangeX_metadata_focal_NOR.csv")
 
@@ -85,40 +97,40 @@ metadata_NOR <- metadata_NOR |>
 # metadata file plot level ------------------------------------------------
 
 # have all 60 plots once
-unique(metadata_NOR$unique_plot_id)
+unique(metadata_NOR$unique_plot_ID)
 
 metadata_NOR_plot <- metadata_NOR |> 
-  distinct(unique_plot_id, .keep_all = TRUE)
+  distinct(unique_plot_ID, .keep_all = TRUE)
 
-unique(metadata_NOR_plot$unique_plot_id)
+unique(metadata_NOR_plot$unique_plot_ID)
 
 
 # add metadata for c and d control plots ----------------------------------
 control_plots <- expand.grid(
   region = "NOR",
   site = "hi",
-  block_id_original = as.character(1:10), # Convert to character
-  plot_id_original = c("c", "d"),
+  block_ID_original = as.character(1:10), # Convert to character
+  plot_ID_original = c("c", "d"),
   treat_competition = "vege",
   added_focals = "nf"
 ) |> 
-  # Assign treat_warming based on plot_id_original
+  # Assign treat_warming based on plot_ID_original
   mutate(
-    treat_warming = if_else(plot_id_original == "c", "warm", "ambi"), 
-    block_id = as.integer(block_id_original), # Ensure block_id matches block_id_original
-    unique_plot_id = paste0(
+    treat_warming = if_else(plot_ID_original == "c", "warm", "ambi"), 
+    block_ID = as.integer(block_ID_original), # Ensure block_ID matches block_ID_original
+    unique_plot_ID = paste0(
       region, site, ".", treat_warming, ".", treat_competition, ".", added_focals, ".",
-      sprintf("%02d", block_id) # Format block_id as two digits
+      sprintf("%02d", block_ID) # Format block_ID as two digits
     ),
-    block_id_original = as.integer(block_id_original)
+    block_ID_original = as.integer(block_ID_original)
   )
 
 names(control_plots)
 
 # correct order
 control_plots <- control_plots |> 
-  select(region, site, block_id_original, plot_id_original, treat_warming, 
-         treat_competition, added_focals, block_id, unique_plot_id)
+  select(region, site, block_ID_original, plot_ID_original, treat_warming, 
+         treat_competition, added_focals, block_ID, unique_plot_ID)
 
 
 # join with metadata
@@ -129,8 +141,8 @@ metadata_NOR_plot_clean <- bind_rows(metadata_NOR_plot, control_plots)
 # filter only needed columns ----------------------------------------------
 
 metadata_NOR_plot_clean <- metadata_NOR_plot_clean |> 
-  select(region, site, block_id_original, plot_id_original, treat_warming, 
-         treat_competition, added_focals, block_id, unique_plot_id)
+  select(region, site, block_ID_original, plot_ID_original, treat_warming, 
+         treat_competition, added_focals, block_ID, unique_plot_ID)
 
 
 
@@ -138,8 +150,8 @@ metadata_NOR_plot_clean <- metadata_NOR_plot_clean |>
 
 metadata_NOR_plot_clean <- metadata_NOR_plot_clean |> 
   arrange(site,
-          block_id_original,
-          match(plot_id_original, c("a", "b", "c", "d", "e", "f")) 
+          block_ID_original,
+          match(plot_ID_original, c("a", "b", "c", "d", "e", "f")) 
     )
 
 
