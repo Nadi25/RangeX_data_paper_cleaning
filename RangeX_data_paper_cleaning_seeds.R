@@ -22,7 +22,11 @@
 # seed_weight: calculated the mean of all collected infructescences per plant to get seed_weight
 # no_seeds: calculated the mean of all collected infructescences per plant to get no_seeds
 
-# flowers: seed_weight_odd: sometimes flowers = 4 because there were more in the same filter
+# flowers: seed_weight_odd: sometimes flowers = 4 
+# because there were more>1 in the same filter
+# 41 cases
+
+# couter: IE = Ingrid Espeland, TD = Timothée Darbois
 
 # load library ------------------------------------------------------------
 library(conflicted)
@@ -278,7 +282,7 @@ rx_seed_raw <- rx_seed_raw |>
 # calculate weight for one seed -------------------------------------------
 # many NAs in the weight columns
 rx_seed_raw <- rx_seed_raw |> 
-  mutate(seed_weight = rowSums(across(c(weight_1, weight_2, weight_3, weight_4)), na.rm = TRUE) / flowers_fixed)
+  mutate(seedweight = rowSums(across(c(weight_1, weight_2, weight_3, weight_4)), na.rm = TRUE) / flowers_fixed)
 
 
 # calculate no_seeds as mean per plant ------------------------------------------------------
@@ -287,13 +291,13 @@ rx_seed_raw <- rx_seed_raw |>
 
 
 # filter only necessary columns for OSF -----------------------------------
-# unique_plant_ID,"species","date_collection","counter","inflorescence_size","no_seeds","seed_weight"
+# unique_plant_ID,"species","date_collection","counter","inflorescence_size","no_seeds","seedweight"
 
 # use coalesce to choose the first date available
 rangex_seed_raw <- rx_seed_raw |> 
   select(unique_plant_ID, species, collected_1, collected_2,
          collected_3, collected_4, counter, 
-         no_seeds, seed_weight) |> 
+         no_seeds, seedweight) |> 
   mutate(date_collection = coalesce(collected_1, collected_2,
                                     collected_3, collected_4)) |> 
   select(-collected_1, -collected_2, -collected_3, -collected_4)
@@ -305,9 +309,14 @@ rangex_seed_raw <- rangex_seed_raw |>
 
 # delete empty rows -------------------------------------------------------
 rangex_seed_clean <- rangex_seed_raw |> 
-  filter(!is.na(no_seeds) | !is.na(seed_weight) | !is.na(date_collection))
+  filter(!is.na(no_seeds) | !is.na(seedweight) | !is.na(date_collection))
 # actually only 337 in total? is that correct?
 
+
+# fix order ---------------------------------------------------------------
+rangex_seed_clean <- rangex_seed_clean |> 
+  select(unique_plant_ID, species, date_collection, counter,
+         inflorescence_size, no_seeds, seedweight)
 
 
 
