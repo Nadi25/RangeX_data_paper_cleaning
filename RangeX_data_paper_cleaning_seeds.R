@@ -19,7 +19,10 @@
 # weight_odd: FYG5543: e6 (and c4?)	3 of e6, 2 of other?
 # position_ID_old: means that it is a different plant than the one we have functional traits on
 
+# seed_weight: calculated the mean of all collected infructescences per plant to get seed_weight
+# no_seeds: calculated the mean of all collected infructescences per plant to get no_seeds
 
+# flowers: seed_weight_odd: sometimes flowers = 4 because there were more in the same filter
 
 # load library ------------------------------------------------------------
 library(conflicted)
@@ -166,7 +169,7 @@ rx_seed_weight_odd <- seed_weight_odd |>
   select("ID", "date", "site", "species", "treat1",
          "treat2", "blockID", "plotID", "positionID", "flowers",
          "seeds_number_1", "weight_1", "date_agar_1", "collected_1", "comment_1",
-         "seeds_number_2", "weight_2", "date_agar_2", "collected_2", "comment_2",
+         "seeds_number_2", "weight_2", "date_agar_2", "collected_2", "comment_2", "seeds_number_3",
          "weight_3", "date_agar_3", "collected_3", "comment_3", "seeds_number_4",
          "weight_4", "collected_4")
 
@@ -175,9 +178,11 @@ rx_seed_weight_even <- seed_weight_even |>
          "treat2", "blockID", "plotID", "positionID", "flowers",
          "seeds_number_1", "weight_1", "date_agar_1", "collected_1", "comment_1",
          "seeds_number_2", "weight_2", "date_agar_2", "collected_2", "comment_2",
-         "weight_3", "date_agar_3", "collected_3", "comment_3", "seeds_number_4",
+         "weight_3", "seeds._number_3", "date_agar_3", "collected_3", "comment_3", "seeds_number_4",
          "weight_4", "collected_4")
 
+rx_seed_weight_even <- rx_seed_weight_even |> 
+  rename(seeds_number_3 = seeds._number_3)
 
 # combine even and odd into one data set --------------------------------------------
 seed_data <- rbind(rx_seed_weight_odd, rx_seed_weight_even)
@@ -241,7 +246,7 @@ seed_data <- seed_data |>
 metadata <- metadata |> 
   mutate(across(c(block_ID_original, plot_ID_original, position_ID_original), as.character))
 
-seed_data <- seed_data %>%
+seed_data <- seed_data |> 
   mutate(across(c(block_ID_original, plot_ID_original, position_ID_original), as.character))
 
 
@@ -257,32 +262,51 @@ rx_seed_raw <- rx_seed_raw |>
                                "IE", "TD"))
 
 
+# fix flower column -------------------------------------------------------
+# weight and seed number should be numeric
+rx_seed_raw <- rx_seed_raw |> 
+  mutate(across(c(weight_1, weight_2, weight_3, weight_4, flowers), as.numeric))
+rx_seed_raw <- rx_seed_raw |> 
+  mutate(across(c(seeds_number_1, seeds_number_2, seeds_number_3),
+                as.numeric))
+
+rx_seed_raw <- rx_seed_raw |> 
+  mutate(flowers_fixed = rowSums(!is.na(across(c(weight_1, weight_2, weight_3, weight_4)))))
+
+
 
 # calculate weight for one seed -------------------------------------------
+# many NAs in the weight columns
 rx_seed_raw <- rx_seed_raw |> 
-  mutate(across(c(weight_1, weight_2, weight_3, flowers), as.numeric))
+  mutate(seed_weight = rowSums(across(c(weight_1, weight_2, weight_3, weight_4)), na.rm = TRUE) / flowers_fixed)
 
+
+# calculate no_seeds as mean per plant ------------------------------------------------------
 rx_seed_raw <- rx_seed_raw |> 
-  mutate(seedweight = (weight_1 + weight_2 + weight_3)/flowers)
-
-
-
+  mutate(no_seeds = rowSums(across(c(seeds_number_1, seeds_number_2, seeds_number_3, seeds_number_4)), na.rm = TRUE) / flowers_fixed)
 
 
 # filter only necessary columns for OSF -----------------------------------
+# unique_plant_ID,"species","date_collection","counter","inflorescence_size","no_seeds","seed_weight"
 
-# unique_plant_ID,"species","date_collection","counter","inflorescence_size","no_seeds","seedweight"
+# use coalesce to choose the first date available
+rangex_seed_raw <- rx_seed_raw |> 
+  select(unique_plant_ID, species, collected_1, collected_2,
+         collected_3, collected_4, counter, 
+         no_seeds, seed_weight) |> 
+  mutate(date_collection = coalesce(collected_1, collected_2,
+                                    collected_3, collected_4)) |> 
+  select(-collected_1, -collected_2, -collected_3, -collected_4)
+
+# add column inflorescence_size
+rangex_seed_raw <- rangex_seed_raw |> 
+  mutate(inflorescence_size = NA)
 
 
-
-
-
-
-
-
-
-
-
+# delete empty rows -------------------------------------------------------
+rangex_seed_clean <- rangex_seed_raw |> 
+  filter(!is.na(no_seeds) | !is.na(seed_weight) | !is.na(date_collection))
+# actually only 337 in total? is that correct?
 
 
 
