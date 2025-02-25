@@ -1,15 +1,14 @@
 
 # Seeds and seed germination NOR --------------------------------------------
 
-## Data used: RangeX_raw_seeds_germination_even_NOR_2023.xlsx,
-##            RangeX_raw_seeds_germination_uneven_NOR_2023.xlsx
+## Data used: RangeX_raw_seed_weight_odd_NOR_2023.csv,
+##            RangeX_raw_seed_weight_even_NOR_2023.xlsx
 ## Date:      05.02.2025
 ## Author:    Nadine Arzt
-## Purpose:   Clean seed data
+## Purpose:   Clean seed data (seedweight and seed number)
 
 
 # comments ----------------------------------------------------------------
-# weight_even: number_infructescence in even? Don't understand. What is difference to flowers
 # weight_even: flowers: how many infructescences = flowers collected separately, e.g. 3
 # weight_even: number_infructescence: how many infructescences per filter, e.g. 2
 # problem: weight_odd: and odd doesn't have number_infructescence
@@ -25,15 +24,21 @@
 # flowers: seed_weight_odd: sometimes flowers = 4 
 # because there were more>1 in the same filter
 # 41 cases
+# should we add a column indicating these cases?
+
+# date still has some issues but might be ok since we are using date_collected
 
 # couter: IE = Ingrid Espeland, TD = Timothée Darbois
+
+# check: 
+# NOR.hi.ambi.vege.wf.09.27 pimsax: high value for weight: 0.69400000
 
 # load library ------------------------------------------------------------
 library(conflicted)
 conflict_prefer_all("dplyr", quiet = TRUE)
 library(tidyverse)
 library(openxlsx)
-
+library(ggplot2)
 
 # import data -------------------------------------------------------------
 # seed_weight_odd <- read.xlsx("Data/Data_seeds/RangeX_raw_seed_weight_odd_NOR_2023.xlsx", sheet = 1)
@@ -41,14 +46,9 @@ seed_weight_odd <- read.csv2("Data/Data_seeds/RangeX_raw_seed_weight_odd_NOR_202
 
 seed_weight_even <- read.xlsx("Data/Data_seeds/RangeX_raw_seed_weight_even_NOR_2023.xlsx", sheet = 1)
 
-# seed_germi_odd <- read.xlsx("Data/Data_seeds/RangeX_raw_seeds_germination_odd_NOR_2023.xlsx")
-# 
-# seed_germi_even <- read.xlsx("Data/Data_seeds/RangeX_raw_seeds_germination_even_NOR_2023.xlsx", sheet = 1)
-
 metadata <- read.csv("Data/RangeX_metadata_focal_NOR.csv")
 metadata <- metadata |> 
   select(-"X")
-
 
 # merge odd and even data sets ------------------------------------------
 names(seed_weight_odd)
@@ -141,6 +141,15 @@ seed_weight_odd <- seed_weight_odd %>%
 colnames(seed_weight_odd)
 
 
+# add number_infructescences columns --------------------------------------
+# odd doesn't have "number_infructescence" which is about how many seedheads were collected per filter
+# but it is written in the comments
+seed_weight_odd <- seed_weight_odd |> 
+  mutate(number_infructescence_1 = NA,
+         number_infructescence_2 = NA,
+         number_infructescence_3 = NA)
+
+
 # clean names weight_even -------------------------------------------------
 colnames(seed_weight_even)
 
@@ -153,36 +162,27 @@ seed_weight_even <- seed_weight_even |>
   select(-c("weight.seed", "seeds_number.inf", "weight.inf"))
 
 
-
-
-
 # merge seed weight with metadata -----------------------------------------
 
 # find out which column names are not matching
-names_odd <- colnames(seed_weight_odd)
-names_even <- colnames(seed_weight_even)
-
-intersect(names_odd, names_even)
-
-# odd doesn't have "number_infructescence"
-# delete for now
-
+colnames(seed_weight_odd)
+colnames(seed_weight_even)
 
 # keep only necessary columns for now -------------------------------------
 rx_seed_weight_odd <- seed_weight_odd |> 
   select("ID", "date", "site", "species", "treat1",
          "treat2", "blockID", "plotID", "positionID", "flowers",
-         "seeds_number_1", "weight_1", "date_agar_1", "collected_1", "comment_1",
-         "seeds_number_2", "weight_2", "date_agar_2", "collected_2", "comment_2", "seeds_number_3",
-         "weight_3", "date_agar_3", "collected_3", "comment_3", "seeds_number_4",
+         "seeds_number_1", "weight_1", "number_infructescence_1", "date_agar_1", "collected_1", "comment_1",
+         "seeds_number_2", "weight_2", "number_infructescence_2", "date_agar_2", "collected_2", "comment_2", "seeds_number_3",
+         "weight_3", "number_infructescence_3", "date_agar_3", "collected_3", "comment_3", "seeds_number_4",
          "weight_4", "collected_4")
 
 rx_seed_weight_even <- seed_weight_even |> 
   select("ID", "date", "site", "species", "treat1",
          "treat2", "blockID", "plotID", "positionID", "flowers",
-         "seeds_number_1", "weight_1", "date_agar_1", "collected_1", "comment_1",
-         "seeds_number_2", "weight_2", "date_agar_2", "collected_2", "comment_2",
-         "weight_3", "seeds._number_3", "date_agar_3", "collected_3", "comment_3", "seeds_number_4",
+         "seeds_number_1", "weight_1", "number_infructescence_1", "date_agar_1", "collected_1", "comment_1",
+         "seeds_number_2", "weight_2", "number_infructescence_2", "date_agar_2", "collected_2", "comment_2", "seeds._number_3",
+         "weight_3", "number_infructescence_3", "date_agar_3", "collected_3", "comment_3", "seeds_number_4",
          "weight_4", "collected_4")
 
 rx_seed_weight_even <- rx_seed_weight_even |> 
@@ -244,6 +244,7 @@ seed_data <- seed_data |>
   ))
 
 
+
 # merge with meta data ----------------------------------------------------
 # need to be same, e.g. chr, to merge
 
@@ -270,12 +271,22 @@ rx_seed_raw <- rx_seed_raw |>
 # weight and seed number should be numeric
 rx_seed_raw <- rx_seed_raw |> 
   mutate(across(c(weight_1, weight_2, weight_3, weight_4, flowers), as.numeric))
+
 rx_seed_raw <- rx_seed_raw |> 
   mutate(across(c(seeds_number_1, seeds_number_2, seeds_number_3),
                 as.numeric))
 
 rx_seed_raw <- rx_seed_raw |> 
   mutate(flowers_fixed = rowSums(!is.na(across(c(weight_1, weight_2, weight_3, weight_4)))))
+
+rx_seed_raw <- rx_seed_raw |> 
+  mutate(flowers_fixed = if_else(block_ID_original %in% c(2,4,6,8,10),  rowSums(!is.na(across(c(number_infructescence_1, number_infructescence_2, number_infructescence_3))))))
+
+
+rx_seed_raw <- rx_seed_raw |> 
+  mutate(flowers_fixed = if_else(block_ID_original %in% c(2,4,6,8,10), 
+                                 rowSums(across(c(number_infructescence_1, number_infructescence_2, number_infructescence_3)), na.rm = TRUE), 
+                                 flowers))
 
 
 
@@ -288,6 +299,12 @@ rx_seed_raw <- rx_seed_raw |>
 # calculate no_seeds as mean per plant ------------------------------------------------------
 rx_seed_raw <- rx_seed_raw |> 
   mutate(no_seeds = rowSums(across(c(seeds_number_1, seeds_number_2, seeds_number_3, seeds_number_4)), na.rm = TRUE) / flowers_fixed)
+
+
+# new column indicating more than 1 seed head per filter -------------------
+# yes, no
+rx_seed_raw <- rx_seed_raw |> 
+  mutate(several_infruct_filter = if_else(flowers_fixed %in% c(1,2,3), "no", "yes"))
 
 
 # filter only necessary columns for OSF -----------------------------------
@@ -308,15 +325,66 @@ rangex_seed_raw <- rangex_seed_raw |>
 
 
 # delete empty rows -------------------------------------------------------
+# and no_seeds and seedweight should not be 0
 rangex_seed_clean <- rangex_seed_raw |> 
-  filter(!is.na(no_seeds) | !is.na(seedweight) | !is.na(date_collection))
-# actually only 337 in total? is that correct?
-
+  filter((!is.na(no_seeds) & no_seeds != 0) | 
+           (!is.na(seedweight) & seedweight != 0) | 
+           !is.na(date_collection))
+# 336 rows now
 
 # fix order ---------------------------------------------------------------
 rangex_seed_clean <- rangex_seed_clean |> 
   select(unique_plant_ID, species, date_collection, counter,
          inflorescence_size, no_seeds, seedweight)
+
+
+# control plotting --------------------------------------------------------
+# use rx_seed_raw
+# pivot longer the table
+
+# combined treatment column
+rx_seed_raw <- rx_seed_raw |> 
+  mutate(treat_comp_warm = paste(treat_warming, treat_competition, sep = "_"))
+
+seed_plot <- rx_seed_raw |> 
+  pivot_longer(cols = c(seedweight, no_seeds), names_to = "variable", values_to = "values")
+
+ggplot(data = seed_plot[seed_plot$site == "lo",], aes(x = variable, y = values)) +
+  geom_boxplot() +
+  facet_grid(species~treat_comp_warm, scales = "free")
+
+ggplot(data = seed_plot, aes(x = variable, y = values, fill = site)) +
+  geom_boxplot() +
+  facet_grid(species~treat_comp_warm, scales = "free")
+
+seed_weight <- seed_plot |> 
+  filter(variable == "seedweight") 
+ggplot(data = seed_weight, aes(x = variable, y = values, fill = site)) +
+  geom_boxplot() +
+  facet_grid(species~treat_comp_warm, scales = "free")
+
+ggplot(data = seed_weight[seed_weight$site == "lo",], aes(x = variable, y = values)) +
+  geom_boxplot() +
+  geom_jitter()+
+  facet_grid(species~treat_comp_warm, scales = "free")
+
+ggplot(data = seed_weight[seed_weight$site == "hi",], aes(x = variable, y = values)) +
+  geom_boxplot() +
+  geom_jitter()+
+  facet_grid(species~treat_comp_warm, scales = "free")
+
+ggplot(data = seed_weight[seed_weight$site == "hi",], aes(x = values, fill = site)) +
+  geom_histogram(binwidth = 0.01, color = "black", alpha = 0.7) +  
+  facet_grid(species ~ treat_comp_warm) +
+  labs(x = "Seed Weight", y = "Frequency") +
+  theme_minimal()
+
+ggplot(data = seed_weight[seed_weight$site == "lo",], aes(x = values, fill = site)) +
+  geom_histogram(binwidth = 0.01, color = "black", alpha = 0.7) +  
+  facet_grid(species ~ treat_comp_warm) +
+  labs(x = "Seed Weight", y = "Frequency") +
+  theme_minimal()
+
 
 
 
