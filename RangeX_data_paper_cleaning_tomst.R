@@ -20,42 +20,51 @@ library(lubridate)
 # 2023: low out: "12.05.2023" "19.06.2023" - "24.10.2023"
 # so take the later one each?
 
-
 # import data 2023 --------------------------------------------------------
 # List all files in the 'Data_tomst_loggers' folder that start with 'data'
 tomst_23 <- list.files(path = "Data/Data_tomst_loggers/tomst_2023/", pattern = "^data_\\d+.*\\.csv$", full.names = TRUE)
 
-# Import each file and combine them into a single data frame
-# name columns
+# test to see structure of files
+test_file <- read_delim(tomst_23[1], delim = ";", skip = 1)
+head(test_file)
+# has , 
+
+# define colnames as header
 column_names <- c("number", "Date", "Column1", "Temp1", "Temp2", "Temp3", "Soilmoisture", "Column6", "Column7")
 
-# Define column types to avoid mismatches
+# define coltypes to have the values correct later
 column_types <- cols(
   number = col_double(),
-  Date = col_character(),
+  Date = col_character(),   # Read as character first, convert to datetime later
   Column1 = col_double(),
-  Temp1 = col_double(),
-  Temp2 = col_double(),
-  Temp3 = col_double(),
+  Temp1 = col_character(),  # Read as character to handle commas, convert later
+  Temp2 = col_character(),
+  Temp3 = col_character(),
   Soilmoisture = col_double(),
   Column6 = col_double(),
   Column7 = col_double()
 )
 
-# Function to extract the number from the filename
+# function to extract tomst logger number
 extract_number <- function(file) {
   str_extract(basename(file), "\\d+")
 }
 
-# Read all files, specifying there is no header and setting the column names manually
-# add a column for the file number
+# function to read a bunch of files at the same time
+read_tomst_file <- function(file) {
+  read_delim(file, delim = ";", skip = 1, col_names = column_names, col_types = column_types, 
+             locale = locale(decimal_mark = ","), show_col_types = FALSE) |>
+    mutate(Date = dmy_hms(Date),  # Convert Date column to datetime
+      across(c(Temp1, Temp2, Temp3), ~ as.numeric(str_replace(.x, ",", "."))), # Convert temps to numeric
+      tomst = extract_number(file)  # Add the tomst logger number
+    )
+}
 
-tomst_data_23 <- tomst_23 |> 
-  map_dfr(~read_delim(.x, col_names = column_names, col_types = column_types, 
-                      delim = ";", skip = 1) |> 
-            mutate(tomst = extract_number(.x)))
+# get one dataframe with data from all files using the list of files (tomst_23) with a loop
+tomst_data_23 <- map_dfr(tomst_23, read_tomst_file)
 
 head(tomst_data_23)
+
 
 # get plot codes 23 ------------------------------------------------------
 
