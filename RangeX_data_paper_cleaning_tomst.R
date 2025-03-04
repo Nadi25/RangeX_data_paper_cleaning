@@ -14,11 +14,16 @@ library(tidyverse)
 library(openxlsx)
 library(janitor)
 library(lubridate)
+library(ggplot2)
 
 # comments ----------------------------------------------------------------
-# 2023: high out: "08.06.2023" "20.06.2023" - "23.10.2023"
-# 2023: low out: "12.05.2023" "19.06.2023" - "24.10.2023"
+# temp1 is in soil, temp2 at 0cm and temp3 20cm above ground
+
+# 2023: high out: "08.06.2023" and "20.06.2023" - "23.10.2023"
+# 2023: low out: "12.05.2023" and "19.06.2023" - "24.10.2023"
 # so take the later one each?
+
+# deleted tomst 94201723 due to impossible values
 
 # import data 2023 --------------------------------------------------------
 # List all files in the 'Data_tomst_loggers' folder that start with 'data'
@@ -67,9 +72,6 @@ head(tomst_data_23)
 
 
 # get plot codes 23 ------------------------------------------------------
-
-plot_codes_23 <- read.xlsx("Data/Data_tomst_loggers/tomst_plot_codes_2023.xlsx", sheet = 1, colNames = FALSE)
-
 plot_codes_23 <- read.csv2("Data/Data_tomst_loggers/tomst_plot_codes_2023.csv", header =  FALSE)
 
 plot_codes_23
@@ -102,12 +104,12 @@ plot_low <- plot_low |>
 
 # combine again under each other
 plot_codes_clean <- bind_rows(plot_high, plot_low)
+head(plot_codes_clean)
+str(plot_codes_clean) # tomst = chr 
 
 # combine tomst data with plot labels -------------------------------------
-
-tomst_23_raw <- left_join(plot_codes_clean, tomst_data_23, by = tomst)
-
-
+tomst_23_raw <- left_join(plot_codes_clean, tomst_data_23, by = "tomst")
+head(tomst_23_raw)
 
 
 # Add treat_warming and treat_competition columns based on treat ----------
@@ -131,16 +133,19 @@ tomst_23_raw <- tomst_23_raw |>
     )
   )
 
-
 # delete empty columns -----------------------------------------------------
 tomst_23_raw <- tomst_23_raw |> 
   select(where(~ !all(is.na(.))))
+
+# delete tomst 94201723  --------------------------------------------------
+tomst_23_raw <- tomst_23_raw |> 
+  filter(tomst != "94201723")
 
 
 # get temperature data ----------------------------------------------------
 
 # Extract temperature columns into a new data frame
-temperature <- tomst_23_raw %>%
+temperature <- tomst_23_raw |> 
   select(tomst, date_out, Date, Temp1, Temp2, Temp3, block, treat, treat_warming, treat_competition, site) 
 
 # View the first few rows of the extracted temperature data
@@ -148,8 +153,11 @@ head(temperature)
 summary(temperature)
 
 # fix date
+# temperature <- temperature |> 
+#   mutate(Date = as.POSIXct(Date, format = "%d.%m.%Y %H:%M:%S"))
+
 temperature <- temperature |> 
-  mutate(Date = as.POSIXct(Date, format = "%d.%m.%Y %H:%M:%S"))
+  mutate(date_out = as.Date(date_out, format = "%d.%m.%Y"))
 
 # split low and high site -------------------------------------------------
 temp_high <- temperature |> 
@@ -158,10 +166,10 @@ temp_high <- temperature |>
 temp_low <- temperature |> 
   filter(site == "low") 
 
+# temp high: -----------------------------------------
 # define time period field season -----------------------------------------
-# high
-start_date <- as.POSIXct("2023-06-21 10:00:00", format = "%Y-%m-%d %H:%M:%S")
-end_date <- as.POSIXct("2023-10-23 10:00:00", format = "%Y-%m-%d %H:%M:%S")
+start_date <- as.Date("2023-06-21") # some were in already on 08.06 but others only 20.06, so decided to take later date
+end_date <- as.Date("2023-10-23") # were collected on 24.10
 
 # Filter the data for the specified date range
 filtered_temp_high <- temp_high |> 
@@ -169,31 +177,163 @@ filtered_temp_high <- temp_high |>
 
 head(filtered_temp_high)
 
-
+# control plotting --------------------------------------------------------
+# temp1 all loggers -------------------------------------------------------
 # Create the plot for Temp1 per logger with the filtered data
-ggplot(high_filtered_temperature, aes(x = Date, y = Temp1, color = tomst)) +
+ggplot(filtered_temp_high, aes(x = Date, y = Temp1, color = tomst)) +
+  geom_point() +
+  theme_minimal() +
+  theme(legend.position = "right")
+
+# one logger seems very off - find out which
+# 94201723 has impossible temp1 values --> delete above in tomst_23_raw
+
+# temp2 -------------------------------------------------------------------
+ggplot(filtered_temp_high, aes(x = Date, y = Temp2, color = tomst)) +
+  geom_point() +
+  theme_minimal() +
+  theme(legend.position = "right")
+
+# temp3 -------------------------------------------------------------------
+ggplot(filtered_temp_high, aes(x = Date, y = Temp3, color = tomst)) +
+  geom_point() +
+  theme_minimal() +
+  theme(legend.position = "none")
+
+ggplot(filtered_temp_high, aes(x = Date, y = Temp3, color = tomst)) +
   geom_line() +
-  labs(title = "Temperature (Temp1) per Logger from 31.05.2024 to 15.10.2024",
-       x = "Date",
-       y = "Temperature (\u00B0C)",
-       color = "Logger ID") +
+  theme_minimal() +
+  theme(legend.position = "none")
+
+
+# Group by treatment wamr, ambi and calculate average temperature --------------------
+temp_high_average <- filtered_temp_high |> 
+  group_by(Date, treat) |> 
+  summarize(avg_temp_1 = mean(Temp1, na.rm = TRUE),
+            avg_temp_2 = mean(Temp2, na.rm = TRUE),
+            avg_temp_3 = mean(Temp3, na.rm = TRUE),.groups = 'drop')
+head(temp_high_average)
+
+# plot average temp per treat
+ggplot(temp_high_average, aes(x = Date, y = avg_temp_1, color = treat)) +
+  geom_line() +
+  theme_minimal() +
+  theme(legend.position = "right")
+
+ggplot(temp_high_average) +
+  geom_line(aes(x = Date, y = avg_temp_1, color = treat)) +
+  geom_line(aes(x = Date, y = avg_temp_2, color = treat)) +
   theme_minimal() +
   theme(legend.position = "right")
 
 
+# average per temp --------------------------------------------------------
+temp_high_avg <- filtered_temp_high |> 
+  group_by(Date) |> 
+  summarize(avg_temp_soil = mean(Temp1, na.rm = TRUE),
+            avg_temp_ground = mean(Temp2, na.rm = TRUE),
+            avg_temp_air = mean(Temp3, na.rm = TRUE),.groups = 'drop')
+head(temp_high_avg)
+
+# pivot longer the data
+temp_high_avg_long <- temp_high_avg |> 
+  pivot_longer(cols = starts_with("avg_temp"), 
+               names_to = "measurement_position", 
+               values_to = "temperature")
+
+ggplot(temp_high_avg_long, aes(x = Date, y = temperature, color = temperature_position)) +
+  geom_line() +
+  theme_minimal() +
+  labs(color = "temperature_position") 
+
+# ok, it seems like it makes sense that temp1 - soil has the least variation
+# more buffering effects then in the air
+
+
+# now test if OTCs work ---------------------------------------------------
+temp_high_avg_OTC <- filtered_temp_high |> 
+  group_by(Date, treat_warming) |> 
+  summarize(avg_temp_soil = mean(Temp1, na.rm = TRUE),
+            avg_temp_ground = mean(Temp2, na.rm = TRUE),
+            avg_temp_air = mean(Temp3, na.rm = TRUE),.groups = 'drop')
+head(temp_high_avg_OTC)
+
+temp_high_avg_OTC_long <- temp_high_avg_OTC |> 
+  pivot_longer(cols = starts_with("avg_temp"), 
+               names_to = "measurement_position", 
+               values_to = "temperature")
+
+ggplot(temp_high_avg_OTC_long, aes(x = Date, y = temperature, color = treat_warming)) +
+  geom_line() +
+  theme_minimal() +
+  labs(color = "treat_warming") 
+
+# one plot per temp position
+ggplot(temp_high_avg_OTC_long, aes(x = Date, y = temperature, color = treat_warming)) +
+  geom_line() +
+  facet_wrap(~ measurement_position, scales = "free_y") + 
+  theme_minimal() +
+  labs(color = "Warming Treatment")
 
 
 
+# daily temp --------------------------------------------------------------
+# calculate a mean per day and treat_warming
+temp_daily <- filtered_temp_high |> 
+  mutate(Date = as.Date(Date)) |> # only keeps day, not time
+  group_by(Date, treat_warming) |> 
+  summarize(
+    avg_temp_soil = mean(Temp1, na.rm = TRUE),
+    avg_temp_ground = mean(Temp2, na.rm = TRUE),
+    avg_temp_air = mean(Temp3, na.rm = TRUE),
+    .groups = 'drop'
+  ) |> 
+  pivot_longer(cols = starts_with("avg_temp"), 
+               names_to = "measurement_position", 
+               values_to = "temperature")
+
+
+ggplot(temp_daily, aes(x = Date, y = temperature, color = treat_warming)) +
+  geom_line() +
+  facet_wrap(~ measurement_position, scales = "free_y") +  # Separate panels for soil, ground, air
+  theme_minimal() +
+  scale_color_manual(values = c("warm" = "pink3", "ambi" = "turquoise"))+
+  labs(color = "Warming treatment", y = "Daily mean temperature")
 
 
 
+# separate day and night --------------------------------------------------
+# define what is day and night in Voss in 2023
+# https://dateandtime.info/citysunrisesunset.php?id=3131329&month=8&year=2023
+
+sunrise_down <- read.csv2("Data/Data_tomst_loggers/Sunrise_sundown_Voss_2023.csv")
+
+# fix date
+sunrise_down <- sunrise_down |> 
+  separate(X...Date, c("Day", "Date"), sep = ",") 
+
+sunrise_down <- sunrise_down |> 
+  mutate(Date = str_trim(Date),  # Remove extra spaces
+         Date = paste(Date, "2023"),  # Add year
+         Date = mdy(Date))  # Convert to Date format
+
+colnames(sunrise_down) <- sunrise_down[1, ]
+sunrise_down <- sunrise_down[c(-1), ]
+
+names(sunrise_down)
+
+colnames(sunrise_down) <- c("day", "Date", "Sunrise", "Sunset", "Solar_Noon", "Day_Length")
 
 
+head(sunrise_down)
 
 
-
-
-
+sunrise_down <- sunrise_down |> 
+  mutate(
+    # Convert Sunrise to 24-hour format
+    Sunrise = mdy_hms(paste(Date, Sunrise)),  # Combines date and time for conversion
+    Sunrise = format(Sunrise, "%H:%M:%S")
+  )
 
 
 
