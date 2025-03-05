@@ -25,6 +25,11 @@ library(ggplot2)
 
 # deleted tomst 94201723 due to impossible values
 
+# calculate max, min and daily amplitude
+# calculate rolling average with rollmean()
+
+# calculate soil moisture: https://github.com/audhalbritter/Three-D/blob/master/R/functions/soilmoisture_correction.R
+
 # import data 2023 --------------------------------------------------------
 # List all files in the 'Data_tomst_loggers' folder that start with 'data'
 tomst_23 <- list.files(path = "Data/Data_tomst_loggers/tomst_2023/", pattern = "^data_\\d+.*\\.csv$", full.names = TRUE)
@@ -116,22 +121,21 @@ head(tomst_23_raw)
 tomst_23_raw <- tomst_23_raw |> 
   mutate(
     treat_warming = case_when(
-      treat == "A" ~ "warm",
-      treat == "B" ~ "ambi",
-      treat == "C" ~ "warm",
-      treat == "D" ~ "ambi",
-      treat == "E" ~ "warm",
-      treat == "F" ~ "ambi"
+      site == "high" & treat %in% c("A", "C", "E") ~ "warm",
+      site == "high" & treat %in% c("B", "D", "F") ~ "ambi",
+      site == "low" & treat %in% c("A", "B") ~ "ambi",  
+      TRUE ~ NA_character_  # Assign NA to unexpected cases
     ),
     treat_competition = case_when(
-      treat == "A" ~ "vege",
-      treat == "B" ~ "vege",
-      treat == "C" ~ "control",
-      treat == "D" ~ "control",
-      treat == "E" ~ "bare",
-      treat == "F" ~ "bare"
+      site == "high" & treat %in% c("A", "B") ~ "vege",
+      site == "high" & treat %in% c("C", "D") ~ "control",
+      site == "high" & treat %in% c("E", "F") ~ "bare",
+      site == "low" & treat == "A" ~ "vege",  
+      site == "low" & treat == "B" ~ "bare",
+      TRUE ~ NA_character_
     )
   )
+
 
 # delete empty columns -----------------------------------------------------
 tomst_23_raw <- tomst_23_raw |> 
@@ -142,8 +146,13 @@ tomst_23_raw <- tomst_23_raw |>
   filter(tomst != "94201723")
 
 
-# get temperature data ----------------------------------------------------
+# rename soil moisture ----------------------------------------------------
 
+tomst_23_raw <- tomst_23_raw |> 
+  rename(Soilmoisture_raw = Soilmoisture)
+
+
+# get temperature data ----------------------------------------------------
 # Extract temperature columns into a new data frame
 temperature <- tomst_23_raw |> 
   select(tomst, date_out, Date, Temp1, Temp2, Temp3, block, treat, treat_warming, treat_competition, site) 
@@ -158,6 +167,14 @@ summary(temperature)
 
 temperature <- temperature |> 
   mutate(date_out = as.Date(date_out, format = "%d.%m.%Y"))
+
+
+# combined treatment column  ----------------------------------------------
+temperature <- temperature |> 
+  mutate(treat_combined = paste(site, treat_warming, treat_competition, sep = "_"))
+
+
+
 
 # split low and high site -------------------------------------------------
 temp_high <- temperature |> 
@@ -241,14 +258,35 @@ temp_high_avg_long <- temp_high_avg |>
                names_to = "measurement_position", 
                values_to = "temperature")
 
-ggplot(temp_high_avg_long, aes(x = Date, y = temperature, color = temperature_position)) +
+ggplot(temp_high_avg_long, aes(x = Date, y = temperature, color = measurement_position)) +
   geom_line() +
   theme_minimal() +
-  labs(color = "temperature_position") 
+  labs(color = "measurement_position") 
 
 # ok, it seems like it makes sense that temp1 - soil has the least variation
 # more buffering effects then in the air
 
+# distribution as histogram -----------------------------------------------
+ggplot(temp_high_avg_long, aes( x = temperature)) +
+  geom_histogram() +
+  theme_minimal()
+
+# q-q plot
+ggplot(temp_high_avg_OTC_long, aes(sample = temperature, color = treat_warming)) +
+  stat_qq() +
+  stat_qq_line() +
+  theme_minimal()
+
+# shapiro wil test
+sample_data <- sample(temp_high_avg_OTC_long$temperature, 5000) 
+shapiro.test(sample_data)
+
+# Kolmogorov-Smirnov Test
+ks.test(temp_high_avg_OTC_long$temperature, "pnorm", 
+        mean(temp_high_avg_OTC_long$temperature), 
+        sd(temp_high_avg_OTC_long$temperature))
+
+# so data in hist looks normally distributed but based on the tests it is not
 
 # now test if OTCs work ---------------------------------------------------
 temp_high_avg_OTC <- filtered_temp_high |> 
@@ -300,6 +338,45 @@ ggplot(temp_daily, aes(x = Date, y = temperature, color = treat_warming)) +
   scale_color_manual(values = c("warm" = "pink3", "ambi" = "turquoise"))+
   labs(color = "Warming treatment", y = "Daily mean temperature")
 
+# calcualte max and min temp per day as well
+temp_daily_high <- filtered_temp_high |> 
+  mutate(Date = as.Date(Date)) |>  # Only keeps day, not time
+  group_by(Date, treat_warming) |> 
+  summarize(
+    avg_temp_soil = mean(Temp1, na.rm = TRUE),
+    max_temp_soil = max(Temp1, na.rm = TRUE),
+    min_temp_soil = min(Temp1, na.rm = TRUE),
+    
+    avg_temp_ground = mean(Temp2, na.rm = TRUE),
+    max_temp_ground = max(Temp2, na.rm = TRUE),
+    min_temp_ground = min(Temp2, na.rm = TRUE),
+    
+    avg_temp_air = mean(Temp3, na.rm = TRUE),
+    max_temp_air = max(Temp3, na.rm = TRUE),
+    min_temp_air = min(Temp3, na.rm = TRUE),
+    
+    .groups = 'drop'
+  ) |> 
+  pivot_longer(cols = -c(Date, treat_warming),  # Keep Date & treat_warming fixed
+               names_to = "measurement_type", 
+               values_to = "temperature")
+
+
+
+# ribbon plot -------------------------------------------------------------
+temp_ribbon <- temp_daily_high |> 
+  pivot_wider(names_from = measurement_type, values_from = temperature)
+
+ggplot(temp_ribbon, aes(x = Date)) +
+  geom_ribbon(aes(ymin = min_temp_air, ymax = max_temp_air, fill = "Air"), alpha = 0.2) +
+  geom_ribbon(aes(ymin = min_temp_soil, ymax = max_temp_soil, fill = "Soil"), alpha = 0.2) +
+  geom_ribbon(aes(ymin = min_temp_ground, ymax = max_temp_ground, fill = "Ground"), alpha = 0.2) +
+  geom_line(aes(y = avg_temp_air, color = "Air")) +
+  geom_line(aes(y = avg_temp_soil, color = "Soil")) +
+  geom_line(aes(y = avg_temp_ground, color = "Ground")) +
+  facet_wrap(~ treat_warming) +
+  labs(title = "Daily Temperature Range", y = "Temperature (°C)", x = "Date") +
+  theme_minimal()
 
 
 # separate day and night --------------------------------------------------
@@ -324,16 +401,254 @@ names(sunrise_down)
 
 colnames(sunrise_down) <- c("day", "Date", "Sunrise", "Sunset", "Solar_Noon", "Day_Length")
 
-
 head(sunrise_down)
 
 
+# fix date -----------------------------------------------------------------
 sunrise_down <- sunrise_down |> 
   mutate(
-    # Convert Sunrise to 24-hour format
-    Sunrise = mdy_hms(paste(Date, Sunrise)),  # Combines date and time for conversion
-    Sunrise = format(Sunrise, "%H:%M:%S")
+    # Ensure Date is in proper format
+    Date = as.Date(Date, format="%Y-%m-%d"),
+    
+    # Convert Sunrise (AM times)
+    Sunrise = str_replace(Sunrise, " a.m.", ""),
+    Sunrise = parse_date_time(paste(Date, Sunrise), orders = "ymd I:M"),
+    Sunrise = format(Sunrise, "%H:%M:%S"),  # Convert to HH:MM:SS format
+    
+    # Convert Sunset (PM times)
+    Sunset = str_replace(Sunset, " p.m.", ""),
+    Sunset = parse_date_time(paste(Date, Sunset), orders = "ymd I:M") + hours(12), # Add 12 hours to PM times
+    Sunset = format(Sunset, "%H:%M:%S")  # Convert to HH:MM:SS format
   )
+head(sunrise_down)
+
+
+
+# combine temp high long otc with sunrise data to get day and night -------
+temp_high_avg_OTC_long_day_night <- temp_high_avg_OTC_long |> 
+  mutate(Date_only = as.Date(Date)) |>   # Extract date from datetime
+  left_join(sunrise_down |> 
+              select(Date, Sunrise, Sunset), 
+            by = c("Date_only" = "Date")) |> 
+  mutate(
+    # Convert Sunrise and Sunset to full datetime
+    Sunrise = ymd_hms(paste(Date_only, Sunrise)),
+    Sunset = ymd_hms(paste(Date_only, Sunset)),
+    
+    # Define day or night
+    day_night = ifelse(Date >= Sunrise & Date <= Sunset, "day", "night")
+  ) |> 
+  select(-Date_only)  # Remove helper column
+
+
+# filter only day ---------------------------------------------------------
+temp_high_avg_OTC_long_day <- temp_high_avg_OTC_long_day_night |> 
+  filter(day_night == "day")
+
+
+# plot only day warm ambi all 3 temp --------------------------------------
+ggplot(temp_high_avg_OTC_long_day, aes(x = Date, y = temperature, color = treat_warming)) +
+  geom_line() +
+  facet_wrap(~ measurement_position, scales = "free_y") +  # Separate panels for soil, ground, air
+  theme_minimal() +
+  scale_color_manual(values = c("warm" = "pink3", "ambi" = "turquoise"))+
+  labs(color = "Warming treatment", y = "Daily mean temperature")
+
+
+
+
+# test for significance ---------------------------------------------------
+ggplot(temp_high_avg_OTC_long_day, aes( x = temperature)) +
+  geom_histogram() +
+  theme_minimal()
+
+# q-q plot
+ggplot(temp_high_avg_OTC_long_day, aes(sample = temperature)) +
+  stat_qq() +
+  stat_qq_line() +
+  theme_minimal()
+
+# shapiro wil test
+sample_data <- sample(temp_high_avg_OTC_long_day$temperature, 5000) 
+shapiro.test(sample_data)
+
+# Kolmogorov-Smirnov Test
+ks.test(temp_high_avg_OTC_long_day$temperature, "pnorm", 
+        mean(temp_high_avg_OTC_long_day$temperature), 
+        sd(temp_high_avg_OTC_long_day$temperature))
+
+# this means that if the data is not normally distributed, t-test doesnt work
+t_test_result <- t.test(temperature ~ treat_warming, data = temp_high_avg_OTC_long_day, var.equal = TRUE)
+print(t_test_result)
+# p-value = 0.01358
+
+# instead use wilcox test
+wilcox.test(temperature ~ treat_warming, data = temp_high_avg_OTC_long_day)
+# p-value = 0.04174
+# there is a significant effect between warm and ambi
+# not very strong though
+
+# plot it
+ggplot(temp_high_avg_OTC_long_day, aes(x = treat_warming, y = temperature, fill = treat_warming)) +
+  geom_boxplot() +
+  labs(title = "Temperature Comparison: Warm vs. Ambi",
+       x = "Treatment Group",
+       y = "Temperature (°C)") +
+  scale_fill_manual(values = c("warm" = "red", "ambi" = "blue")) +
+  theme_bw()
+
+
+
+# temp low: -----------------------------------------
+# define time period field season -----------------------------------------
+start_date_lo <- as.Date("2023-06-20") 
+end_date_lo <- as.Date("2023-10-23") # were collected on 24.10
+
+# Filter the data for the specified date range
+filtered_temp_low <- temp_low |> 
+  filter(Date >= start_date_lo & Date <= end_date_lo)
+
+head(filtered_temp_low)
+
+
+# delete 94217314 ---------------------------------------------------------
+filtered_temp_low <- filtered_temp_low |> 
+  filter(tomst != "94217314")
+
+# control plotting --------------------------------------------------------
+# temp1 all loggers -------------------------------------------------------
+# Create the plot for Temp1 per logger with the filtered data
+ggplot(filtered_temp_low, aes(x = Date, y = Temp1, color = tomst)) +
+  geom_point() +
+  theme_minimal() +
+  theme(legend.position = "right")
+
+# temp2 -------------------------------------------------------------------
+ggplot(filtered_temp_low, aes(x = Date, y = Temp2, color = tomst)) +
+  geom_point() +
+  theme_minimal() +
+  theme(legend.position = "right")
+
+# temp3 -------------------------------------------------------------------
+ggplot(filtered_temp_low, aes(x = Date, y = Temp3, color = tomst)) +
+  geom_point() +
+  theme_minimal() +
+  theme(legend.position = "none")
+
+ggplot(filtered_temp_low, aes(x = Date, y = Temp3, color = tomst)) +
+  geom_line() +
+  theme_minimal() +
+  theme(legend.position = "none")
+
+
+
+# pivot longer the data ---------------------------------------------------
+
+temp_low_avg <- filtered_temp_low |> 
+  group_by(Date, treat_combined) |> 
+  summarize(avg_temp_soil = mean(Temp1, na.rm = TRUE),
+            avg_temp_ground = mean(Temp2, na.rm = TRUE),
+            avg_temp_air = mean(Temp3, na.rm = TRUE),.groups = 'drop')
+head(temp_low_avg)
+
+temp_low_avg_long <- temp_low_avg |> 
+  pivot_longer(cols = starts_with("avg_temp"), 
+               names_to = "measurement_position", 
+               values_to = "temperature")
+
+# plot
+ggplot(temp_low_avg_long, aes(x = Date, y = temperature, color = measurement_position)) +
+  geom_line() +
+  theme_minimal() +
+  labs(color = "measurement_position") 
+
+# daily temp --------------------------------------------------------------
+# calculate a mean per day and treat_competition
+temp_daily_low <- filtered_temp_low |> 
+  mutate(Date = as.Date(Date)) |> # only keeps day, not time
+  group_by(Date, treat_combined) |> 
+  summarize(
+    avg_temp_soil = mean(Temp1, na.rm = TRUE),
+    avg_temp_ground = mean(Temp2, na.rm = TRUE),
+    avg_temp_air = mean(Temp3, na.rm = TRUE),
+    .groups = 'drop'
+  ) |> 
+  pivot_longer(cols = starts_with("avg_temp"), 
+               names_to = "measurement_position", 
+               values_to = "temperature")
+
+
+ggplot(temp_daily_low, aes(x = Date, y = temperature, color = treat_combined)) +
+  geom_line() +
+  facet_wrap(~ measurement_position, scales = "free_y") + 
+  theme_minimal() +
+  scale_color_manual(values = c("low_ambi_vege" = "pink4", "low_ambi_bare" = "turquoise3"))+
+  labs(color = "treatment combind", y = "Daily mean temperature")
+
+
+
+
+
+# soil moisture -----------------------------------------------------------
+# function to calculate soil moisture from raw values
+soil.moist <- function(rawsoilmoist, soil_temp, soilclass){
+  
+  # creating df with parameters for each soil type
+  soilclass.df <- tibble(
+    soil = c("sand", "loamy_sand_A", "loamy_sand_B", "sandy_loam_A", "sandy_loam_B", "loam", "silt_loam", "peat"),
+    a = c(-3E-9, -1.9e-8, -2.3e-8, -3.8e-8, -9e-10, -5.1e-8, 1.7e-8, 1.23e-7),
+    b = c(1.61192e-4, 2.6561e-4, 2.82473e-4, 3.39449e-4, 2.61847e-4, 3.97984e-4, 1.18119e-4, 1.44644e-4),
+    c = c(-0.109956505, -0.154089291, -0.167211156, -0.214921782, -0.158618303, 0.291046437, -0.101168511, 0.202927906),
+    AirCalib = rep(57.64530756, 8), # a constant across all soil types, don't know exactly what this does
+    AirPuls = rep(56.88867311, 8), # a constant across all soil types, don't know exactly what this does
+    DilVol = rep(-59.72975311, 8) # a constant across all soil types, don't know exactly what this does
+  )
+  
+  #filtering soilclass.df based on which soilclass was entered in the function
+  soilclass.df <- soilclass.df %>%
+    filter(
+      soil == soilclass
+    )
+  
+  #calculating the volumetric soil moisture with the parameters corresponding to the soil class and the raw soil moisture from the logger
+  volmoist = (soilclass.df$a * rawsoilmoist^2) + (soilclass.df$b * rawsoilmoist) + soilclass.df$c
+  
+  #temperature correction
+  temp_ref <- 24
+  delta_air <- 1.91132689118083
+  delta_water <- 0.64108
+  delta_dil <- -1.270246891 # this is delta-water - delta_air
+  # we don't know what this does or what the variables do, but the result is the same as in excel
+  temp_corr <- rawsoilmoist + ((temp_ref-soil_temp) * (delta_air + delta_dil * volmoist))
+  # volumetric soil moisture with temperatue correction
+  volmoistcorr <- with(soilclass.df,
+                       ifelse(rawsoilmoist>AirCalib,
+                              (temp_corr+AirPuls+DilVol*volmoist)^2*a+(temp_corr+AirPuls+DilVol*volmoist)*b+c,
+                              NA))
+  return(volmoistcorr)
+  # return(volmoist) #let's just use the soil moisture without temperature correction for now
+}
+
+tomst_23_raw <- tomst_23_raw |> 
+  mutate(soil_moisture = soil.moist(rawsoilmoist = Soilmoisture_raw, 
+                                    soil_temp = Temp1, 
+                                    soilclass ="silt_loam"))
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
