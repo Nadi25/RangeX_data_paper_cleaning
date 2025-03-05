@@ -1,11 +1,12 @@
 
 # Climate data TOMST loggers NOR --------------------------------------------
 
-## Data used: ,
-##            
+## Data used: Data/Data_tomst_loggers/tomst_2023/,
+##            tomst_plot_codes_2023.csv,
+##            Sunrise_sundown_Voss_2023.csv
 ## Date:      03.03.2025
 ## Author:    Nadine Arzt
-## Purpose:   Clean TOMST logger data 
+## Purpose:   Clean TOMST logger data 2023
 
 # load library ------------------------------------------------------------
 library(conflicted)
@@ -23,12 +24,13 @@ library(ggplot2)
 # 2023: low out: "12.05.2023" and "19.06.2023" - "24.10.2023"
 # so take the later one each?
 
-# deleted tomst 94201723 due to impossible values
+# deleted tomst 94201723 and 94217314 because of impossible values
 
 # calculate max, min and daily amplitude
 # calculate rolling average with rollmean()
 
 # calculate soil moisture: https://github.com/audhalbritter/Three-D/blob/master/R/functions/soilmoisture_correction.R
+
 
 # import data 2023 --------------------------------------------------------
 # List all files in the 'Data_tomst_loggers' folder that start with 'data'
@@ -72,13 +74,10 @@ read_tomst_file <- function(file) {
 
 # get one dataframe with data from all files using the list of files (tomst_23) with a loop
 tomst_data_23 <- map_dfr(tomst_23, read_tomst_file)
-
 head(tomst_data_23)
-
 
 # get plot codes 23 ------------------------------------------------------
 plot_codes_23 <- read.csv2("Data/Data_tomst_loggers/tomst_plot_codes_2023.csv", header =  FALSE)
-
 plot_codes_23
 
 # split dataset into low and high 
@@ -91,7 +90,6 @@ plot_low <- plot_codes_23 |>
 
 plot_low <- plot_low |> 
   filter(if_any(everything(), ~ !is.na(.) & . != ""))
-
 
 # row 2 as header
 colnames(plot_high) <- plot_high[2, ]
@@ -136,7 +134,6 @@ tomst_23_raw <- tomst_23_raw |>
     )
   )
 
-
 # delete empty columns -----------------------------------------------------
 tomst_23_raw <- tomst_23_raw |> 
   select(where(~ !all(is.na(.))))
@@ -145,12 +142,61 @@ tomst_23_raw <- tomst_23_raw |>
 tomst_23_raw <- tomst_23_raw |> 
   filter(tomst != "94201723")
 
+# delete 94217314 ---------------------------------------------------------
+tomst_23_raw <- tomst_23_raw |> 
+  filter(tomst != "94217314")
+
 
 # rename soil moisture ----------------------------------------------------
-
 tomst_23_raw <- tomst_23_raw |> 
   rename(Soilmoisture_raw = Soilmoisture)
 
+
+# calculate soil moisture -----------------------------------------------------------
+# function to calculate soil moisture from raw values
+# https://github.com/audhalbritter/Three-D/blob/master/R/functions/soilmoisture_correction.R
+soil.moist <- function(rawsoilmoist, soil_temp, soilclass){
+  
+  # creating df with parameters for each soil type
+  soilclass.df <- tibble(
+    soil = c("sand", "loamy_sand_A", "loamy_sand_B", "sandy_loam_A", "sandy_loam_B", "loam", "silt_loam", "peat"),
+    a = c(-3E-9, -1.9e-8, -2.3e-8, -3.8e-8, -9e-10, -5.1e-8, 1.7e-8, 1.23e-7),
+    b = c(1.61192e-4, 2.6561e-4, 2.82473e-4, 3.39449e-4, 2.61847e-4, 3.97984e-4, 1.18119e-4, 1.44644e-4),
+    c = c(-0.109956505, -0.154089291, -0.167211156, -0.214921782, -0.158618303, 0.291046437, -0.101168511, 0.202927906),
+    AirCalib = rep(57.64530756, 8), # a constant across all soil types, don't know exactly what this does
+    AirPuls = rep(56.88867311, 8), # a constant across all soil types, don't know exactly what this does
+    DilVol = rep(-59.72975311, 8) # a constant across all soil types, don't know exactly what this does
+  )
+  
+  #filtering soilclass.df based on which soilclass was entered in the function
+  soilclass.df <- soilclass.df %>%
+    filter(
+      soil == soilclass
+    )
+  
+  #calculating the volumetric soil moisture with the parameters corresponding to the soil class and the raw soil moisture from the logger
+  volmoist = (soilclass.df$a * rawsoilmoist^2) + (soilclass.df$b * rawsoilmoist) + soilclass.df$c
+  
+  #temperature correction
+  temp_ref <- 24
+  delta_air <- 1.91132689118083
+  delta_water <- 0.64108
+  delta_dil <- -1.270246891 # this is delta-water - delta_air
+  # we don't know what this does or what the variables do, but the result is the same as in excel
+  temp_corr <- rawsoilmoist + ((temp_ref-soil_temp) * (delta_air + delta_dil * volmoist))
+  # volumetric soil moisture with temperatue correction
+  volmoistcorr <- with(soilclass.df,
+                       ifelse(rawsoilmoist>AirCalib,
+                              (temp_corr+AirPuls+DilVol*volmoist)^2*a+(temp_corr+AirPuls+DilVol*volmoist)*b+c,
+                              NA))
+  return(volmoistcorr)
+  # return(volmoist) #let's just use the soil moisture without temperature correction for now
+}
+
+tomst_23_raw <- tomst_23_raw |> 
+  mutate(soil_moisture = soil.moist(rawsoilmoist = Soilmoisture_raw, 
+                                    soil_temp = Temp1, 
+                                    soilclass ="silt_loam"))
 
 # get temperature data ----------------------------------------------------
 # Extract temperature columns into a new data frame
@@ -174,8 +220,6 @@ temperature <- temperature |>
   mutate(treat_combined = paste(site, treat_warming, treat_competition, sep = "_"))
 
 
-
-
 # split low and high site -------------------------------------------------
 temp_high <- temperature |> 
   filter(site == "high") 
@@ -185,7 +229,9 @@ temp_low <- temperature |>
 
 # temp high: -----------------------------------------
 # define time period field season -----------------------------------------
-start_date <- as.Date("2023-06-21") # some were in already on 08.06 but others only 20.06, so decided to take later date
+start_date <- as.Date("2023-06-21") 
+# some were in already on 08.06 but others only 20.06, so decided to take later date for all 
+# and take away one day for handling
 end_date <- as.Date("2023-10-23") # were collected on 24.10
 
 # Filter the data for the specified date range
@@ -264,7 +310,7 @@ ggplot(temp_high_avg_long, aes(x = Date, y = temperature, color = measurement_po
   labs(color = "measurement_position") 
 
 # ok, it seems like it makes sense that temp1 - soil has the least variation
-# more buffering effects then in the air
+# more buffering effects than in the air
 
 # distribution as histogram -----------------------------------------------
 ggplot(temp_high_avg_long, aes( x = temperature)) +
@@ -426,7 +472,7 @@ head(sunrise_down)
 
 # combine temp high long otc with sunrise data to get day and night -------
 temp_high_avg_OTC_long_day_night <- temp_high_avg_OTC_long |> 
-  mutate(Date_only = as.Date(Date)) |>   # Extract date from datetime
+  mutate(Date_only = as.Date(Date)) |>   
   left_join(sunrise_down |> 
               select(Date, Sunrise, Sunset), 
             by = c("Date_only" = "Date")) |> 
@@ -438,7 +484,7 @@ temp_high_avg_OTC_long_day_night <- temp_high_avg_OTC_long |>
     # Define day or night
     day_night = ifelse(Date >= Sunrise & Date <= Sunset, "day", "night")
   ) |> 
-  select(-Date_only)  # Remove helper column
+  select(-Date_only)
 
 
 # filter only day ---------------------------------------------------------
@@ -455,8 +501,6 @@ ggplot(temp_high_avg_OTC_long_day, aes(x = Date, y = temperature, color = treat_
   labs(color = "Warming treatment", y = "Daily mean temperature")
 
 
-
-
 # test for significance ---------------------------------------------------
 ggplot(temp_high_avg_OTC_long_day, aes( x = temperature)) +
   geom_histogram() +
@@ -468,7 +512,7 @@ ggplot(temp_high_avg_OTC_long_day, aes(sample = temperature)) +
   stat_qq_line() +
   theme_minimal()
 
-# shapiro wil test
+# shapiro wilk test
 sample_data <- sample(temp_high_avg_OTC_long_day$temperature, 5000) 
 shapiro.test(sample_data)
 
@@ -511,10 +555,6 @@ filtered_temp_low <- temp_low |>
 head(filtered_temp_low)
 
 
-# delete 94217314 ---------------------------------------------------------
-filtered_temp_low <- filtered_temp_low |> 
-  filter(tomst != "94217314")
-
 # control plotting --------------------------------------------------------
 # temp1 all loggers -------------------------------------------------------
 # Create the plot for Temp1 per logger with the filtered data
@@ -541,9 +581,7 @@ ggplot(filtered_temp_low, aes(x = Date, y = Temp3, color = tomst)) +
   theme(legend.position = "none")
 
 
-
 # pivot longer the data ---------------------------------------------------
-
 temp_low_avg <- filtered_temp_low |> 
   group_by(Date, treat_combined) |> 
   summarize(avg_temp_soil = mean(Temp1, na.rm = TRUE),
@@ -586,53 +624,10 @@ ggplot(temp_daily_low, aes(x = Date, y = temperature, color = treat_combined)) +
   labs(color = "treatment combind", y = "Daily mean temperature")
 
 
+# combine filtered low and filtered high and soil moisture ------------------
 
 
 
-# soil moisture -----------------------------------------------------------
-# function to calculate soil moisture from raw values
-soil.moist <- function(rawsoilmoist, soil_temp, soilclass){
-  
-  # creating df with parameters for each soil type
-  soilclass.df <- tibble(
-    soil = c("sand", "loamy_sand_A", "loamy_sand_B", "sandy_loam_A", "sandy_loam_B", "loam", "silt_loam", "peat"),
-    a = c(-3E-9, -1.9e-8, -2.3e-8, -3.8e-8, -9e-10, -5.1e-8, 1.7e-8, 1.23e-7),
-    b = c(1.61192e-4, 2.6561e-4, 2.82473e-4, 3.39449e-4, 2.61847e-4, 3.97984e-4, 1.18119e-4, 1.44644e-4),
-    c = c(-0.109956505, -0.154089291, -0.167211156, -0.214921782, -0.158618303, 0.291046437, -0.101168511, 0.202927906),
-    AirCalib = rep(57.64530756, 8), # a constant across all soil types, don't know exactly what this does
-    AirPuls = rep(56.88867311, 8), # a constant across all soil types, don't know exactly what this does
-    DilVol = rep(-59.72975311, 8) # a constant across all soil types, don't know exactly what this does
-  )
-  
-  #filtering soilclass.df based on which soilclass was entered in the function
-  soilclass.df <- soilclass.df %>%
-    filter(
-      soil == soilclass
-    )
-  
-  #calculating the volumetric soil moisture with the parameters corresponding to the soil class and the raw soil moisture from the logger
-  volmoist = (soilclass.df$a * rawsoilmoist^2) + (soilclass.df$b * rawsoilmoist) + soilclass.df$c
-  
-  #temperature correction
-  temp_ref <- 24
-  delta_air <- 1.91132689118083
-  delta_water <- 0.64108
-  delta_dil <- -1.270246891 # this is delta-water - delta_air
-  # we don't know what this does or what the variables do, but the result is the same as in excel
-  temp_corr <- rawsoilmoist + ((temp_ref-soil_temp) * (delta_air + delta_dil * volmoist))
-  # volumetric soil moisture with temperatue correction
-  volmoistcorr <- with(soilclass.df,
-                       ifelse(rawsoilmoist>AirCalib,
-                              (temp_corr+AirPuls+DilVol*volmoist)^2*a+(temp_corr+AirPuls+DilVol*volmoist)*b+c,
-                              NA))
-  return(volmoistcorr)
-  # return(volmoist) #let's just use the soil moisture without temperature correction for now
-}
-
-tomst_23_raw <- tomst_23_raw |> 
-  mutate(soil_moisture = soil.moist(rawsoilmoist = Soilmoisture_raw, 
-                                    soil_temp = Temp1, 
-                                    soilclass ="silt_loam"))
 
 
 
