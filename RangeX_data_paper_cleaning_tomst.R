@@ -3,6 +3,7 @@
 
 ## Data used: Data/Data_tomst_loggers/tomst_2023/,
 ##            tomst_plot_codes_2023.csv,
+##            RangeX_metadata_plot_NOR.csv
 ##            Sunrise_sundown_Voss_2023.csv
 ## Date:      03.03.2025
 ## Author:    Nadine Arzt
@@ -25,6 +26,8 @@ library(ggplot2)
 # so take the later one each?
 
 # deleted tomst 94201723 and 94217314 because of impossible values
+# should I delete 94217320? it has a drop in early August: 2023-08-19 11:15:00
+
 
 # calculate max, min and daily amplitude
 # calculate rolling average with rollmean()
@@ -100,10 +103,10 @@ plot_low <- plot_low[c(-1,-2), ]
 
 # add column with site
 plot_high <- plot_high |> 
-  mutate(site = "high")
+  mutate(site = "hi")
 
 plot_low <- plot_low |> 
-  mutate(site = "low")
+  mutate(site = "lo")
 
 # combine again under each other
 plot_codes_clean <- bind_rows(plot_high, plot_low)
@@ -119,17 +122,17 @@ head(tomst_23_raw)
 tomst_23_raw <- tomst_23_raw |> 
   mutate(
     treat_warming = case_when(
-      site == "high" & treat %in% c("A", "C", "E") ~ "warm",
-      site == "high" & treat %in% c("B", "D", "F") ~ "ambi",
-      site == "low" & treat %in% c("A", "B") ~ "ambi",  
+      site == "hi" & treat %in% c("A", "C", "E") ~ "warm",
+      site == "hi" & treat %in% c("B", "D", "F") ~ "ambi",
+      site == "lo" & treat %in% c("A", "B") ~ "ambi",  
       TRUE ~ NA_character_  # Assign NA to unexpected cases
     ),
     treat_competition = case_when(
-      site == "high" & treat %in% c("A", "B") ~ "vege",
-      site == "high" & treat %in% c("C", "D") ~ "control",
-      site == "high" & treat %in% c("E", "F") ~ "bare",
-      site == "low" & treat == "A" ~ "vege",  
-      site == "low" & treat == "B" ~ "bare",
+      site == "hi" & treat %in% c("A", "B") ~ "vege",
+      site == "hi" & treat %in% c("C", "D") ~ "control",
+      site == "hi" & treat %in% c("E", "F") ~ "bare",
+      site == "lo" & treat == "A" ~ "vege",  
+      site == "lo" & treat == "B" ~ "bare",
       TRUE ~ NA_character_
     )
   )
@@ -220,10 +223,32 @@ tomst_23_raw_filtered <- tomst_23_raw |>
   filter(Date >= start_date & Date <= end_date)
 
 
-
-
-
 # plot soil moisture ------------------------------------------------------
+# one line per logger
+ggplot(tomst_23_raw_filtered, aes(x = Date, y = TMS_moist, color = tomst)) +
+  geom_line() +
+  theme_minimal() +
+  theme(legend.position = "none")
+# is there one outlier in the middle?
+
+# check if the drop in the middle is an outlier
+# by finding min in August-September
+out <- tomst_23_raw_filtered |> 
+  filter(Date >= as.Date("2023-08-01") & Date <= as.Date("2023-09-20")) |> 
+  filter(TMS_moist == min(TMS_moist, na.rm = TRUE)) 
+
+# plot only 94217320
+one_logger <- tomst_23_raw_filtered |> 
+  filter(tomst == 94217320)
+
+ggplot(one_logger, aes(x = Date, y = TMS_moist, color = tomst)) +
+  geom_line() +
+  theme_minimal() +
+  theme(legend.position = "none")
+# ok, it has a drop in early August: 2023-08-19 11:15:00
+# should we delete the whole logger?
+
+
 # calculate average per date per treatment
 # it's still every 15 min
 tomst_23_raw_average <- tomst_23_raw_filtered |> 
@@ -232,16 +257,94 @@ tomst_23_raw_average <- tomst_23_raw_filtered |>
 head(tomst_23_raw_average)
 
 # plot all treatments
-ggplot(tomst_23_raw_average, aes(x = Date, y = avg_soil_moist, color = treat_combined)) +
+soil_moist <- ggplot(tomst_23_raw_average, aes(x = Date, y = avg_soil_moist, color = treat_combined)) +
   geom_line() +
-  theme_minimal() +
+  theme_bw() +
   theme(legend.position = "right")
+soil_moist
+
+ggsave(filename = "RangeX_soil_moisture_23.png", 
+       plot = soil_moist, 
+       path = "Data/Data_tomst_loggers/", 
+       width = 10, height = 6, dpi = 300)
 
 # it doesn't look like there is a drying effect of the OTCs here
 # warm has higher soil moist values
 # less transpiration due to OTCs?
 
-# get temperature data ----------------------------------------------------
+
+# fix colnames ------------------------------------------------------------
+names(tomst_23_raw_filtered)
+
+tomst_23_raw_filtered <- tomst_23_raw_filtered |> 
+  rename(date_time = Date,
+         TMS_T1 = Temp1,
+         TMS_T2 = Temp2,
+         TMS_T3 = Temp3)
+
+# add column VWC
+tomst_23_raw_filtered <- tomst_23_raw_filtered |> 
+  mutate(VWC = NA)
+
+
+# import metadata -------------------------------------------------------
+metadata <- read.csv("Data/RangeX_metadata_plot_NOR.csv")
+metadata <- metadata |> 
+  select(-"X")
+
+
+# fix col names --------------------------------------------------------
+names(metadata)
+names(tomst_23_raw_filtered)
+
+tomst_23_raw_filtered <- tomst_23_raw_filtered |> 
+  rename("block_ID_original" = "block",
+         "plot_ID_original" = "treat")
+
+# to match plot_ID_original
+tomst_23_raw_filtered <- tomst_23_raw_filtered |> 
+  mutate(plot_ID_original = case_when(
+    plot_ID_original == "A" ~ "a",
+    plot_ID_original == "B" ~ "b",
+    plot_ID_original == "C" ~ "c",
+    plot_ID_original == "D" ~ "d",
+    plot_ID_original == "E" ~ "e",
+    plot_ID_original == "F" ~ "f"
+  ))
+
+
+# merge metadata with tomst_23_raw_filtered -------------------------------
+metadata <- metadata |> 
+  mutate(across(c(block_ID_original, plot_ID_original), as.character))
+
+tomst_23_raw_filtered <- tomst_23_raw_filtered |> 
+  mutate(across(c(block_ID_original, plot_ID_original), as.character))
+
+tomst_23_clean<- left_join(metadata, tomst_23_raw_filtered, 
+                         by = c( "site", "block_ID_original",
+                                 "plot_ID_original",
+                                 "treat_warming", "treat_competition"))
+
+
+# select only columns needed for clean data on OSF ------------------------
+rx_tomst_23_clean <- tomst_23_clean |> 
+  select(unique_plot_ID, date_time, 
+         TMS_T1, TMS_T2, TMS_T3, 
+         TMS_moist, VWC)
+
+
+# save clean data ---------------------------------------------------------
+write.csv(rx_tomst_23_clean, "Data/Data_tomst_loggers/RangeX_clean_tomst_NOR_2023.csv")
+
+tomst <- read_csv("Data/Data_tomst_loggers/RangeX_clean_tomst_NOR_2023.csv")
+
+
+
+
+
+
+
+# get temperature data for plotting ----------------------------------------------------
 # Extract temperature columns into a new data frame
 temperature <- tomst_23_raw |> 
   select(tomst, date_out, Date, Temp1, Temp2, Temp3, block, treat, treat_warming, treat_competition, site) 
