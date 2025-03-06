@@ -193,10 +193,53 @@ soil.moist <- function(rawsoilmoist, soil_temp, soilclass){
   # return(volmoist) #let's just use the soil moisture without temperature correction for now
 }
 
+# apply the soil moisture function
 tomst_23_raw <- tomst_23_raw |> 
-  mutate(soil_moisture = soil.moist(rawsoilmoist = Soilmoisture_raw, 
+  mutate(TMS_moist = soil.moist(rawsoilmoist = Soilmoisture_raw, 
                                     soil_temp = Temp1, 
                                     soilclass ="silt_loam"))
+
+
+# combined treatment column -----------------------------------------------
+tomst_23_raw <- tomst_23_raw |> 
+  mutate(treat_combined = paste(site, treat_warming, treat_competition, sep = "_"))
+
+
+
+# filter field season already here ----------------------------------------
+#high site
+# some were in already on 08.06 but others only 20.06, so decided to take later date for all 
+# and take away one day for handling
+# low site
+# 20.06 but rather do 21.06 then to match with high site
+start_date <- as.Date("2023-06-21") 
+end_date <- as.Date("2023-10-23") # were collected on 24.10
+
+# Filter the data for the specified date range
+tomst_23_raw_filtered <- tomst_23_raw |> 
+  filter(Date >= start_date & Date <= end_date)
+
+
+
+
+
+# plot soil moisture ------------------------------------------------------
+# calculate average per date per treatment
+# it's still every 15 min
+tomst_23_raw_average <- tomst_23_raw_filtered |> 
+  group_by(Date, treat_combined) |> 
+  summarize(avg_soil_moist = mean(TMS_moist, na.rm = TRUE),,.groups = 'drop')
+head(tomst_23_raw_average)
+
+# plot all treatments
+ggplot(tomst_23_raw_average, aes(x = Date, y = avg_soil_moist, color = treat_combined)) +
+  geom_line() +
+  theme_minimal() +
+  theme(legend.position = "right")
+
+# it doesn't look like there is a drying effect of the OTCs here
+# warm has higher soil moist values
+# less transpiration due to OTCs?
 
 # get temperature data ----------------------------------------------------
 # Extract temperature columns into a new data frame
@@ -213,11 +256,6 @@ summary(temperature)
 
 temperature <- temperature |> 
   mutate(date_out = as.Date(date_out, format = "%d.%m.%Y"))
-
-
-# combined treatment column  ----------------------------------------------
-temperature <- temperature |> 
-  mutate(treat_combined = paste(site, treat_warming, treat_competition, sep = "_"))
 
 
 # split low and high site -------------------------------------------------
