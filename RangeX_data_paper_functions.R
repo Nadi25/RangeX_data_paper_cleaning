@@ -2,26 +2,44 @@
 # Script with functions used for tomst logger data cleaning ----------------------------------------------
 
 # Extract tomst logger number from file name ------------------------------
-extract_number <- function(file) {
+# for 2021 data
+# 6 numbers in a row
+extract_number_21 <- function(file) {
   str_extract(basename(file), "\\d{6,}")
+}
+
+# for 2023 data
+extract_number_23 <- function(file) {
+  str_extract(basename(file), "\\d+")
 }
 
 
 # Read folder with multiple tomst data files ------------------------------
-# date has several formats in the data, with and without seconds
-read_tomst_file <- function(file) {
+# 2021: date has several formats in the data, with and without seconds
+read_tomst_file_21 <- function(file) {
   read_delim(file, delim = ";", skip = 1, col_names = column_names, col_types = column_types, 
              locale = locale(decimal_mark = ","), show_col_types = FALSE) |>
     mutate(date_time = parse_date_time(date_time, orders = c("dmy HMS", "dmy HM", "ymd HMS", "ymd HM")),  # Convert Date column to datetime
            across(c(TMS_T1, TMS_T2, TMS_T3), ~ as.numeric(str_replace(.x, ",", "."))), # Convert temps to numeric
-           tomst = extract_number(file)  # Add the tomst logger number
+           tomst = extract_number_21(file)  # Add the tomst logger number
+    )
+}
+
+# 2023: same date format for all files
+read_tomst_file_23 <- function(file) {
+  read_delim(file, delim = ";", skip = 1, col_names = column_names, col_types = column_types, 
+             locale = locale(decimal_mark = ","), show_col_types = FALSE) |>
+    mutate(date_time = dmy_hms(date_time),  # Convert Date column to datetime
+           across(c(TMS_T1, TMS_T2, TMS_T3), ~ as.numeric(str_replace(.x, ",", "."))), # Convert temps to numeric
+           tomst = extract_number_23(file)  # Add the tomst logger number
     )
 }
 
 # Soil moisture ----------------------------------------------------------
 # function to calculate soil moisture from raw values
+# slightly adapted from:
 # https://github.com/audhalbritter/Three-D/blob/master/R/functions/soilmoisture_correction.R
-soil.moist <- function(rawsoilmoist, soil_temp, soilclass){
+calc_soil_moist <- function(rawsoilmoist, soil_temp, soilclass){
   
   # creating df with parameters for each soil type
   soilclass.df <- tibble(
@@ -35,13 +53,13 @@ soil.moist <- function(rawsoilmoist, soil_temp, soilclass){
   )
   
   #filtering soilclass.df based on which soilclass was entered in the function
-  soilclass.df <- soilclass.df %>%
+  soilclass.df <- soilclass.df |> 
     filter(
-      soil == soilclass
+      soil == {{soilclass}}
     )
   
   #calculating the volumetric soil moisture with the parameters corresponding to the soil class and the raw soil moisture from the logger
-  volmoist = (soilclass.df$a * rawsoilmoist^2) + (soilclass.df$b * rawsoilmoist) + soilclass.df$c
+  volmoist = with(soilclass.df, {(a * rawsoilmoist^2) + (b * rawsoilmoist) + c})
   
   #temperature correction
   temp_ref <- 24
@@ -55,7 +73,8 @@ soil.moist <- function(rawsoilmoist, soil_temp, soilclass){
                        ifelse(rawsoilmoist>AirCalib,
                               (temp_corr+AirPuls+DilVol*volmoist)^2*a+(temp_corr+AirPuls+DilVol*volmoist)*b+c,
                               NA))
-  return(volmoistcorr)
+  
+  volmoistcorr
   # return(volmoist) #let's just use the soil moisture without temperature correction for now
 }
 
