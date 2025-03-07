@@ -32,6 +32,12 @@
 
 # check: 
 # NOR.hi.ambi.vege.wf.09.27 pimsax: high value for weight: 0.69400000
+# NOR.hi.warm.bare.wf.03.11 pimsax: no_seeds: 239.00000
+# NOR.hi.warm.bare.wf.05.15 leuvul: no_seeds: 237.50000
+
+
+
+# for usage notes: silene should be taken out because there were not many seeds
 
 # load library ------------------------------------------------------------
 library(conflicted)
@@ -349,6 +355,8 @@ rx_seed_raw <- rx_seed_raw |>
 seed_plot <- rx_seed_raw |> 
   pivot_longer(cols = c(seedweight, no_seeds), names_to = "variable", values_to = "values")
 
+
+# plotting all ------------------------------------------------------------
 ggplot(data = seed_plot[seed_plot$site == "lo",], aes(x = variable, y = values)) +
   geom_boxplot() +
   facet_grid(species~treat_comp_warm, scales = "free")
@@ -357,8 +365,17 @@ ggplot(data = seed_plot, aes(x = variable, y = values, fill = site)) +
   geom_boxplot() +
   facet_grid(species~treat_comp_warm, scales = "free")
 
+
+# seed weight only --------------------------------------------------------
 seed_weight <- seed_plot |> 
   filter(variable == "seedweight") 
+
+ggplot(data = seed_weight[seed_weight$site == "hi",], aes(x = variable, y = values)) +
+  geom_jitter()
+
+ggplot(data = seed_weight[seed_weight$site == "lo",], aes(x = variable, y = values)) +
+  geom_jitter()
+
 ggplot(data = seed_weight, aes(x = variable, y = values, fill = site)) +
   geom_boxplot() +
   facet_grid(species~treat_comp_warm, scales = "free")
@@ -370,6 +387,11 @@ ggplot(data = seed_weight[seed_weight$site == "lo",], aes(x = variable, y = valu
 
 ggplot(data = seed_weight[seed_weight$site == "hi",], aes(x = variable, y = values)) +
   geom_boxplot() +
+  geom_jitter()+
+  facet_grid(species~treat_comp_warm, scales = "free")
+
+
+ggplot(data = seed_weight[seed_weight$site == "hi",], aes(x = variable, y = values)) +
   geom_jitter()+
   facet_grid(species~treat_comp_warm, scales = "free")
 
@@ -387,13 +409,27 @@ ggplot(data = seed_weight[seed_weight$site == "lo",], aes(x = values, fill = sit
 
 
 
+# number of seeds only ----------------------------------------------------
+seed_number <- seed_plot |> 
+  filter(variable == "no_seeds") 
+
+ggplot(data = seed_number[seed_number$site == "hi",], aes(x = variable, y = values)) +
+  geom_jitter()
+
+ggplot(data = seed_number[seed_number$site == "hi",], aes(x = values)) +
+  geom_histogram()
+
+ggplot(data = seed_number[seed_number$site == "lo",], aes(x = variable, y = values)) +
+  geom_jitter()
+
+ggplot(data = seed_number[seed_number$site == "lo",], aes(x = values)) +
+  geom_histogram()
 
 
 
+# save clean data set -----------------------------------------------------
 
+# write.csv(rangex_seed_clean, "Data/Data_seeds/RangeX_clean_seeds_NOR_2023.csv")
 
-
-
-
-
+seed <- read_csv("Data/Data_seeds/RangeX_clean_seeds_NOR_2023.csv")
 
