@@ -44,17 +44,17 @@ head(test_file)
 # has , 
 
 # define colnames as header
-column_names <- c("number", "Date", "Column1", "Temp1", "Temp2", "Temp3", "Soilmoisture", "Column6", "Column7")
+column_names <- c("number", "date_time", "Column1", "TMS_T1", "TMS_T2", "TMS_T3", "Soilmoisture_raw", "Column6", "Column7")
 
 # define coltypes to have the values correct later
 column_types <- cols(
   number = col_double(),
-  Date = col_character(),   # Read as character first, convert to datetime later
+  date_time = col_character(),   # Read as character first, convert to datetime later
   Column1 = col_double(),
-  Temp1 = col_character(),  # Read as character to handle commas, convert later
-  Temp2 = col_character(),
-  Temp3 = col_character(),
-  Soilmoisture = col_double(),
+  TMS_T1 = col_character(),  # Read as character to handle commas, convert later
+  TMS_T2 = col_character(),
+  TMS_T3 = col_character(),
+  Soilmoisture_raw = col_double(),
   Column6 = col_double(),
   Column7 = col_double()
 )
@@ -68,8 +68,8 @@ extract_number <- function(file) {
 read_tomst_file <- function(file) {
   read_delim(file, delim = ";", skip = 1, col_names = column_names, col_types = column_types, 
              locale = locale(decimal_mark = ","), show_col_types = FALSE) |>
-    mutate(Date = dmy_hms(Date),  # Convert Date column to datetime
-      across(c(Temp1, Temp2, Temp3), ~ as.numeric(str_replace(.x, ",", "."))), # Convert temps to numeric
+    mutate(date_time = dmy_hms(date_time),  # Convert Date column to datetime
+      across(c(TMS_T1, TMS_T2, TMS_T3), ~ as.numeric(str_replace(.x, ",", "."))), # Convert temps to numeric
       tomst = extract_number(file)  # Add the tomst logger number
     )
 }
@@ -145,12 +145,6 @@ tomst_23_raw <- tomst_23_raw |>
 tomst_23_raw <- tomst_23_raw |> 
   filter(tomst != "94217314")
 
-
-# rename soil moisture ----------------------------------------------------
-tomst_23_raw <- tomst_23_raw |> 
-  rename(Soilmoisture_raw = Soilmoisture)
-
-
 # calculate soil moisture -----------------------------------------------------------
 # function to calculate soil moisture from raw values
 # https://github.com/audhalbritter/Three-D/blob/master/R/functions/soilmoisture_correction.R
@@ -196,7 +190,7 @@ calc_soil_moist <- function(rawsoilmoist, soil_temp, soilclass){
 # apply the soil moisture function
 tomst_23_raw <- tomst_23_raw |> 
   mutate(TMS_moist = calc_soil_moist(rawsoilmoist = Soilmoisture_raw, 
-                                    soil_temp = Temp1, 
+                                    soil_temp = TMS_T1, 
                                     soilclass ="silt_loam"))
 
 
@@ -217,12 +211,12 @@ end_date <- as.Date("2023-10-23") # were collected on 24.10
 
 # Filter the data for the specified date range
 tomst_23_raw_filtered <- tomst_23_raw |> 
-  filter(between(Date, left = start_date, right = end_date))
+  filter(between(date_time, left = start_date, right = end_date))
 
 
 # plot soil moisture ------------------------------------------------------
 # one line per logger
-p <- ggplot(tomst_23_raw_filtered, aes(x = Date, y = TMS_moist, color = tomst)) +
+p <- ggplot(tomst_23_raw_filtered, aes(x = date_time, y = TMS_moist, color = tomst)) +
   geom_line() +
   theme(legend.position = "none")
 p 
@@ -231,7 +225,7 @@ p
 # check if the drop in the middle is an outlier
 # by finding min in August-September
 out <- tomst_23_raw_filtered |> 
-  filter(Date >= as.Date("2023-08-01") & Date <= as.Date("2023-09-20")) |> 
+  filter(between(date_time, left = as.Date("2023-08-01"), right =  as.Date("2023-09-20"))) |> 
   filter(TMS_moist == min(TMS_moist, na.rm = TRUE)) 
 
 # plot only 94217320
@@ -246,14 +240,13 @@ p %+% one_logger
 # calculate average per date per treatment
 # it's still every 15 min
 tomst_23_raw_average <- tomst_23_raw_filtered |> 
-  group_by(Date, treat_combined) |> 
+  group_by(date_time, treat_combined) |> 
   summarize(avg_soil_moist = mean(TMS_moist, na.rm = TRUE), .groups = 'drop')
 head(tomst_23_raw_average)
 
 # plot all treatments
-soil_moist <- ggplot(tomst_23_raw_average, aes(x = Date, y = avg_soil_moist, color = treat_combined)) +
+soil_moist <- ggplot(tomst_23_raw_average, aes(x = date_time, y = avg_soil_moist, color = treat_combined)) +
   geom_line() +
-  theme_bw() +
   theme(legend.position = "right")
 soil_moist
 
@@ -267,16 +260,7 @@ ggsave(filename = "RangeX_soil_moisture_23.png",
 # less transpiration due to OTCs?
 
 
-# fix colnames ------------------------------------------------------------
-names(tomst_23_raw_filtered)
-
-tomst_23_raw_filtered <- tomst_23_raw_filtered |> 
-  rename(date_time = Date,
-         TMS_T1 = Temp1,
-         TMS_T2 = Temp2,
-         TMS_T3 = Temp3)
-
-# add column VWC
+# add column VWC ----------------------------------------------------------
 tomst_23_raw_filtered <- tomst_23_raw_filtered |> 
   mutate(VWC = NA)
 
