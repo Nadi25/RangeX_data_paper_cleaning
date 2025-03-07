@@ -10,13 +10,13 @@
 ## Purpose:   Clean TOMST logger data 2023
 
 # load library ------------------------------------------------------------
+library(tidyverse)
 library(conflicted)
 conflict_prefer_all("dplyr", quiet = TRUE)
-library(tidyverse)
-library(openxlsx)
 library(janitor)
-library(lubridate)
-library(ggplot2)
+
+# default theme
+theme_set(theme_bw())
 
 # comments ----------------------------------------------------------------
 # temp1 is in soil, temp2 at 0cm and temp3 20cm above ground
@@ -75,42 +75,38 @@ read_tomst_file <- function(file) {
 }
 
 # get one dataframe with data from all files using the list of files (tomst_23) with a loop
-tomst_data_23 <- map_dfr(tomst_23, read_tomst_file)
+tomst_data_23 <- map(tomst_23, read_tomst_file) |> 
+  list_rbind()
 head(tomst_data_23)
 
 # get plot codes 23 ------------------------------------------------------
-plot_codes_23 <- read.csv2("Data/Data_tomst_loggers/tomst_plot_codes_2023.csv", header =  FALSE)
+plot_codes_23 <- read.csv2("Data/Data_tomst_loggers/tomst_plot_codes_2023.csv", skip = 1)
 plot_codes_23
 
 # split dataset into low and high 
 # high
 plot_high <- plot_codes_23 |> 
-  select(V1:V5)
+  select(block:comment)
 # low
 plot_low <- plot_codes_23 |> 
-  select(V7:V11)
+  select(block.1:comment.1)
 
 plot_low <- plot_low |> 
-  filter(if_any(everything(), ~ !is.na(.) & . != ""))
-
-# row 2 as header
-colnames(plot_high) <- plot_high[2, ]
-plot_high <- plot_high[c(-1,-2), ]
-
-colnames(plot_low) <- plot_low[2, ]
-plot_low <- plot_low[c(-1,-2), ]
-
-# add column with site
-plot_high <- plot_high |> 
-  mutate(site = "hi")
-
-plot_low <- plot_low |> 
-  mutate(site = "lo")
+  filter(if_any(everything(), ~ !is.na(.) & . != "")) |> 
+  rename(block = block.1,
+        treat = treat.1,
+        tomst = tomst.1,
+        date_out = date_out.1,
+        comment = comment.1)
 
 # combine again under each other
-plot_codes_clean <- bind_rows(plot_high, plot_low)
+plot_codes_clean <- bind_rows(hi = plot_high, lo = plot_low, .id = "site")
 head(plot_codes_clean)
 str(plot_codes_clean) # tomst = chr 
+
+# tomst into character
+plot_codes_clean <- plot_codes_clean |> 
+  mutate(tomst = as.character(tomst))
 
 # combine tomst data with plot labels -------------------------------------
 tomst_23_raw <- left_join(plot_codes_clean, tomst_data_23, by = "tomst")
@@ -118,13 +114,14 @@ head(tomst_23_raw)
 
 
 # Add treat_warming and treat_competition columns based on treat ----------
+# why does it not work with .default ~ NA
 tomst_23_raw <- tomst_23_raw |> 
   mutate(
     treat_warming = case_when(
       site == "hi" & treat %in% c("A", "C", "E") ~ "warm",
       site == "hi" & treat %in% c("B", "D", "F") ~ "ambi",
       site == "lo" & treat %in% c("A", "B") ~ "ambi",  
-      TRUE ~ NA_character_  # Assign NA to unexpected cases
+      TRUE ~ NA  # Assign NA to unexpected cases
     ),
     treat_competition = case_when(
       site == "hi" & treat %in% c("A", "B") ~ "vege",
@@ -132,7 +129,7 @@ tomst_23_raw <- tomst_23_raw |>
       site == "hi" & treat %in% c("E", "F") ~ "bare",
       site == "lo" & treat == "A" ~ "vege",  
       site == "lo" & treat == "B" ~ "bare",
-      TRUE ~ NA_character_
+      TRUE ~ NA
     )
   )
 
@@ -140,7 +137,7 @@ tomst_23_raw <- tomst_23_raw |>
 tomst_23_raw <- tomst_23_raw |> 
   select(where(~ !all(is.na(.))))
 
-# delete tomst 94201723  --------------------------------------------------
+# delete tomst 94201723 because of impossible values --------------------------------------------------
 tomst_23_raw <- tomst_23_raw |> 
   filter(tomst != "94201723")
 
@@ -157,7 +154,7 @@ tomst_23_raw <- tomst_23_raw |>
 # calculate soil moisture -----------------------------------------------------------
 # function to calculate soil moisture from raw values
 # https://github.com/audhalbritter/Three-D/blob/master/R/functions/soilmoisture_correction.R
-soil.moist <- function(rawsoilmoist, soil_temp, soilclass){
+calc_soil_moist <- function(rawsoilmoist, soil_temp, soilclass){
   
   # creating df with parameters for each soil type
   soilclass.df <- tibble(
@@ -171,13 +168,13 @@ soil.moist <- function(rawsoilmoist, soil_temp, soilclass){
   )
   
   #filtering soilclass.df based on which soilclass was entered in the function
-  soilclass.df <- soilclass.df %>%
+  soilclass.df <- soilclass.df |> 
     filter(
-      soil == soilclass
+      soil == {{soilclass}}
     )
   
   #calculating the volumetric soil moisture with the parameters corresponding to the soil class and the raw soil moisture from the logger
-  volmoist = (soilclass.df$a * rawsoilmoist^2) + (soilclass.df$b * rawsoilmoist) + soilclass.df$c
+  volmoist = with(soilclass.df, {(a * rawsoilmoist^2) + (b * rawsoilmoist) + c})
   
   #temperature correction
   temp_ref <- 24
@@ -191,13 +188,14 @@ soil.moist <- function(rawsoilmoist, soil_temp, soilclass){
                        ifelse(rawsoilmoist>AirCalib,
                               (temp_corr+AirPuls+DilVol*volmoist)^2*a+(temp_corr+AirPuls+DilVol*volmoist)*b+c,
                               NA))
-  return(volmoistcorr)
+  
+  volmoistcorr
   # return(volmoist) #let's just use the soil moisture without temperature correction for now
 }
 
 # apply the soil moisture function
 tomst_23_raw <- tomst_23_raw |> 
-  mutate(TMS_moist = soil.moist(rawsoilmoist = Soilmoisture_raw, 
+  mutate(TMS_moist = calc_soil_moist(rawsoilmoist = Soilmoisture_raw, 
                                     soil_temp = Temp1, 
                                     soilclass ="silt_loam"))
 
@@ -219,15 +217,15 @@ end_date <- as.Date("2023-10-23") # were collected on 24.10
 
 # Filter the data for the specified date range
 tomst_23_raw_filtered <- tomst_23_raw |> 
-  filter(Date >= start_date & Date <= end_date)
+  filter(between(Date, left = start_date, right = end_date))
 
 
 # plot soil moisture ------------------------------------------------------
 # one line per logger
-ggplot(tomst_23_raw_filtered, aes(x = Date, y = TMS_moist, color = tomst)) +
+p <- ggplot(tomst_23_raw_filtered, aes(x = Date, y = TMS_moist, color = tomst)) +
   geom_line() +
-  theme_minimal() +
   theme(legend.position = "none")
+p 
 # is there one outlier in the middle?
 
 # check if the drop in the middle is an outlier
@@ -240,10 +238,7 @@ out <- tomst_23_raw_filtered |>
 one_logger <- tomst_23_raw_filtered |> 
   filter(tomst == 94217320)
 
-ggplot(one_logger, aes(x = Date, y = TMS_moist, color = tomst)) +
-  geom_line() +
-  theme_minimal() +
-  theme(legend.position = "none")
+p %+% one_logger
 # ok, it has a drop in early August: 2023-08-19 11:15:00
 # should we delete the whole logger?
 
@@ -252,7 +247,7 @@ ggplot(one_logger, aes(x = Date, y = TMS_moist, color = tomst)) +
 # it's still every 15 min
 tomst_23_raw_average <- tomst_23_raw_filtered |> 
   group_by(Date, treat_combined) |> 
-  summarize(avg_soil_moist = mean(TMS_moist, na.rm = TRUE),,.groups = 'drop')
+  summarize(avg_soil_moist = mean(TMS_moist, na.rm = TRUE), .groups = 'drop')
 head(tomst_23_raw_average)
 
 # plot all treatments
@@ -265,7 +260,7 @@ soil_moist
 ggsave(filename = "RangeX_soil_moisture_23.png", 
        plot = soil_moist, 
        path = "Data/Data_tomst_loggers/", 
-       width = 10, height = 6, dpi = 300)
+       width = 10, height = 6)
 
 # it doesn't look like there is a drying effect of the OTCs here
 # warm has higher soil moist values
@@ -336,17 +331,6 @@ rx_tomst_23_clean <- tomst_23_clean |>
 # write.csv(rx_tomst_23_clean, "Data/Data_tomst_loggers/RangeX_clean_tomst_NOR_2023.csv")
 
 tomst <- read_csv("Data/Data_tomst_loggers/RangeX_clean_tomst_NOR_2023.csv")
-
-
-
-
-
-
-
-
-
-
-
 
 
 
