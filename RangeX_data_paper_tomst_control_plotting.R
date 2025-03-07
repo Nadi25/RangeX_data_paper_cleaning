@@ -1,6 +1,5 @@
 
-
-# Climate data TOMST loggers NOR data exploration --------------------------------------------
+# Climate data TOMST loggers NOR 2023 data exploration --------------------------------------------
 
 ## Data used: Data/Data_tomst_loggers/tomst_2023/,
 ##            tomst_plot_codes_2023.csv,
@@ -14,15 +13,15 @@
 library(conflicted)
 conflict_prefer_all("dplyr", quiet = TRUE)
 library(tidyverse)
-library(openxlsx)
-library(janitor)
-library(lubridate)
+#library(openxlsx)
+#library(janitor)
+#library(lubridate)
 library(ggplot2)
 
 
 
 # source clean functional trait data file from cleaning R script ---------------------------------
-source("RangeX_data_paper_cleaning_tomst.R")
+source("RangeX_data_paper_cleaning_tomst_2023.R")
 
 head(tomst_23_raw_filtered)
 names(tomst_23_raw_filtered)
