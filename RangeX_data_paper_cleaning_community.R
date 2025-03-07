@@ -6,7 +6,7 @@
 ##            RangeX_raw_comcov_low_2021.xlsx,
 ##            RangeX_raw_comcov_high_2023.xlsx, 
 ##            RangeX_raw_comcov_low_2023.xlsx,
-##            RangeX_Metadata.csv
+##            RangeX_metadata_plot_NOR.csv
 ## Date:      15.01.2025
 ## Author:    Nadine Arzt
 ## Purpose:   Cleaning of the complete raw data files of community 2021-2023
@@ -511,19 +511,30 @@ community_data_clean_NOR <- community_data_clean_NOR |>
 
 
 
-# check spelling of species names -----------------------------------------
+# prepare species data set to check spelling of species names -----------------------------------------
+
+species_to_check <- community_data_clean_NOR |> 
+  select(species) |> 
+  distinct(species) |> 
+  arrange(species)
+
+# add column with unique identifier = row number
+species_to_check <- species_to_check |> 
+  mutate(ID = row_number())
+
+species_to_check <- species_to_check |> 
+  select(ID, species) |> 
+  rename("species_submitted" = "species")
+
+
+# save species to check  --------------------------------------------------
+
+# write.csv(species_to_check, "Data/Data_community/Species_names_to_check.csv")
+
+
+
 
 # https://bien.nceas.ucsb.edu/bien/tools/tnrs/tnrs-api/
 # https://github.com/ojalaquellueva/TNRSapi/blob/master/example_scripts/tnrs_api_example.R
-
-
-
-
-
-
-
-
-
-
 
 
