@@ -18,7 +18,8 @@ library(janitor)
 # default theme
 theme_set(theme_bw())
 
-# comments ----------------------------------------------------------------
+# comments --------------------------------------------------------------
+# https://tomst.com/web/en/systems/tms/software/
 # temp1 is in soil, temp2 at 0cm and temp3 20cm above ground
 
 # 2023: high out: "08.06.2023" and "20.06.2023" - "23.10.2023"
@@ -222,17 +223,14 @@ ggsave(filename = "RangeX_soil_moisture_23.png",
 # warm has higher soil moist values
 # less transpiration due to OTCs?
 
-
 # add column VWC ----------------------------------------------------------
 tomst_23_raw_filtered <- tomst_23_raw_filtered |> 
   mutate(VWC = NA)
-
 
 # import metadata -------------------------------------------------------
 metadata <- read.csv("Data/RangeX_metadata_plot_NOR.csv")
 metadata <- metadata |> 
   select(-"X")
-
 
 # fix col names --------------------------------------------------------
 names(metadata)
