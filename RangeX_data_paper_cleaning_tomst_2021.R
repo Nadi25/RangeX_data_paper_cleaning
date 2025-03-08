@@ -12,11 +12,9 @@
 library(conflicted)
 conflict_prefer_all("dplyr", quiet = TRUE)
 library(tidyverse)
-library(openxlsx)
 library(janitor)
-library(lubridate)
-library(ggplot2)
 
+theme_set(theme_bw())
 # comments ---------------------------------------------------------------
 # temp1 is in soil, temp2 at 0cm and temp3 20cm above ground
 
@@ -57,40 +55,30 @@ column_types <- cols(
 
 # get the data ----------------------------------------------------------
 # get one dataframe with data from all files using the list of files (tomst_21) with a loop
-tomst_data_21 <- map_dfr(tomst_21, read_tomst_file)
+tomst_data_21 <- map_dfr(tomst_21, read_tomst_file_21)
 head(tomst_data_21)
 
 # get plot codes 21 ------------------------------------------------------
-plot_codes_21 <- read.csv2("Data/Data_tomst_loggers/tomst_plot_codes_2021.csv", header =  FALSE)
+plot_codes_21 <- read.csv2("Data/Data_tomst_loggers/tomst_plot_codes_2021.csv", skip = 1)
 plot_codes_21
 
 # split dataset into low and high 
 # high
 plot_high <- plot_codes_21 |> 
-  select(V1:V4)
+  select(block:date_out)
 # low
 plot_low <- plot_codes_21 |> 
-  select(V6:V9)
+  select(block.1:date_out.1)
 
 plot_low <- plot_low |> 
-  filter(if_any(everything(), ~ !is.na(.) & . != ""))
-
-# row 2 as header
-colnames(plot_high) <- plot_high[2, ]
-plot_high <- plot_high[c(-1,-2), ]
-
-colnames(plot_low) <- plot_low[2, ]
-plot_low <- plot_low[c(-1,-2), ]
-
-# add column with site
-plot_high <- plot_high |> 
-  mutate(site = "hi")
-
-plot_low <- plot_low |> 
-  mutate(site = "lo")
+  filter(if_any(everything(), ~ !is.na(.) & . != "")) |> 
+  rename(block = block.1,
+         treat = treat.1,
+         tomst = tomst.1,
+         date_out = date_out.1)
 
 # combine again under each other
-plot_codes_clean <- bind_rows(plot_high, plot_low)
+plot_codes_clean <- bind_rows(hi = plot_high, lo = plot_low, .id = "site")
 head(plot_codes_clean)
 str(plot_codes_clean) # tomst = chr 
 
@@ -124,7 +112,7 @@ tomst_21_raw <- tomst_21_raw |>
 # calculate soil moisture -----------------------------------------------------------
 # apply the soil moisture function
 tomst_21_raw <- tomst_21_raw |> 
-  mutate(TMS_moist = soil.moist(rawsoilmoist = Soilmoisture_raw, 
+  mutate(TMS_moist = calc_soil_moist(rawsoilmoist = Soilmoisture_raw, 
                                 soil_temp = TMS_T1, 
                                 soilclass ="silt_loam"))
 # using silt loam even though this might not be correct but comes closest
@@ -145,13 +133,12 @@ end_date <- as.Date("2021-10-05")
 
 # Filter the data for the specified date range
 tomst_21_raw_filtered <- tomst_21_raw |> 
-  filter(date_time >= start_date & date_time <= end_date)
+  filter(between(date_time, left = start_date, right = end_date))
 
 # plot soil moisture ------------------------------------------------------
 # one line per logger
 ggplot(tomst_21_raw_filtered, aes(x = date_time, y = TMS_moist, color = tomst)) +
   geom_line() +
-  theme_minimal() +
   theme(legend.position = "none")
 #
 
@@ -201,7 +188,7 @@ tomst_21_raw_filtered <- tomst_21_raw_filtered |>
   ))
 
 
-# merge metadata with tomst_23_raw_filtered -------------------------------
+# merge metadata with tomst_21_raw_filtered -------------------------------
 metadata <- metadata |> 
   mutate(across(c(block_ID_original, plot_ID_original), as.character))
 
