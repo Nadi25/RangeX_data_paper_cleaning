@@ -13,11 +13,6 @@
 library(conflicted)
 conflict_prefer_all("dplyr", quiet = TRUE)
 library(tidyverse)
-#library(openxlsx)
-#library(janitor)
-#library(lubridate)
-library(ggplot2)
-
 
 
 # source clean functional trait data file from cleaning R script ---------------------------------
@@ -27,21 +22,20 @@ head(tomst_23_raw_filtered)
 names(tomst_23_raw_filtered)
 
 # get temperature data for plotting ----------------------------------------------------
-# Extract temperature columns into a new data frame
-temperature <- tomst_23_raw_filtered |> 
-  select(tomst, date_out, date_time, TMS_T1, TMS_T2, TMS_T3, block_ID_original, plot_ID_original, 
-         treat_warming, treat_competition, treat_combined, site) 
-
-# View the first few rows of the extracted temperature data
-head(temperature)
-summary(temperature)
-
+# # Extract temperature columns into a new data frame
+# temperature <- tomst_23_raw_filtered |> 
+#   select(tomst, date_out, date_time, TMS_T1, TMS_T2, TMS_T3, block_ID_original, plot_ID_original, 
+#          treat_warming, treat_competition, treat_combined, site) 
+# 
+# # View the first few rows of the extracted temperature data
+# head(temperature)
+# summary(temperature)
 # temperature <- temperature |> 
 #   mutate(date_time = as.Date(date_time, format = "%d.%m.%Y"))
 
 
 # plot all treatments low and high ----------------------------------------
-temp_average <- temperature |> 
+temp_average <- tomst_23_raw_filtered |> 
   group_by(date_time, treat_combined) |> 
   summarize(avg_temp_1 = mean(TMS_T1, na.rm = TRUE),
             avg_temp_2 = mean(TMS_T2, na.rm = TRUE),
@@ -51,134 +45,116 @@ head(temp_average)
 # plot average temp per treat
 ggplot(temp_average, aes(x = date_time, y = avg_temp_1, color = treat_combined)) +
   geom_line() +
-  theme_minimal() +
   theme(legend.position = "right")
 
-# split low and high site -------------------------------------------------
-temp_high <- temperature |> 
-  filter(site == "hi") 
-
-temp_low <- temperature |> 
-  filter(site == "lo") 
+# # split low and high site -------------------------------------------------
+# temp_high <- temperature |> 
+#   filter(site == "hi") 
+# 
+# temp_low <- temperature |> 
+#   filter(site == "lo") 
 
 # control plotting high --------------------------------------------------------
 # temp1 all loggers -------------------------------------------------------
 # Create the plot for Temp1 per logger with the filtered data
-ggplot(temp_high, aes(x = date_time, y = TMS_T1, color = tomst)) +
+ggplot(tomst_23_raw_filtered, 
+       aes(x = date_time, y = TMS_T1, color = tomst)) +
   geom_point() +
-  theme_minimal() +
   theme(legend.position = "right")
 
 # one logger seems very off - find out which
 # 94201723 has impossible temp1 values --> delete above in tomst_23_raw
 
 # temp2 -------------------------------------------------------------------
-ggplot(temp_high, aes(x = date_time, y = TMS_T2, color = tomst)) +
+ggplot(tomst_23_raw_filtered, 
+       aes(x = date_time, y = TMS_T2, color = tomst)) +
   geom_point() +
-  theme_minimal() +
-  theme(legend.position = "right")
+  theme(legend.position = "none")
 
 # temp3 -------------------------------------------------------------------
-ggplot(temp_high, aes(x = date_time, y = TMS_T3, color = tomst)) +
+ggplot(tomst_23_raw_filtered, 
+       aes(x = date_time, y = TMS_T3, color = tomst)) +
   geom_point() +
-  theme_minimal() +
   theme(legend.position = "none")
 
 ggplot(temp_high, aes(x = date_time, y = TMS_T3, color = tomst)) +
   geom_line() +
-  theme_minimal() +
   theme(legend.position = "none")
 
 
 # Group by treatment wamr, ambi and calculate average temperature --------------------
-temp_high_average <- temp_high |> 
+# have low and high site together dont split up df and have site in group by
+temp_average <- tomst_23_raw_filtered |> 
   group_by(date_time, treat_combined) |> 
   summarize(avg_temp_1 = mean(TMS_T1, na.rm = TRUE),
             avg_temp_2 = mean(TMS_T2, na.rm = TRUE),
             avg_temp_3 = mean(TMS_T3, na.rm = TRUE),.groups = 'drop')
-head(temp_high_average)
+temp_average
 
 # plot average temp per treat
-ggplot(temp_high_average, aes(x = date_time, y = avg_temp_1, color = treat_combined)) +
+ggplot(temp_average, aes(x = date_time, y = avg_temp_1, color = treat_combined)) +
   geom_line() +
-  theme_minimal() +
   theme(legend.position = "right")
 
-ggplot(temp_high_average) +
-  geom_line(aes(x = date_time, y = avg_temp_1, color = treat_combined)) +
+ggplot(temp_average) +
   geom_line(aes(x = date_time, y = avg_temp_2, color = treat_combined)) +
-  theme_minimal() +
   theme(legend.position = "right")
 
 
 # average per temp --------------------------------------------------------
-temp_high_avg <- temp_high |> 
-  group_by(date_time) |> 
-  summarize(avg_temp_soil = mean(TMS_T1, na.rm = TRUE),
-            avg_temp_ground = mean(TMS_T2, na.rm = TRUE),
-            avg_temp_air = mean(TMS_T3, na.rm = TRUE),.groups = 'drop')
-head(temp_high_avg)
+# temp_high_avg <- ttomst_23_raw_filtered |> 
+#   group_by(date_time) |> 
+#   summarize(avg_temp_soil = mean(TMS_T1, na.rm = TRUE),
+#             avg_temp_ground = mean(TMS_T2, na.rm = TRUE),
+#             avg_temp_air = mean(TMS_T3, na.rm = TRUE),.groups = 'drop')
+# head(temp_high_avg)
 
 # pivot longer the data
-temp_high_avg_long <- temp_high_avg |> 
+temp_avg_long <- temp_average |> 
   pivot_longer(cols = starts_with("avg_temp"), 
                names_to = "measurement_position", 
                values_to = "temperature")
 
-ggplot(temp_high_avg_long, aes(x = date_time, y = temperature, color = measurement_position)) +
-  geom_line() +
-  theme_minimal() +
+ggplot(temp_avg_long, 
+       aes(x = date_time, y = temperature, color = measurement_position)) +
+  geom_line(alpha = 0.5) +
   labs(color = "measurement_position") 
 
 # ok, it seems like it makes sense that temp1 - soil has the least variation
 # more buffering effects than in the air
 
 # distribution as histogram -----------------------------------------------
-ggplot(temp_high_avg_long, aes( x = temperature)) +
-  geom_histogram() +
-  theme_minimal()
+ggplot(temp_avg_long, aes( x = temperature)) +
+  geom_histogram()
 
 # q-q plot
-ggplot(temp_high_avg_long, aes(sample = temperature)) +
+ggplot(temp_avg_long, aes(sample = temperature)) +
   stat_qq() +
-  stat_qq_line() +
-  theme_minimal()
-
-# shapiro wil test
-sample_data <- sample(temp_high_avg_long$temperature, size = 5000) 
-shapiro.test(sample_data)
-
-# Kolmogorov-Smirnov Test
-ks.test(temp_high_avg_long$temperature, "pnorm", 
-        mean(temp_high_avg_long$temperature), 
-        sd(temp_high_avg_long$temperature))
-
-# so data in hist looks normally distributed but based on the tests it is not
+  stat_qq_line()
+# assume that temp data is normally distributed
 
 # now test if OTCs work ---------------------------------------------------
-temp_high_avg_OTC <- temp_high |> 
+temp_avg_OTC <- tomst_23_raw_filtered |> 
   group_by(date_time, treat_warming) |> 
   summarize(avg_temp_soil = mean(TMS_T1, na.rm = TRUE),
-            avg_temp_ground = mean(TMS_T2, na.rm = TRUE),
+            avg_temp_surface = mean(TMS_T2, na.rm = TRUE),
             avg_temp_air = mean(TMS_T3, na.rm = TRUE),.groups = 'drop')
-head(temp_high_avg_OTC)
+temp_avg_OTC
 
-temp_high_avg_OTC_long <- temp_high_avg_OTC |> 
+temp_avg_OTC_long <- temp_avg_OTC |> 
   pivot_longer(cols = starts_with("avg_temp"), 
                names_to = "measurement_position", 
                values_to = "temperature")
 
-ggplot(temp_high_avg_OTC_long, aes(x = date_time, y = temperature, color = treat_warming)) +
+ggplot(temp_avg_OTC_long, aes(x = date_time, y = temperature, color = treat_warming)) +
   geom_line() +
-  theme_minimal() +
   labs(color = "treat_warming")+
   scale_color_manual(values = c("warm" = "pink2", "ambi" = "turquoise3"))
 
 # one plot per temp position
-ggplot(temp_high_avg_OTC_long, aes(x = date_time, y = temperature, color = treat_warming)) +
+ggplot(temp_avg_OTC_long, aes(x = date_time, y = temperature, color = treat_warming)) +
   geom_line() +
-  facet_wrap(~ measurement_position, scales = "free_y") + 
-  theme_minimal() +
+  facet_wrap(vars(measurement_position), scales = "free_y") +
   labs(color = "Warming Treatment")+
   scale_color_manual(values = c("warm" = "pink2", "ambi" = "turquoise3"))
 
@@ -186,12 +162,12 @@ ggplot(temp_high_avg_OTC_long, aes(x = date_time, y = temperature, color = treat
 
 # daily temp --------------------------------------------------------------
 # calculate a mean per day and treat_warming
-temp_daily <- temp_high |> 
+temp_daily <- tomst_23_raw_filtered |> 
   mutate(date_time = as.Date(date_time)) |> # only keeps day, not time
   group_by(date_time, treat_warming) |> 
   summarize(
     avg_temp_soil = mean(TMS_T1, na.rm = TRUE),
-    avg_temp_ground = mean(TMS_T2, na.rm = TRUE),
+    avg_temp_surface = mean(TMS_T2, na.rm = TRUE),
     avg_temp_air = mean(TMS_T3, na.rm = TRUE),
     .groups = 'drop'
   ) |> 
@@ -200,15 +176,20 @@ temp_daily <- temp_high |>
                values_to = "temperature")
 
 
-ggplot(temp_daily, aes(x = date_time, y = temperature, color = treat_warming)) +
+temp_day <- ggplot(temp_daily, aes(x = date_time, y = temperature, color = treat_warming)) +
   geom_line() +
   facet_wrap(~ measurement_position, scales = "free_y") +  # Separate panels for soil, ground, air
-  theme_minimal() +
   scale_color_manual(values = c("warm" = "pink3", "ambi" = "turquoise"))+
   labs(color = "Warming treatment", y = "Daily mean temperature")
+temp_day
+
+ggsave(filename = "RangeX_temp_daily_23.png", 
+       plot = temp_day, 
+       path = "Data/Data_tomst_loggers/", 
+       width = 10, height = 6)
 
 # calcualte max and min temp per day as well
-temp_daily_high <- temp_high |> 
+temp_daily_date <- tomst_23_raw_filtered |> 
   mutate(date_time = as.Date(date_time)) |>  # Only keeps day, not time
   group_by(date_time, treat_warming) |> 
   summarize(
@@ -216,9 +197,9 @@ temp_daily_high <- temp_high |>
     max_temp_soil = max(TMS_T1, na.rm = TRUE),
     min_temp_soil = min(TMS_T1, na.rm = TRUE),
     
-    avg_temp_ground = mean(TMS_T2, na.rm = TRUE),
-    max_temp_ground = max(TMS_T2, na.rm = TRUE),
-    min_temp_ground = min(TMS_T2, na.rm = TRUE),
+    avg_temp_surface = mean(TMS_T2, na.rm = TRUE),
+    max_temp_surface = max(TMS_T2, na.rm = TRUE),
+    min_temp_surface = min(TMS_T2, na.rm = TRUE),
     
     avg_temp_air = mean(TMS_T3, na.rm = TRUE),
     max_temp_air = max(TMS_T3, na.rm = TRUE),
@@ -233,20 +214,24 @@ temp_daily_high <- temp_high |>
 
 
 # ribbon plot -------------------------------------------------------------
-temp_ribbon <- temp_daily_high |> 
+temp_ribbon <- temp_daily_date |> 
   pivot_wider(names_from = measurement_type, values_from = temperature)
 
-ggplot(temp_ribbon, aes(x = date_time)) +
+temp_daily_min_max <- ggplot(temp_ribbon, aes(x = date_time)) +
   geom_ribbon(aes(ymin = min_temp_air, ymax = max_temp_air, fill = "Air"), alpha = 0.2) +
   geom_ribbon(aes(ymin = min_temp_soil, ymax = max_temp_soil, fill = "Soil"), alpha = 0.2) +
-  geom_ribbon(aes(ymin = min_temp_ground, ymax = max_temp_ground, fill = "Ground"), alpha = 0.2) +
+  geom_ribbon(aes(ymin = min_temp_surface, ymax = max_temp_surface, fill = "Surface"), alpha = 0.2) +
   geom_line(aes(y = avg_temp_air, color = "Air")) +
   geom_line(aes(y = avg_temp_soil, color = "Soil")) +
-  geom_line(aes(y = avg_temp_ground, color = "Ground")) +
+  geom_line(aes(y = avg_temp_surface, color = "Surface")) +
   facet_wrap(~ treat_warming) +
-  labs(title = "Daily Temperature Range", y = "Temperature (°C)", x = "Date") +
-  theme_minimal()
+  labs(title = "Daily temperature min and max", y = "Temperature (°C)", x = "Date")
+temp_daily_min_max
 
+ggsave(filename = "RangeX_temp_daily_min_max_23.png", 
+       plot = temp_daily_min_max, 
+       path = "Data/Data_tomst_loggers/", 
+       width = 10, height = 6)
 
 # separate day and night --------------------------------------------------
 # define what is day and night in Voss in 2023
@@ -255,6 +240,7 @@ ggplot(temp_ribbon, aes(x = date_time)) +
 sunrise_down <- read.csv2("Data/Data_tomst_loggers/Sunrise_sundown_Voss_2023.csv")
 
 # fix date
+# separate_wider_delim doesnt work
 sunrise_down <- sunrise_down |> 
   separate(X...Date, c("Day", "Date"), sep = ",") 
 
@@ -292,10 +278,10 @@ sunrise_down <- sunrise_down |>
 head(sunrise_down)
 
 # sunrise_down <- sunrise_down |> 
-  rename(date_time = Date)
+#  rename(date_time = Date)
 
 # combine temp high long otc with sunrise data to get day and night -------
-temp_high_avg_OTC_long_day_night <- temp_high_avg_OTC_long |> 
+temp_avg_OTC_long_day_night <- temp_avg_OTC_long |> 
   mutate(Date_only = as.Date(date_time)) |>   
   left_join(sunrise_down |> 
               select(Date, Sunrise, Sunset), 
@@ -312,131 +298,44 @@ temp_high_avg_OTC_long_day_night <- temp_high_avg_OTC_long |>
 
 
 # filter only day ---------------------------------------------------------
-temp_high_avg_OTC_long_day <- temp_high_avg_OTC_long_day_night |> 
+temp_avg_OTC_long_day <- temp_avg_OTC_long_day_night |> 
   filter(day_night == "day")
 
 
 # plot only day warm ambi all 3 temp --------------------------------------
-ggplot(temp_high_avg_OTC_long_day, aes(x = date_time, y = temperature, color = treat_warming)) +
+ggplot(temp_avg_OTC_long_day, aes(x = date_time, y = temperature, color = treat_warming)) +
   geom_line() +
   facet_wrap(~ measurement_position, scales = "free_y") +  # Separate panels for soil, ground, air
-  theme_minimal() +
   scale_color_manual(values = c("warm" = "pink3", "ambi" = "turquoise"))+
   labs(color = "Warming treatment", y = "Daily mean temperature")
 
 
 # test for significance ---------------------------------------------------
-ggplot(temp_high_avg_OTC_long_day, aes( x = temperature)) +
-  geom_histogram() +
-  theme_minimal()
+ggplot(temp_avg_OTC_long_day, aes( x = temperature)) +
+  geom_histogram()
 
 # q-q plot
-ggplot(temp_high_avg_OTC_long_day, aes(sample = temperature)) +
+ggplot(temp_avg_OTC_long_day, aes(sample = temperature)) +
   stat_qq() +
-  stat_qq_line() +
-  theme_minimal()
+  stat_qq_line()
 
-# shapiro wilk test
-sample_data <- sample(temp_high_avg_OTC_long_day$temperature, 5000) 
-shapiro.test(sample_data)
-
-# Kolmogorov-Smirnov Test
-ks.test(temp_high_avg_OTC_long_day$temperature, "pnorm", 
-        mean(temp_high_avg_OTC_long_day$temperature), 
-        sd(temp_high_avg_OTC_long_day$temperature))
-
-# this means that if the data is not normally distributed, t-test doesnt work
-t_test_result <- t.test(temperature ~ treat_warming, data = temp_high_avg_OTC_long_day, var.equal = TRUE)
+t_test_result <- t.test(temperature ~ treat_warming, data = temp_avg_OTC_long_day, var.equal = TRUE)
 print(t_test_result)
-# p-value = 0.01358
+# p-value = 1.535e-14
 
 # instead use wilcox test
-wilcox.test(temperature ~ treat_warming, data = temp_high_avg_OTC_long_day)
-# p-value = 0.04174
+wilcox.test(temperature ~ treat_warming, data = temp_avg_OTC_long_day)
+# p-value < 2.2e-16
 # there is a significant effect between warm and ambi
-# not very strong though
+
 
 # plot it
-ggplot(temp_high_avg_OTC_long_day, aes(x = treat_warming, y = temperature, fill = treat_warming)) +
+ggplot(temp_avg_OTC_long_day, aes(x = treat_warming, y = temperature, fill = treat_warming)) +
   geom_boxplot() +
   labs(title = "Temperature Comparison: Warm vs. Ambi",
        x = "Treatment Group",
        y = "Temperature (°C)") +
-  scale_fill_manual(values = c("warm" = "red", "ambi" = "blue")) +
-  theme_bw()
-
-
-
-# temp low: -----------------------------------------
-# control plotting --------------------------------------------------------
-# temp1 all loggers -------------------------------------------------------
-# Create the plot for Temp1 per logger with the filtered data
-ggplot(temp_low, aes(x = date_time, y = TMS_T1, color = tomst)) +
-  geom_point() +
-  theme_minimal() +
-  theme(legend.position = "right")
-
-# temp2 -------------------------------------------------------------------
-ggplot(temp_low, aes(x = date_time, y = TMS_T2, color = tomst)) +
-  geom_point() +
-  theme_minimal() +
-  theme(legend.position = "right")
-
-# temp3 -------------------------------------------------------------------
-ggplot(temp_low, aes(x = date_time, y = TMS_T3, color = tomst)) +
-  geom_point() +
-  theme_minimal() +
-  theme(legend.position = "none")
-
-ggplot(temp_low, aes(x = date_time, y = TMS_T3, color = tomst)) +
-  geom_line() +
-  theme_minimal() +
-  theme(legend.position = "none")
-
-
-# pivot longer the data ---------------------------------------------------
-temp_low_avg <- temp_low |> 
-  group_by(date_time, treat_combined) |> 
-  summarize(avg_temp_soil = mean(TMS_T1, na.rm = TRUE),
-            avg_temp_ground = mean(TMS_T2, na.rm = TRUE),
-            avg_temp_air = mean(TMS_T3, na.rm = TRUE),.groups = 'drop')
-head(temp_low_avg)
-
-temp_low_avg_long <- temp_low_avg |> 
-  pivot_longer(cols = starts_with("avg_temp"), 
-               names_to = "measurement_position", 
-               values_to = "temperature")
-
-# plot
-ggplot(temp_low_avg_long, aes(x = date_time, y = temperature, color = measurement_position)) +
-  geom_line() +
-  theme_minimal() +
-  labs(color = "measurement_position") 
-
-# daily temp --------------------------------------------------------------
-# calculate a mean per day and treat_competition
-temp_daily_low <- temp_low |> 
-  mutate(date_time = as.Date(date_time)) |> # only keeps day, not time
-  group_by(date_time, treat_combined) |> 
-  summarize(
-    avg_temp_soil = mean(TMS_T1, na.rm = TRUE),
-    avg_temp_ground = mean(TMS_T2, na.rm = TRUE),
-    avg_temp_air = mean(TMS_T3, na.rm = TRUE),
-    .groups = 'drop'
-  ) |> 
-  pivot_longer(cols = starts_with("avg_temp"), 
-               names_to = "measurement_position", 
-               values_to = "temperature")
-
-
-ggplot(temp_daily_low, aes(x = date_time, y = temperature, color = treat_combined)) +
-  geom_line() +
-  facet_wrap(~ measurement_position, scales = "free_y") + 
-  theme_minimal() +
-  scale_color_manual(values = c("low_ambi_vege" = "pink4", "low_ambi_bare" = "turquoise3"))+
-  labs(color = "treatment combind", y = "Daily mean temperature")
-
-
+  scale_fill_manual(values = c("warm" = "red", "ambi" = "blue"))
 
 
 
