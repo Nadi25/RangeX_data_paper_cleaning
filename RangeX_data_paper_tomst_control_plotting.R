@@ -108,7 +108,9 @@ ggplot(temp_avg_long, aes(sample = temperature)) +
 # assume that temp data is normally distributed
 
 # now test if OTCs work ---------------------------------------------------
-temp_avg_OTC <- tomst_23_raw_filtered |> 
+# makes no sense to calculate that including the low site, right?
+temp_avg_OTC <- tomst_23_raw_filtered |>
+  filter(site == "hi") |> # low site has no OTCs
   group_by(date_time, treat_warming) |> 
   summarize(avg_temp_soil = mean(TMS_T1, na.rm = TRUE),
             avg_temp_surface = mean(TMS_T2, na.rm = TRUE),
@@ -134,62 +136,17 @@ ggplot(temp_avg_OTC_long, aes(x = date_time, y = temperature, color = treat_warm
 
 
 # lmer test ---------------------------------------------------------------
-lmm_soil <- lmer(TMS_T1 ~ treat_warming + (1 | date_time), data = tomst_23_raw_filtered)
+lmm_air <- lmerTest::lmer(avg_temp_air ~ treat_warming + (1 | date_time), data = temp_avg_OTC)
+summary(lmm_air)
+# looks like warming leads on average to 3.356e-01 degree warmer temp
+# in the air (15 cm)
+lmm_soil <- lmerTest::lmer(avg_temp_soil ~ treat_warming + (1 | date_time), data = temp_avg_OTC)
 summary(lmm_soil)
-anova(lmm_soil)
-# looks like warming leads on average to -0.5 degree colder temp
-# that makes no sense
-# lets look at the average per day
+# not in the soil: -8.656e-02 colder in OTCs
+# lets check daily means
 
-# daily temp --------------------------------------------------------------
-# calculate a mean per day and treat_warming all sites
-temp_daily <- tomst_23_raw_filtered |> 
-  mutate(date_time = as.Date(date_time)) |> # only keeps day, not time
-  group_by(date_time, treat_warming) |> 
-  summarize(
-    avg_temp_soil = mean(TMS_T1, na.rm = TRUE),
-    avg_temp_surface = mean(TMS_T2, na.rm = TRUE),
-    avg_temp_air = mean(TMS_T3, na.rm = TRUE),
-    .groups = 'drop'
-  ) |> 
-  pivot_longer(cols = starts_with("avg_temp"), 
-               names_to = "measurement_position", 
-               values_to = "temperature")
-
-
-temp_day <- ggplot(temp_daily, aes(x = date_time, y = temperature, color = treat_warming)) +
-  geom_line() +
-  facet_wrap(~ measurement_position, scales = "free_y") +  # Separate panels for soil, ground, air
-  scale_color_manual(values = c("warm" = "pink3", "ambi" = "turquoise"))+
-  labs(color = "Warming treatment", y = "Daily mean temperature")
-temp_day
-
-ggsave(filename = "RangeX_temp_daily_23.png", 
-       plot = temp_day, 
-       path = "Data/Data_tomst_loggers/", 
-       width = 10, height = 6)
-
-# makes no sense to calculate that including the low site, right?
-# # test for significance per day--------------------------------------------
-# lmm_soil_daily <- lmer(temperature ~ treat_warming + (1 | date_time), data = temp_daily[temp_daily$measurement_position == "avg_temp_soil", ])
-# summary(lmm_soil_daily)
-# # still the same effect that warming has colder temp
-
-
-# Filter the data for the high site
-temp_daily_high <- temp_daily |> 
-  filter(site == "hi")
-
-# Plot the filtered data
-temp_day_high <- ggplot(temp_daily_high, aes(x = date_time, y = temperature, color = treat_warming)) +
-  geom_line() +
-  facet_wrap(~ measurement_position, scales = "free_y") +  # Separate panels for soil, ground, air
-  scale_color_manual(values = c("warm" = "pink3", "ambi" = "turquoise")) +
-  labs(color = "Warming treatment", y = "Daily mean temperature")
-
-
-
-# daily mean filtered by high site first---------------------------------
+# daily temp high site ---------------------------------------------------
+# calculate a mean per day and treat_warming
 temp_daily_high <- tomst_23_raw_filtered |> 
   filter(site == "hi") |> 
   mutate(date_time = as.Date(date_time)) |> # only keeps day, not time
@@ -204,14 +161,20 @@ temp_daily_high <- tomst_23_raw_filtered |>
                names_to = "measurement_position", 
                values_to = "temperature")
 
-# plot and facet per measurment position
+temp_daily_high <- temp_daily_high |> 
+  mutate(measurement_position = factor(measurement_position, 
+                                       levels = c("avg_temp_air", 
+                                                  "avg_temp_surface", 
+                                                  "avg_temp_soil")))
+
+
 temp_day_high <- ggplot(temp_daily_high, aes(x = date_time, y = temperature, color = treat_warming)) +
   geom_line() +
-  facet_wrap(vars(measurement_position)) +  # Separate panels for soil, surface, air
-  scale_color_manual(values = c("warm" = "pink3", "ambi" = "turquoise")) +
+  facet_wrap(vars(measurement_position)) +  # Separate panels for soil, ground, air
+  scale_color_manual(values = c("warm" = "pink3", "ambi" = "turquoise"))+
   labs(color = "Warming treatment", y = "Daily mean temperature")
 temp_day_high
-#
+
 ggsave(filename = "RangeX_temp_avg_daily_high_23.png", 
        plot = temp_day_high, 
        path = "Data/Data_tomst_loggers/", 
@@ -245,13 +208,14 @@ summary(lmm_air_daily_hi)
 # t-value: 14.31 also significant
 # p-value: <2e-16 ***
 
-
-
-
+# could it be that OTcs have higher condenstaion --> higher moisture
+# higher buffer capapcity of soil
+# colder soil in OTCs?
 
 
 # calculate max and min temp per day --------------------------------------
-temp_daily_date <- tomst_23_raw_filtered |> 
+temp_daily_high_date <- tomst_23_raw_filtered |>
+  filter(site == "hi") |> 
   mutate(date_time = as.Date(date_time)) |>  # Only keeps day, not time
   group_by(date_time, treat_warming) |> 
   summarize(
@@ -274,9 +238,8 @@ temp_daily_date <- tomst_23_raw_filtered |>
                values_to = "temperature")
 
 
-
 # ribbon plot -------------------------------------------------------------
-temp_ribbon <- temp_daily_date |> 
+temp_ribbon <- temp_daily_high_date |> 
   pivot_wider(names_from = measurement_type, values_from = temperature)
 
 temp_daily_min_max <- ggplot(temp_ribbon, aes(x = date_time)) +
@@ -290,7 +253,7 @@ temp_daily_min_max <- ggplot(temp_ribbon, aes(x = date_time)) +
   labs(title = "Daily temperature min and max", y = "Temperature (°C)", x = "Date")
 temp_daily_min_max
 
-ggsave(filename = "RangeX_temp_daily_min_max_23.png", 
+ggsave(filename = "RangeX_temp_daily_high_min_max_23.png", 
        plot = temp_daily_min_max, 
        path = "Data/Data_tomst_loggers/", 
        width = 10, height = 6)
@@ -321,7 +284,7 @@ colnames(sunrise_down) <- c("day", "Date", "Sunrise", "Sunset", "Solar_Noon", "D
 head(sunrise_down)
 
 
-# fix date -----------------------------------------------------------------
+# fix date ----------------------------------------------------------------
 sunrise_down <- sunrise_down |> 
   mutate(
     # Ensure Date is in proper format
@@ -339,17 +302,13 @@ sunrise_down <- sunrise_down |>
   )
 head(sunrise_down)
 
-# sunrise_down <- sunrise_down |> 
-#  rename(date_time = Date)
-
 # combine temp high long otc with sunrise data to get day and night -------
 temp_avg_OTC_long_day_night <- temp_avg_OTC_long |> 
   mutate(Date_only = as.Date(date_time)) |>   
   left_join(sunrise_down |> 
               select(Date, Sunrise, Sunset), 
             by = c("Date_only" = "Date")) |> 
-  mutate(
-    # Convert Sunrise and Sunset to full datetime
+  mutate(# Convert Sunrise and Sunset to full datetime
     Sunrise = ymd_hms(paste(Date_only, Sunrise)),
     Sunset = ymd_hms(paste(Date_only, Sunset)),
     
@@ -363,46 +322,110 @@ temp_avg_OTC_long_day_night <- temp_avg_OTC_long |>
 temp_avg_OTC_long_day <- temp_avg_OTC_long_day_night |> 
   filter(day_night == "day")
 
+temp_avg_OTC_long_day <- temp_avg_OTC_long_day |> 
+  mutate(measurement_position = factor(measurement_position, 
+                                       levels = c("avg_temp_air", 
+                                                  "avg_temp_surface", 
+                                                  "avg_temp_soil")))
 
 # plot only day warm ambi all 3 temp --------------------------------------
 ggplot(temp_avg_OTC_long_day, aes(x = date_time, y = temperature, color = treat_warming)) +
   geom_line() +
-  facet_wrap(~ measurement_position, scales = "free_y") +  # Separate panels for soil, ground, air
+  facet_wrap(vars(measurement_position)) + 
   scale_color_manual(values = c("warm" = "pink3", "ambi" = "turquoise"))+
   labs(color = "Warming treatment", y = "Daily mean temperature")
 
 
 # test for significance ---------------------------------------------------
-ggplot(temp_avg_OTC_long_day, aes( x = temperature)) +
-  geom_histogram()
+# soil
+lmm_soil_day <- lmerTest::lmer(temperature ~ treat_warming + (1 | date_time), data = temp_avg_OTC_long[temp_avg_OTC_long$measurement_position == "avg_temp_soil", ])
+summary(lmm_soil_day)
 
-# q-q plot
-ggplot(temp_avg_OTC_long_day, aes(sample = temperature)) +
-  stat_qq() +
-  stat_qq_line()
+lmm_soil_day <- lme4::lmer(temperature ~ treat_warming + (1 | date_time), data = temp_avg_OTC_long[temp_avg_OTC_long$measurement_position == "avg_temp_soil", ])
+summary(lmm_soil_day)
+# -0.086558 colder in OTCs
+# but how can it be basically the same as with the night together?
 
-t_test_result <- t.test(temperature ~ treat_warming, data = temp_avg_OTC_long_day, var.equal = TRUE)
-print(t_test_result)
-# p-value = 1.535e-14
+# surface
+lmm_surface_day <- lme4::lmer(temperature ~ treat_warming + (1 | date_time), data = temp_avg_OTC_long[temp_avg_OTC_long$measurement_position == "avg_temp_surface", ])
+summary(lmm_surface_day)
+# 0.236429 warmer in OTCs
 
-# instead use wilcox test
-wilcox.test(temperature ~ treat_warming, data = temp_avg_OTC_long_day)
-# p-value < 2.2e-16
-# there is a significant effect between warm and ambi
+# air
+lmm_air_day <- lme4::lmer(temperature ~ treat_warming + (1 | date_time), data = temp_avg_OTC_long[temp_avg_OTC_long$measurement_position == "avg_temp_air", ])
+summary(lmm_air_day)
+# 0.335553 warmer in OTC
 
+# ok, so there is almost no difference to with including the night time
+# maybe we should look at the midday (11-15)
 
 # plot it
 ggplot(temp_avg_OTC_long_day, aes(x = treat_warming, y = temperature, fill = treat_warming)) +
   geom_boxplot() +
+  facet_wrap(vars(measurement_position)) +
   labs(title = "Temperature Comparison: Warm vs. Ambi",
        x = "Treatment Group",
        y = "Temperature (°C)") +
-  scale_fill_manual(values = c("warm" = "red", "ambi" = "blue"))
+  scale_fill_manual(values = c("warm" = "pink3", "ambi" = "turquoise"))
 
 
+# midday 11-15 ------------------------------------------------------------
+# calculate means per day
+# define day as 11-15 when solar radiation is strongest
+temp_avg_OTC_long_midday <- temp_avg_OTC_long |> 
+  mutate(hour = hour(date_time),  # Extract hour from datetime
+         day_night = ifelse(hour >= 11 & hour <= 15, "day", "night"))
+
+# filter only midday
+temp_avg_OTC_long_midday_day <- temp_avg_OTC_long_midday |> 
+  filter(day_night == "day")
+
+temp_avg_OTC_long_midday_day <- temp_avg_OTC_long_midday_day |> 
+  mutate(measurement_position = factor(measurement_position, 
+                                       levels = c("avg_temp_air", 
+                                                  "avg_temp_surface", 
+                                                  "avg_temp_soil")))
+
+# plot only day warm ambi all 3 temp --------------------------------------
+ggplot(temp_avg_OTC_long_midday_day, aes(x = date_time, y = temperature, color = treat_warming)) +
+  geom_line() +
+  facet_wrap(vars(measurement_position)) + 
+  scale_color_manual(values = c("warm" = "pink3", "ambi" = "turquoise"))+
+  labs(color = "Warming treatment", y = "Daily mean temperature")
 
 
+# test for significance ---------------------------------------------------
+# soil
+lmm_soil_midday <- lmerTest::lmer(temperature ~ treat_warming + (1 | date_time), data = temp_avg_OTC_long_midday_day[temp_avg_OTC_long_midday_day$measurement_position == "avg_temp_soil", ])
+summary(lmm_soil_midday)
 
+lmm_soil_midday <- lme4::lmer(temperature ~ treat_warming + (1 | date_time), data = temp_avg_OTC_long_midday_day[temp_avg_OTC_long_midday_day$measurement_position == "avg_temp_soil", ])
+summary(lmm_soil_midday)
+# -0.299585 colder in OTCs
+
+# surface
+lmm_surface_midday <- lme4::lmer(temperature ~ treat_warming + (1 | date_time), data = temp_avg_OTC_long_midday_day[temp_avg_OTC_long_midday_day$measurement_position == "avg_temp_surface", ])
+summary(lmm_surface_midday)
+# -0.26378 colder in OTCs???
+# what??? why?
+
+# air
+lmm_air_midday <- lme4::lmer(temperature ~ treat_warming + (1 | date_time), data = temp_avg_OTC_long_midday_day[temp_avg_OTC_long_midday_day$measurement_position == "avg_temp_air", ])
+summary(lmm_air_midday)
+# 0.71119 warmer in OTC
+
+
+# plot it
+ggplot(temp_avg_OTC_long_midday_day, aes(x = treat_warming, y = temperature, fill = treat_warming)) +
+  geom_boxplot() +
+  facet_wrap(vars(measurement_position)) +
+  labs(title = "Temperature Comparison: Warm vs. Ambi",
+       x = "Treatment Group",
+       y = "Temperature (°C)") +
+  scale_fill_manual(values = c("warm" = "pink3", "ambi" = "turquoise"))
+
+# not sure to be honest
+# now the air is warmer but surface and soil are colder in the OTCs
 
 
 
