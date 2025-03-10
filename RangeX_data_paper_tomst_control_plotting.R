@@ -13,25 +13,14 @@
 library(conflicted)
 conflict_prefer_all("dplyr", quiet = TRUE)
 library(tidyverse)
-
+library(lme4)
+library(lmerTest)
 
 # source clean functional trait data file from cleaning R script ---------------------------------
 source("RangeX_data_paper_cleaning_tomst_2023.R")
 
 head(tomst_23_raw_filtered)
 names(tomst_23_raw_filtered)
-
-# get temperature data for plotting ----------------------------------------------------
-# # Extract temperature columns into a new data frame
-# temperature <- tomst_23_raw_filtered |> 
-#   select(tomst, date_out, date_time, TMS_T1, TMS_T2, TMS_T3, block_ID_original, plot_ID_original, 
-#          treat_warming, treat_competition, treat_combined, site) 
-# 
-# # View the first few rows of the extracted temperature data
-# head(temperature)
-# summary(temperature)
-# temperature <- temperature |> 
-#   mutate(date_time = as.Date(date_time, format = "%d.%m.%Y"))
 
 
 # plot all treatments low and high ----------------------------------------
@@ -47,14 +36,7 @@ ggplot(temp_average, aes(x = date_time, y = avg_temp_1, color = treat_combined))
   geom_line() +
   theme(legend.position = "right")
 
-# # split low and high site -------------------------------------------------
-# temp_high <- temperature |> 
-#   filter(site == "hi") 
-# 
-# temp_low <- temperature |> 
-#   filter(site == "lo") 
-
-# control plotting high --------------------------------------------------------
+# control plotting  --------------------------------------------------------
 # temp1 all loggers -------------------------------------------------------
 # Create the plot for Temp1 per logger with the filtered data
 ggplot(tomst_23_raw_filtered, 
@@ -63,7 +45,7 @@ ggplot(tomst_23_raw_filtered,
   theme(legend.position = "right")
 
 # one logger seems very off - find out which
-# 94201723 has impossible temp1 values --> delete above in tomst_23_raw
+# 94201723 has impossible temp1 values --> delete in cleaning script above in tomst_23_raw
 
 # temp2 -------------------------------------------------------------------
 ggplot(tomst_23_raw_filtered, 
@@ -101,15 +83,7 @@ ggplot(temp_average) +
   theme(legend.position = "right")
 
 
-# average per temp --------------------------------------------------------
-# temp_high_avg <- ttomst_23_raw_filtered |> 
-#   group_by(date_time) |> 
-#   summarize(avg_temp_soil = mean(TMS_T1, na.rm = TRUE),
-#             avg_temp_ground = mean(TMS_T2, na.rm = TRUE),
-#             avg_temp_air = mean(TMS_T3, na.rm = TRUE),.groups = 'drop')
-# head(temp_high_avg)
-
-# pivot longer the data
+# pivot longer the data ------------------------------------------
 temp_avg_long <- temp_average |> 
   pivot_longer(cols = starts_with("avg_temp"), 
                names_to = "measurement_position", 
@@ -159,9 +133,16 @@ ggplot(temp_avg_OTC_long, aes(x = date_time, y = temperature, color = treat_warm
   scale_color_manual(values = c("warm" = "pink2", "ambi" = "turquoise3"))
 
 
+# lmer test ---------------------------------------------------------------
+lmm_soil <- lmer(TMS_T1 ~ treat_warming + (1 | date_time), data = tomst_23_raw_filtered)
+summary(lmm_soil)
+anova(lmm_soil)
+# looks like warming leads on average to -0.5 degree colder temp
+# that makes no sense
+# lets look at the average per day
 
 # daily temp --------------------------------------------------------------
-# calculate a mean per day and treat_warming
+# calculate a mean per day and treat_warming all sites
 temp_daily <- tomst_23_raw_filtered |> 
   mutate(date_time = as.Date(date_time)) |> # only keeps day, not time
   group_by(date_time, treat_warming) |> 
@@ -188,7 +169,88 @@ ggsave(filename = "RangeX_temp_daily_23.png",
        path = "Data/Data_tomst_loggers/", 
        width = 10, height = 6)
 
-# calcualte max and min temp per day as well
+# makes no sense to calculate that including the low site, right?
+# # test for significance per day--------------------------------------------
+# lmm_soil_daily <- lmer(temperature ~ treat_warming + (1 | date_time), data = temp_daily[temp_daily$measurement_position == "avg_temp_soil", ])
+# summary(lmm_soil_daily)
+# # still the same effect that warming has colder temp
+
+
+# Filter the data for the high site
+temp_daily_high <- temp_daily |> 
+  filter(site == "hi")
+
+# Plot the filtered data
+temp_day_high <- ggplot(temp_daily_high, aes(x = date_time, y = temperature, color = treat_warming)) +
+  geom_line() +
+  facet_wrap(~ measurement_position, scales = "free_y") +  # Separate panels for soil, ground, air
+  scale_color_manual(values = c("warm" = "pink3", "ambi" = "turquoise")) +
+  labs(color = "Warming treatment", y = "Daily mean temperature")
+
+
+
+# daily mean filtered by high site first---------------------------------
+temp_daily_high <- tomst_23_raw_filtered |> 
+  filter(site == "hi") |> 
+  mutate(date_time = as.Date(date_time)) |> # only keeps day, not time
+  group_by(date_time, treat_warming) |> 
+  summarize(
+    avg_temp_soil = mean(TMS_T1, na.rm = TRUE),
+    avg_temp_surface = mean(TMS_T2, na.rm = TRUE),
+    avg_temp_air = mean(TMS_T3, na.rm = TRUE),
+    .groups = 'drop'
+  ) |> 
+  pivot_longer(cols = starts_with("avg_temp"), 
+               names_to = "measurement_position", 
+               values_to = "temperature")
+
+# plot and facet per measurment position
+temp_day_high <- ggplot(temp_daily_high, aes(x = date_time, y = temperature, color = treat_warming)) +
+  geom_line() +
+  facet_wrap(vars(measurement_position)) +  # Separate panels for soil, surface, air
+  scale_color_manual(values = c("warm" = "pink3", "ambi" = "turquoise")) +
+  labs(color = "Warming treatment", y = "Daily mean temperature")
+temp_day_high
+#
+ggsave(filename = "RangeX_temp_avg_daily_high_23.png", 
+       plot = temp_day_high, 
+       path = "Data/Data_tomst_loggers/", 
+       width = 10, height = 6)
+#
+
+# test for significance with lmer ---------------------------------------------------
+# Soil temperature
+lmm_soil_daily_hi <- lme4::lmer(temperature ~ treat_warming + (1 | date_time), data = temp_daily_high[temp_daily_high$measurement_position == "avg_temp_soil", ])
+summary(lmm_soil_daily_hi)
+# warm -0.08655 colder then ambi in soil
+# t-value: -3.462 so significant
+
+lmm_soil_daily_hi <- lmerTest::lmer(temperature ~ treat_warming + (1 | date_time), data = temp_daily_high[temp_daily_high$measurement_position == "avg_temp_soil", ])
+summary(lmm_soil_daily_hi)
+# p-value: 0.000737 ***
+
+# Surface temperature
+lmm_surface_daily_hi <- lme4::lmer(temperature ~ treat_warming + (1 | date_time), data = temp_daily_high[temp_daily_high$measurement_position == "avg_temp_surface", ])
+summary(lmm_surface_daily_hi)
+# warm 0.23643 warmer at surface
+# t-value: 7.417 so also significant
+lmm_surface_daily_hi <- lmerTest::lmer(temperature ~ treat_warming + (1 | date_time), data = temp_daily_high[temp_daily_high$measurement_position == "avg_temp_surface", ])
+summary(lmm_surface_daily_hi)
+# p-value: 1.7e-11 ***
+
+# Air temperature
+lmm_air_daily_hi <- lmerTest::lmer(temperature ~ treat_warming + (1 | date_time), data = temp_daily_high[temp_daily_high$measurement_position == "avg_temp_air", ])
+summary(lmm_air_daily_hi)
+# warm 0.33555 warmer at surface
+# t-value: 14.31 also significant
+# p-value: <2e-16 ***
+
+
+
+
+
+
+# calculate max and min temp per day --------------------------------------
 temp_daily_date <- tomst_23_raw_filtered |> 
   mutate(date_time = as.Date(date_time)) |>  # Only keeps day, not time
   group_by(date_time, treat_warming) |> 
