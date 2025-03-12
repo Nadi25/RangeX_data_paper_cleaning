@@ -15,6 +15,7 @@ conflict_prefer_all("dplyr", quiet = TRUE)
 library(tidyverse)
 library(lme4)
 library(lmerTest)
+library(ggsignif)
 
 # source clean functional trait data file from cleaning R script ---------------------------------
 source("RangeX_data_paper_cleaning_tomst_2023.R")
@@ -68,18 +69,18 @@ ggplot(temp_high, aes(x = date_time, y = TMS_T3, color = tomst)) +
 # have low and high site together dont split up df and have site in group by
 temp_average <- tomst_23_raw_filtered |> 
   group_by(date_time, treat_combined) |> 
-  summarize(avg_temp_1 = mean(TMS_T1, na.rm = TRUE),
-            avg_temp_2 = mean(TMS_T2, na.rm = TRUE),
-            avg_temp_3 = mean(TMS_T3, na.rm = TRUE),.groups = 'drop')
+  summarize(avg_temp_soil = mean(TMS_T1, na.rm = TRUE),
+            avg_temp_surface = mean(TMS_T2, na.rm = TRUE),
+            avg_temp_air = mean(TMS_T3, na.rm = TRUE),.groups = 'drop')
 temp_average
 
 # plot average temp per treat
-ggplot(temp_average, aes(x = date_time, y = avg_temp_1, color = treat_combined)) +
+ggplot(temp_average, aes(x = date_time, y = avg_temp_soil, color = treat_combined)) +
   geom_line() +
   theme(legend.position = "right")
 
 ggplot(temp_average) +
-  geom_line(aes(x = date_time, y = avg_temp_2, color = treat_combined)) +
+  geom_line(aes(x = date_time, y = avg_temp_surface, color = treat_combined)) +
   theme(legend.position = "right")
 
 
@@ -147,7 +148,9 @@ summary(lmm_soil)
 
 # daily temp high site ---------------------------------------------------
 # calculate a mean per day and treat_warming
-temp_daily_high <- tomst_23_raw_filtered |> 
+temp_daily_high <- stat_compare_means(aes(label = ..p.signif..), 
+                     comparisons = list(c("warm", "ambi")), 
+                     method = "t.test") |> 
   filter(site == "hi") |> 
   mutate(date_time = as.Date(date_time)) |> # only keeps day, not time
   group_by(date_time, treat_warming) |> 
@@ -369,7 +372,7 @@ ggplot(temp_avg_OTC_long_day, aes(x = treat_warming, y = temperature, fill = tre
   scale_fill_manual(values = c("warm" = "pink3", "ambi" = "turquoise"))
 
 
-# midday 11-15 ------------------------------------------------------------
+# midday 11-15 day --------------------------------------------------------
 # calculate means per day
 # define day as 11-15 when solar radiation is strongest
 temp_avg_OTC_long_midday <- temp_avg_OTC_long |> 
@@ -398,6 +401,7 @@ ggplot(temp_avg_OTC_long_midday_day, aes(x = date_time, y = temperature, color =
 # soil
 lmm_soil_midday <- lmerTest::lmer(temperature ~ treat_warming + (1 | date_time), data = temp_avg_OTC_long_midday_day[temp_avg_OTC_long_midday_day$measurement_position == "avg_temp_soil", ])
 summary(lmm_soil_midday)
+# <2e-16 ***
 
 lmm_soil_midday <- lme4::lmer(temperature ~ treat_warming + (1 | date_time), data = temp_avg_OTC_long_midday_day[temp_avg_OTC_long_midday_day$measurement_position == "avg_temp_soil", ])
 summary(lmm_soil_midday)
@@ -408,12 +412,13 @@ lmm_surface_midday <- lme4::lmer(temperature ~ treat_warming + (1 | date_time), 
 summary(lmm_surface_midday)
 # -0.26378 colder in OTCs???
 # what??? why?
+lmm_surface_midday <- lmerTest::lmer(temperature ~ treat_warming + (1 | date_time), data = temp_avg_OTC_long_midday_day[temp_avg_OTC_long_midday_day$measurement_position == "avg_temp_surface", ])
+summary(lmm_surface_midday)
 
 # air
 lmm_air_midday <- lme4::lmer(temperature ~ treat_warming + (1 | date_time), data = temp_avg_OTC_long_midday_day[temp_avg_OTC_long_midday_day$measurement_position == "avg_temp_air", ])
 summary(lmm_air_midday)
 # 0.71119 warmer in OTC
-
 
 # plot it
 ggplot(temp_avg_OTC_long_midday_day, aes(x = treat_warming, y = temperature, fill = treat_warming)) +
@@ -426,12 +431,12 @@ ggplot(temp_avg_OTC_long_midday_day, aes(x = treat_warming, y = temperature, fil
 
 # not sure to be honest
 # now the air is warmer but surface and soil are colder in the OTCs
+# but with geom_signif surface is not sign, but it uses t.test
 
 
 
 # night time --------------------------------------------------------------
-
-# midday 11-15 ------------------------------------------------------------
+# midday 11-15
 # filter only night
 temp_avg_OTC_long_midday_night <- temp_avg_OTC_long_midday |> 
   filter(day_night == "night")
@@ -464,6 +469,8 @@ summary(lmm_soil_night)
 lmm_surface_night <- lme4::lmer(temperature ~ treat_warming + (1 | date_time), data = temp_avg_OTC_long_midday_night[temp_avg_OTC_long_midday_night$measurement_position == "avg_temp_surface", ])
 summary(lmm_surface_night)
 # 0.369818 warmer in OTCs - aha
+lmm_surface_night <- lmerTest::lmer(temperature ~ treat_warming + (1 | date_time), data = temp_avg_OTC_long_midday_night[temp_avg_OTC_long_midday_night$measurement_position == "avg_temp_surface", ])
+summary(lmm_surface_night)
 
 # air
 lmm_air_night <- lme4::lmer(temperature ~ treat_warming + (1 | date_time), data = temp_avg_OTC_long_midday_night[temp_avg_OTC_long_midday_night$measurement_position == "avg_temp_air", ])
@@ -540,7 +547,7 @@ summary(lmm_air_comp)
 ggplot(temp_daily_high_comp, aes(x = treat_competition, y = temperature, fill = treat_competition)) +
   geom_boxplot() +
   facet_wrap(vars(measurement_position)) +
-  labs(title = "Temperature Comparison: Warm vs. Ambi",
+  labs(title = "Temperature Comparison: Vege vs. bare",
        x = "Treatment Group",
        y = "Temperature (°C)") +
   scale_fill_manual(values = c("bare" = "blue", "vege" = "green", "control" = "pink3"))
@@ -578,5 +585,107 @@ ggplot(temp_daily_high_comp_block, aes(x = date_time, y = temperature, color = t
 lmm_soil_comp_b <- lmerTest::lmer(temperature ~ treat_competition + (1 | date_time)+ (1 | date_time), data = temp_daily_high_comp_block[temp_daily_high_comp_block$measurement_position == "avg_temp_soil", ])
 summary(lmm_soil_comp_b)
 # hm, seems like that doesnt work
+
+
+
+# 24 hours plot -----------------------------------------------------------
+# use all treatments and get new column with only the hour
+temp_avg_long_24h <- temp_average |> 
+  pivot_longer(cols = starts_with("avg_temp"), 
+               names_to = "measurement_position", 
+               values_to = "temperature") |> 
+  mutate(hour = hour(date_time))
+
+# Calculate average temperature for each hour across all days for each treatment
+temp_hourly_avg <- temp_avg_long_24h |> 
+  group_by(hour, treat_combined, measurement_position) |> 
+  summarize(avg_temperature = mean(temperature, na.rm = TRUE), .groups = 'drop')
+
+# factor to have the positions in right order
+temp_hourly_avg <- temp_hourly_avg |> 
+  mutate(measurement_position = factor(measurement_position, 
+                                       levels = c("avg_temp_air", 
+                                                  "avg_temp_surface", 
+                                                  "avg_temp_soil")))
+# plot 24 hours
+hour24 <- ggplot(temp_hourly_avg, aes(x = hour, y = avg_temperature, color = treat_combined)) +
+  geom_line() +
+  facet_wrap(vars(measurement_position)) +
+  labs(title = "Average temperature over 24 hours",
+       x = "Hour of day",
+       y = "Average Temperature (°C)",
+       color = "Treatment") +
+  scale_x_continuous(breaks = seq(0, 23, by = 1)) +
+  theme( legend.position = "bottom")
+hour24
+
+ggsave(filename = "RangeX_temp_avg_24_hours_23.png", 
+       plot = hour24, 
+       path = "Data/Data_tomst_loggers/", 
+       width = 16, height = 7)
+
+# looking at that, maybe we should use 8-15 as midday?
+
+# midday 8-15 day --------------------------------------------------------
+# calculate means per day
+# define day as 8-15 when solar radiation is strongest
+temp_avg_OTC_long_midday_8_15 <- temp_avg_OTC_long |> 
+  mutate(hour = hour(date_time),  # Extract hour from datetime
+         day_night = ifelse(hour >= 8 & hour <= 15, "day", "night"))
+
+# filter only midday
+temp_avg_OTC_long_midday_8_15 <- temp_avg_OTC_long_midday_8_15 |> 
+  filter(day_night == "day")
+
+temp_avg_OTC_long_midday_8_15 <- temp_avg_OTC_long_midday_8_15 |> 
+  mutate(measurement_position = factor(measurement_position, 
+                                       levels = c("avg_temp_air", 
+                                                  "avg_temp_surface", 
+                                                  "avg_temp_soil")))
+
+# plot only day warm ambi all 3 temp --------------------------------------
+ggplot(temp_avg_OTC_long_midday_8_15, aes(x = date_time, y = temperature, color = treat_warming)) +
+  geom_line() +
+  facet_wrap(vars(measurement_position)) + 
+  scale_color_manual(values = c("warm" = "pink3", "ambi" = "turquoise"))+
+  labs(color = "Warming treatment", y = "Daily mean temperature")
+
+
+# test for significance ---------------------------------------------------
+# soil
+soil_midday <- lmerTest::lmer(temperature ~ treat_warming + (1 | date_time), data = temp_avg_OTC_long_midday_8_15[temp_avg_OTC_long_midday_8_15$measurement_position == "avg_temp_soil", ])
+summary(soil_midday)
+# <2e-16 ***
+  
+soil_midday <- lme4::lmer(temperature ~ treat_warming + (1 | date_time), data = temp_avg_OTC_long_midday_8_15[temp_avg_OTC_long_midday_8_15$measurement_position == "avg_temp_soil", ])
+summary(soil_midday)
+# -0.203043 colder in OTCs
+
+# surface
+surface_midday <- lme4::lmer(temperature ~ treat_warming + (1 | date_time), data = temp_avg_OTC_long_midday_8_15[temp_avg_OTC_long_midday_8_15$measurement_position == "avg_temp_surface", ])
+summary(surface_midday)
+# -0.25177 colder in OTCs
+
+surface_midday <- lmerTest::lmer(temperature ~ treat_warming + (1 | date_time), data = temp_avg_OTC_long_midday_8_15[temp_avg_OTC_long_midday_8_15$measurement_position == "avg_temp_surface", ])
+summary(surface_midday)
+
+# air
+air_midday <- lme4::lmer(temperature ~ treat_warming + (1 | date_time), data = temp_avg_OTC_long_midday_8_15[temp_avg_OTC_long_midday_8_15$measurement_position == "avg_temp_air", ])
+summary(air_midday)
+# 0.71599 warmer in OTC
+air_midday <- lmerTest::lmer(temperature ~ treat_warming + (1 | date_time), data = temp_avg_OTC_long_midday_8_15[temp_avg_OTC_long_midday_8_15$measurement_position == "avg_temp_air", ])
+summary(air_midday)
+# <2e-16 ***
+
+# plot it
+ggplot(temp_avg_OTC_long_midday_8_15, aes(x = treat_warming, y = temperature, fill = treat_warming)) +
+  geom_boxplot() +
+  facet_wrap(vars(measurement_position)) +
+  labs(title = "Temperature Comparison: Warm vs. Ambi",
+       x = "Treatment Group",
+       y = "Temperature (°C)") +
+  scale_fill_manual(values = c("warm" = "pink3", "ambi" = "turquoise"))
+
+# hm, that also doesn't change so much
 
 
