@@ -594,7 +594,7 @@ climate_23_sun <- left_join(climate_23_filt, sunniness,
 climate_23_sun_hi <- climate_23_sun |> 
   filter(site == "hi")
   
-# plot
+# plot air temp
 ggplot(climate_23_sun_hi, aes(x = date, y = AirTemp, colour = sun_status)) +
   geom_line()+
   labs(title = "Daily temperature 2m 2023", y = "Temperature (°C)", x = "Date")+
@@ -604,6 +604,12 @@ ggplot(climate_23_sun_hi, aes(x = date, y = AirTemp, colour = sun_status)) +
 # at least it makes sense that sunny days are warmer than cloudy days
 # now this needs to be combined with the tomst logger data
 
+# plot humidity
+ggplot(climate_23_sun_hi, aes(x = date, y = Humidity, colour = sun_status)) +
+  geom_line()+
+  labs(title = "Humidity 2m 2023", y = "Temperature (°C)", x = "Date")+
+  scale_color_manual(values = c("Sunny" = "orange", "Cloudy" = "turquoise",
+                                "Intermediate" = "grey88"))
 
 
 
