@@ -35,7 +35,7 @@ read_tomst_file_23 <- function(file) {
     )
 }
 
-# Soil moisture ----------------------------------------------------------
+# Soil moisture calculation -------------------------------------------
 # function to calculate soil moisture from raw values
 # slightly adapted from:
 # https://github.com/audhalbritter/Three-D/blob/master/R/functions/soilmoisture_correction.R
