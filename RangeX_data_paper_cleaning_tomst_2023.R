@@ -63,21 +63,6 @@ column_types <- cols(
   Column7 = col_double()
 )
 
-# # function to extract tomst logger number
-# extract_number_23 <- function(file) {
-#   str_extract(basename(file), "\\d+")
-# }
-# 
-# # function to read a bunch of files at the same time
-# read_tomst_file <- function(file) {
-#   read_delim(file, delim = ";", skip = 1, col_names = column_names, col_types = column_types, 
-#              locale = locale(decimal_mark = ","), show_col_types = FALSE) |>
-#     mutate(date_time = dmy_hms(date_time),  # Convert Date column to datetime
-#       across(c(TMS_T1, TMS_T2, TMS_T3), ~ as.numeric(str_replace(.x, ",", "."))), # Convert temps to numeric
-#       tomst = extract_number(file)  # Add the tomst logger number
-#     )
-# }
-
 # get one dataframe with data from all files using the list of files (tomst_23) with a loop
 tomst_data_23 <- map(tomst_23, read_tomst_file_23) |> 
   list_rbind()
