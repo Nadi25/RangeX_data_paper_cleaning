@@ -180,7 +180,7 @@ temp_day_high
 
 ggsave(filename = "RangeX_temp_avg_daily_high_23.png", 
        plot = temp_day_high, 
-       path = "Data/Data_tomst_loggers/", 
+       path = "Data/Data_tomst_loggers/Graphs/", 
        width = 10, height = 6)
 #
 
@@ -258,7 +258,7 @@ temp_daily_min_max
 
 ggsave(filename = "RangeX_temp_daily_high_min_max_23.png", 
        plot = temp_daily_min_max, 
-       path = "Data/Data_tomst_loggers/", 
+       path = "Data/Data_tomst_loggers/Graphs/", 
        width = 10, height = 6)
 
 # separate day and night --------------------------------------------------
@@ -520,7 +520,7 @@ temp_day_high_comp
 
 ggsave(filename = "RangeX_temp_avg_daily_high_23.png", 
        plot = temp_day_high, 
-       path = "Data/Data_tomst_loggers/", 
+       path = "Data/Data_tomst_loggers/Graphs/", 
        width = 10, height = 6)
 
 
@@ -558,7 +558,7 @@ ggplot(temp_daily_high_comp, aes(x = treat_competition, y = temperature, fill = 
 temp_daily_high_comp_block <- tomst_23_raw_filtered |> 
   filter(site == "hi") |> 
   mutate(date_time = as.Date(date_time)) |> # only keeps day, not time
-  group_by(date_time, block_ID_original, treat_competition) |> 
+  group_by(date_time, treat_competition, block_ID_original) |> 
   summarize(
     avg_temp_soil = mean(TMS_T1, na.rm = TRUE),
     avg_temp_surface = mean(TMS_T2, na.rm = TRUE),
@@ -582,10 +582,25 @@ ggplot(temp_daily_high_comp_block, aes(x = date_time, y = temperature, color = t
   scale_color_manual(values = c("bare" = "blue", "vege" = "green", "control" = "pink3"))+
   labs(color = "Warming treatment", y = "Daily mean temperature")
 
-lmm_soil_comp_b <- lmerTest::lmer(temperature ~ treat_competition + (1 | date_time)+ (1 | date_time), data = temp_daily_high_comp_block[temp_daily_high_comp_block$measurement_position == "avg_temp_soil", ])
+lmm_soil_comp_b <- lmerTest::lmer(temperature ~ treat_competition + (1 | date_time)+ (1 | block_ID_original), data = temp_daily_high_comp_block[temp_daily_high_comp_block$measurement_position == "avg_temp_soil", ])
 summary(lmm_soil_comp_b)
-# hm, seems like that doesnt work
+# 0.07089 warmer in vege
 
+lmm_surface_comp_b <- lme4::lmer(temperature ~ treat_competition + (1 | date_time)+ (1 | block_ID_original), data = temp_daily_high_comp_block[temp_daily_high_comp_block$measurement_position == "avg_temp_surface", ])
+summary(lmm_surface_comp_b)
+# 0.52498 warmer in vege
+
+lmm_air_comp_b <- lme4::lmer(temperature ~ treat_competition + (1 | date_time)+ (1 | block_ID_original), data = temp_daily_high_comp_block[temp_daily_high_comp_block$measurement_position == "avg_temp_air", ])
+summary(lmm_air_comp_b)
+# 0.15186 warmer in vege
+
+ggplot(temp_daily_high_comp_block, aes(x = treat_competition, y = temperature, fill = treat_competition)) +
+  geom_boxplot() +
+  facet_wrap(vars(measurement_position)) +
+  labs(title = "Temperature Comparison: Vege vs. bare",
+       x = "Treatment Group",
+       y = "Temperature (°C)") +
+  scale_fill_manual(values = c("bare" = "blue", "vege" = "green", "control" = "pink3"))
 
 
 # 24 hours plot -----------------------------------------------------------
@@ -621,7 +636,7 @@ hour24
 
 ggsave(filename = "RangeX_temp_avg_24_hours_23.png", 
        plot = hour24, 
-       path = "Data/Data_tomst_loggers/", 
+       path = "Data/Data_tomst_loggers/Graphs/", 
        width = 16, height = 7)
 
 # looking at that, maybe we should use 8-15 as midday?
