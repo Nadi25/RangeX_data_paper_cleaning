@@ -15,16 +15,18 @@ library(conflicted)
 conflict_prefer_all("dplyr", quiet = TRUE)
 library(tidyverse)
 library(gridExtra)
+library(quantreg)
+library(splines)
+library(broom)
 
 theme_set(theme_bw())
 
 
 # comments ----------------------------------------------------------------
-# plot years separately 
+# change to 23 first and fix Ra ditation problem in 21
 
 # should I use all days that have been recorded or shorten it to same as 
 # tomst logger time frame? Kept everything for now
-
 
 # 2021 --------------------------------------------------------------------
 # import data hi 21 ----------------------------------------------------------
@@ -526,3 +528,89 @@ ggsave(filename = "RangeX_climate_station_radiation_21_23_24.png",
        plot = radiation, 
        path = "Data/Data_climate_station/Graphs", 
        width = 15, height = 6)
+
+
+
+
+
+# sunniness level ---------------------------------------------------------
+# Filter for dates between June 15 and September 15
+# its from 20.06 then
+climate_23_filtered <- climate_23 |> 
+  filter(format(date_time, "%Y-%m-%d") >= "2023-06-15" & format(date_time, "%Y-%m-%d") <= "2023-09-15")  
+
+# Summarize data to get one solar radiation value per hour
+climate_23_filtered <- climate_23_filtered |> 
+  distinct() |> 
+  group_by(site, hour = hour(date_time), date = as.Date(date_time)) |> 
+  summarise(value = mean(Radiation_Avg))
+
+# Perform 95% quantile regression to determine sunniness for each site at each hour of the day
+predictions <- climate_23_filtered |> 
+  group_by(site, hour) |> 
+  do({
+    fit <- rq(value ~ splines::bs(date, df = 10), tau = 0.95, data = .)
+    augment(fit, data = .)
+  })
+
+# Calculate sunniness proportion
+# 0 = complete cloudy and 1 = clear sky
+sunniness <- predictions |> 
+  mutate(prop = value / .fitted) |> 
+  group_by(site, date) |> 
+  summarise(sunniness = weighted.mean(prop, w = .fitted)) |> 
+  mutate(sunniness = if_else(sunniness > 1, 1, sunniness)) |> 
+  ungroup() 
+# what is dict_Site?
+# do I need this part?
+  # mutate(siteID = plyr::mapvalues(site, from = dict_Site$v3, to = dict_Site$new)) |> 
+  # select(-site)
+
+
+# assign sunny status -----------------------------------------------------
+# top third is sunny
+# lower third is cloudy
+# intermediate is discarded
+# Classify days into "sunny," "cloudy," and "intermediate"
+sunniness <- sunniness |> 
+  mutate(sun_status = case_when(
+    sunniness >= 0.66 ~ "Sunny",
+    sunniness <= 0.33 ~ "Cloudy",
+    TRUE ~ "Intermediate"
+  ))
+
+# combine temp data with sunniness estimate -------------------------------
+# use data with average values per day (climate_23_plot)
+# filter same timeframe as sunniness (peak season)
+# rename date column to match with sunniness
+climate_23_filt <- climate_23_plot |> 
+  filter(format(date_time, "%Y-%m-%d") >= "2023-06-15" & format(date_time, "%Y-%m-%d") <= "2023-09-15") |> 
+  rename(date = date_time)
+
+climate_23_sun <- left_join(climate_23_filt, sunniness, 
+                            by = c("date", "site")) 
+
+# filter only hi site
+climate_23_sun_hi <- climate_23_sun |> 
+  filter(site == "hi")
+  
+# plot
+ggplot(climate_23_sun_hi, aes(x = date, y = AirTemp, colour = sun_status)) +
+  geom_line()+
+  labs(title = "Daily temperature 2m 2023", y = "Temperature (°C)", x = "Date")+
+  scale_color_manual(values = c("Sunny" = "orange", "Cloudy" = "turquoise",
+                                "Intermediate" = "grey88"))
+
+# at least it makes sense that sunny days are warmer than cloudy days
+# now this needs to be combined with the tomst logger data
+
+
+
+
+
+
+
+
+
+
+
