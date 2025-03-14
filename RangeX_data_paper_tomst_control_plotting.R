@@ -734,6 +734,19 @@ climate_23_sun_hi
 temp_daily_avg_23_sun <- left_join(temp_daily_avg_23, climate_23_sun_hi,
                                by = "date")
 
+# How many cloudy and sunny days do we have in 23
+sunny <- sum(temp_daily_avg_23_sun$sun_status == "Sunny")
+sunny # 126
+
+cloudy <- sum(temp_daily_avg_23_sun$sun_status == "Cloudy")
+cloudy # 168
+
+intermediate <- sum(temp_daily_avg_23_sun$sun_status == "Intermediate")
+intermediate # 228
+
+days_total <- length(temp_daily_avg_23_sun$sun_status)
+days_total # 522
+
 # plot facetted by sunniness and all 3 temp positions
 temp_sun_cloud <- ggplot(temp_daily_avg_23_sun, aes(x = date, y = daily_avg_temp, color = treat_warming)) +
   geom_line() +
