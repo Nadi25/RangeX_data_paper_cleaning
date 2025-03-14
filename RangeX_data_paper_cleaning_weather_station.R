@@ -36,7 +36,7 @@ climate_hi_21 <- read_table("Data/Data_climate_station/2021/weather_high_2021_fa
 # use for all years
 labels <- climate_hi_21[1, -1] # take first row and delete first argument
 labels
-# AirTemp.Avg, Humidity.Avg, WindDir.Avg, WindSpd.Avg, Radiation.Avg, Rainfall
+# AirTemp.Avg, Humidity.Avg, WindDir.Avg, WindSpd.Avg, Ra  diation.Avg, Rainfall
 
 units <- climate_hi_21[2, -1]
 units
@@ -49,6 +49,8 @@ climate_hi_21 <- climate_hi_21[-c(1, 2), ]
 climate_hi_21 <- climate_hi_21 |> 
   mutate(date_time = paste(X1, X2)) |> 
   select(date_time, X3:X8)
+
+column_names <- c("date_time", "AirTemp_Avg", "Humidity_Avg", "WindDir_Avg", "WindSpd_Avg", "Radiation_Avg", "Rainfall")
 
 colnames(climate_hi_21) <- column_names
 climate_hi_21
@@ -199,7 +201,6 @@ climate_hi_23 <- read_table("Data/Data_climate_station/2023/RangeX_HIGH_fall_202
 
 # Remove the first two rows from the data
 climate_hi_23 <- climate_hi_23[-c(1, 2), ]  
-
 
 # combine first two colums date and time 
 climate_hi_23 <- climate_hi_23 |> 
