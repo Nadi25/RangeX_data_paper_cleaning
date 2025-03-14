@@ -99,7 +99,7 @@ plot_codes_clean <- plot_codes_clean |>
 
 # combine tomst data with plot labels -------------------------------------
 tomst_23_raw <- left_join(plot_codes_clean, tomst_data_23, by = "tomst")
-head(tomst_23_raw)
+head(tomst_24_raw)
 
 
 # Add treat_warming and treat_competition columns based on treat ----------
