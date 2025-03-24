@@ -3,8 +3,9 @@
 # RangeX data combine functional traits with leaf area and clean raw data file----------------------------------
 
 ## Data used: RangeX_raw_functional_traits_2023.csv, 
-##            RangeX_raw_functional_traits_leaf_area_final.csv,
-##            RangeX_Metadata.csv 
+##            RangeX_raw_functional_traits_leaf_area_all_23_NOR_final.csv,
+##            RangeX_Metadata_focal_NOR.csv 
+##            RangeX_raw_functional_traits_leaf_area_hypmac_recolored.csv
 ## Date:      11.11.24
 ## Author:    Nadine Arzt
 ## Purpose:   Combine functional traits with leaf area 
@@ -57,20 +58,17 @@ length(functional_traits$blockID) # 611 rows
 # delete duplicates that have no dry mass -----------------------------------
 # comment: accidentally sampled 2, in fridge
 # no dry mass for 5 samples
-
 functional_traits <- functional_traits |> 
   filter(!is.na(dry_mass))
 # 606 rows
 
 
 # import leaf area data ---------------------------------------------------
-
 leaf_area_NOR <- read.csv("Data/Data_functional_traits/RangeX_raw_functional_traits_leaf_area_all_23_NOR_final.csv")
 leaf_area_NOR
 
 
 # Join leaf area to rest of functional traits -----------------------------
-
 functional_traits_NOR <- left_join(functional_traits, leaf_area_NOR,
                                   by = "ID")
 
