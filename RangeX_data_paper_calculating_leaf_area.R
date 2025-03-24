@@ -18,7 +18,12 @@
 
 # 70 leaves were colored with paint3D to get the whole leaf area
 # sucpra, cennig and cyncri often have whitish parts
-# and 13 hypmac leaves were recolored to get area without the two small leaves
+
+# 13 hypmac leaves with extra small leaves:
+# decided to not recolor and reweigh
+# use original wet_mass, dry_mass and leaf area to calculate LDMC and SLA
+# but delete wet_mass, dry_mass and leaf area afterwards
+# done in RangeX_data_paper_cleaning_functional_traits.R
 
 
 # load packages -----------------------------------------------------------
@@ -146,6 +151,7 @@ LA_recolored <- read.csv("Data/Data_functional_traits/RangeX_raw_functional_trai
 
 
 # hypmac recolored again ------------------------------------
+# but decided later to not use it
 list.of.files <- dir(path = paste0("Data/Leaf_area_scans/RangeX_leaf_scans_hypmac_recolored/"), pattern = "jpeg|jpg", recursive = TRUE, full.names = TRUE)
 
 # create a different output folder for every folder of scans
@@ -168,17 +174,15 @@ leaf_area_hypmac_recolored <- LA_3 |>
 LA_hypmac_recolored <- read.csv("Data/Data_functional_traits/RangeX_raw_functional_traits_leaf_area_hypmac_recolored.csv")
 
 
-
 # get data set with recolored hypmac---------------------
-leaf_area_final <- leaf_area |> 
-  left_join(leaf_area_recolored, by = "ID", 
-            suffix = c("", "_recolored")) |> 
-  left_join(leaf_area_hypmac_recolored, by = "ID",
-            suffix = c("", "_hypmac_recolored")) |> 
-  mutate(leaf_area = coalesce(leaf_area_recolored,
-                              leaf_area_hypmac_recolored, leaf_area)) |> 
-  select(dir, ID, n, leaf_area)
-
+# leaf_area_final <- leaf_area |> 
+#   left_join(leaf_area_recolored, by = "ID", 
+#             suffix = c("", "_recolored")) |> 
+#   left_join(leaf_area_hypmac_recolored, by = "ID",
+#             suffix = c("", "_hypmac_recolored")) |> 
+#   mutate(leaf_area = coalesce(leaf_area_recolored,
+#                               leaf_area_hypmac_recolored, leaf_area)) |> 
+#   select(dir, ID, n, leaf_area)
 
 # save as csv
 # write.csv(leaf_area_final, file = "Data/Data_functional_traits/RangeX_raw_functional_traits_leaf_area_all_final.csv")
@@ -195,7 +199,7 @@ leaf_area_final_23 <- area |>
 
 
 # save as csv
-write.csv(leaf_area_final_23, file = "Data/Data_functional_traits/RangeX_raw_functional_traits_leaf_area_all_23_NOR_final.csv")
+# write.csv(leaf_area_final_23, file = "Data/Data_functional_traits/RangeX_raw_functional_traits_leaf_area_all_23_NOR_final.csv")
 
 leaf_area_23_NOR <- read.csv("Data/Data_functional_traits/RangeX_raw_functional_traits_leaf_area_all_23_NOR_final.csv")
 
