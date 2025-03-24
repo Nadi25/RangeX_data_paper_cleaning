@@ -169,7 +169,7 @@ LA_hypmac_recolored <- read.csv("Data/Data_functional_traits/RangeX_raw_function
 
 
 
-# get final data set -------------------------------------------------------
+# get data set with recolored hypmac---------------------
 leaf_area_final <- leaf_area |> 
   left_join(leaf_area_recolored, by = "ID", 
             suffix = c("", "_recolored")) |> 
@@ -187,8 +187,17 @@ leaf_area_NOR <- read.csv("Data/Data_functional_traits/RangeX_raw_functional_tra
 
 
 
+# final data set without recolored hypmac --------------------------------
+leaf_area_final_23 <- area |> 
+  left_join(LA_recolored, by = "ID", 
+            suffix = c("", "_recolored")) |>
+  select(dir, ID, n, leaf_area)
 
 
+# save as csv
+write.csv(leaf_area_final_23, file = "Data/Data_functional_traits/RangeX_raw_functional_traits_leaf_area_all_23_NOR_final.csv")
+
+leaf_area_23_NOR <- read.csv("Data/Data_functional_traits/RangeX_raw_functional_traits_leaf_area_all_23_NOR_final.csv")
 
 
 
