@@ -11,8 +11,7 @@
 ##            and clean the complete raw data file of functional traits
 
 
-# Questions ---------------------------------------------------------------
-
+# Questions / comments -------------------------------------------------
 # 1. delete rows with NAs, so that data set is only 600 plants not 1800? --> did it
 # 2. delete outliers? How to define them
 # 3. why does functional_traits_NOR_23 has 598 rows and when I delete 
@@ -24,11 +23,12 @@
 # 7. FYP9768 hi sildio warm bare 2f c8 --> was corrected to ambi --> check 
 #   GAT6555 hi sildio ambi bare 2f c8
 # 8. hypmac: some have small extra leaves --> reweigh + recolor?
+# Excluded values for wet_mass, dry_mass, and leaf_area for the 13 leaves
+# LDMC and SLA are correct
 # 9. hypmac: what if part of stem is not cut?
 # 10. make folder without overlapping scans for OSF? --> do leaf area again? --> did it
 
 # load packages -----------------------------------------------------------
-
 library(conflicted)
 conflict_prefer_all("dplyr", quiet = TRUE)
 library(tidyverse)
@@ -65,7 +65,7 @@ functional_traits <- functional_traits |>
 
 # import leaf area data ---------------------------------------------------
 
-leaf_area_NOR <- read.csv("Data/Data_functional_traits/RangeX_raw_functional_traits_leaf_area_all_final.csv")
+leaf_area_NOR <- read.csv("Data/Data_functional_traits/RangeX_raw_functional_traits_leaf_area_all_23_NOR_final.csv")
 leaf_area_NOR
 
 
@@ -358,22 +358,15 @@ functional_traits_NOR <- functional_traits_NOR |>
   mutate(dry_mass = case_when(ID == "GMJ6176" ~ 0.02398, TRUE ~ dry_mass))
 
 # Import metadata ---------------------------------------------------------
-metadata <- read.csv2("Data/RangeX_Metadata.csv")
+metadata <- read.csv("Data/RangeX_metadata_focal_NOR.csv")
 head(metadata)
 dput(colnames(metadata))
 
-## filter only NOR
-metadata_NOR <- metadata %>%
-  filter(grepl('NOR', region))
-head(metadata_NOR)
-
 
 # merge functional traits data with metadata ------------------------------
-
-dput(colnames(metadata_NOR))
 dput(colnames(functional_traits_NOR))
 
-functional_traits_NOR_23 <- left_join(metadata_NOR, functional_traits_NOR,
+functional_traits_NOR_23 <- left_join(metadata, functional_traits_NOR,
                                       by = c( "site", "block_ID_original",
                                               "plot_ID_original", 
                                               "position_ID_original", "species", 
@@ -391,7 +384,7 @@ length(functional_traits_NOR_23$date) # 1800
 
 # join: TRUE when matching worked
 joined_data <- functional_traits_NOR |> 
-  left_join(metadata_NOR, 
+  left_join(metadata, 
             by = c("site", "block_ID_original", "plot_ID_original",
                    "position_ID_original", "species", "treat_warming", "treat_competition")) |> 
   mutate(matched = ifelse(is.na(unique_plant_ID), FALSE, TRUE))
@@ -447,8 +440,7 @@ functional_traits_NOR_23 <- functional_traits_NOR_23 |>
                                    na.rm = TRUE))
 
 
-# SLA and LDMC ---------------------------------------------------------------------
-
+# SLA and LDMC ---------------------------------------------------------------
 # calculate SLA (leaf area (mm2)/dry mass(mg)) and LDMC (dry mass (mg)/wet mass (g))
 
 # get right units
@@ -462,6 +454,24 @@ functional_traits_NOR_23 <- functional_traits_NOR_23 %>%
 functional_traits_NOR_23 <- functional_traits_NOR_23 |> 
   mutate(SLA = leaf_area/dry_mass,
          LDMC = dry_mass/wet_mass_g) 
+
+
+
+# fix hypmac problem ------------------------------------------------------
+# 13 hypmac leaves have 2 extra small leaves that were misidentified as 
+# stipules
+# wet mass, dry mass and leaf area are using the wrong values
+# but LDMC and SLA are correct because they use the relationships
+# delete wet mas, dry mass and leaf area
+
+# get list of 13 wrong leaves
+LA_hypmac_recolored <- read.csv("Data/Data_functional_traits/RangeX_raw_functional_traits_leaf_area_hypmac_recolored.csv")
+
+# list of IDs for the 13 hypmac leaves
+exclude_ids <- LA_hypmac_recolored$ID
+
+# exclude values for wet_mass, dry_mass, and leaf_area for the specified IDs
+functional_traits_NOR_23[functional_traits_NOR_23$ID %in% exclude_ids, c("wet_mass", "dry_mass", "leaf_area")] <- NA
 
 
 # select columns to match meta data ---------------------------------------------
@@ -479,10 +489,9 @@ str(functional_leaf_traits_NOR_23)
 
 
 # check whether dry mass is heavier than the wet mass ---------------------
-dry_wet <- functional_leaf_traits_NOR_23 %>%
+dry_wet <- functional_leaf_traits_NOR_23 |> 
   filter(dry_mass > wet_mass)
 dry_wet # all good
-
 
 # delete samples without measurements -------------------------------------
 functional_leaf_traits_NOR_23_clean <- functional_leaf_traits_NOR_23 |> 
@@ -497,7 +506,7 @@ str(functional_leaf_traits_NOR_23_clean)
 # save clean file ---------------------------------------------------------
 # write.csv(functional_leaf_traits_NOR_23_clean, file = "Data/Data_functional_traits/RangeX_clean_functional_traits_NOR_2023.csv")
 
-
+traits_clean <- read.csv("Data/Data_functional_traits/RangeX_clean_functional_traits_NOR_2023.csv")
 
 
 
