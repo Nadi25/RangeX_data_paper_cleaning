@@ -14,6 +14,8 @@
 # take only peak growing season (15 June- 15 September) like in Francescas bryophyte paper?
 # they defined daytime 10:00-18:00
 
+# have block as random factor 
+# plot deviations (delta) or boxplots
 
 # load library ------------------------------------------------------------
 library(conflicted)
@@ -188,7 +190,7 @@ ggsave(filename = "RangeX_temp_avg_daily_high_23.png",
 
 # test for significance with lmer ---------------------------------------------------
 # Soil temperature
-lmm_soil_daily_hi <- lme4::lmer(temperature ~ treat_warming + (1 | date_time), data = temp_daily_high[temp_daily_high$measurement_position == "avg_temp_soil", ])
+lmm_soil_daily_hi <- lme4::lmer(temperature ~ treat_warming + (1 | date_time), data = temp_daily_high, subset = temp_daily_high$measurement_position == "avg_temp_soil")
 summary(lmm_soil_daily_hi)
 # warm -0.08655 colder then ambi in soil
 # t-value: -3.462 so significant
@@ -582,7 +584,7 @@ ggplot(temp_daily_high_comp_block, aes(x = date_time, y = temperature, color = t
   geom_line() +
   facet_wrap(vars(measurement_position)) +  # Separate panels for soil, ground, air
   scale_color_manual(values = c("bare" = "blue", "vege" = "green", "control" = "pink3"))+
-  labs(color = "Warming treatment", y = "Daily mean temperature")
+  labs(color = "Competition treatment", y = "Daily mean temperature")
 
 lmm_soil_comp_b <- lmerTest::lmer(temperature ~ treat_competition + (1 | date_time)+ (1 | block_ID_original), data = temp_daily_high_comp_block[temp_daily_high_comp_block$measurement_position == "avg_temp_soil", ])
 summary(lmm_soil_comp_b)
@@ -777,3 +779,7 @@ humidity_plot
 
 combined_plot <- ggarrange(temp_sun_cloud, humidity_plot, ncol = 1, nrow = 2, align = "v")
 combined_plot
+
+
+
+
