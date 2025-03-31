@@ -496,7 +496,7 @@ rangex_traits_22 <- rangex_traits_22 %>%
 #           row.names = FALSE)
 
 ## read cleaned data
-data_22 <- read.csv("RangeX_clean_traits_2022.csv")
+data_22 <- read.csv("Data/Data_demographic_traits/RangeX_clean_traits_2022.csv")
 
 
 
