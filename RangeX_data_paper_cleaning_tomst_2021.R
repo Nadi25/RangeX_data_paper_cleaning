@@ -209,7 +209,7 @@ rx_tomst_21_clean <- tomst_21_clean |>
 
 
 # save clean data ---------------------------------------------------------
-write.csv(rx_tomst_21_clean, "Data/Data_tomst_loggers/RangeX_clean_tomst_NOR_2021.csv")
+# write.csv(rx_tomst_21_clean, "Data/Data_tomst_loggers/RangeX_clean_tomst_NOR_2021.csv")
 
 tomst <- read_csv("Data/Data_tomst_loggers/RangeX_clean_tomst_NOR_2021.csv")
 
