@@ -10,6 +10,10 @@
 ## Author:    Nadine Arzt
 ## Purpose:   Transform the raw data in the format we agreed on
 
+
+# comments ----------------------------------------------------------------
+# one plant has no block_ID_original (f sucpra e4) --> block 6
+
 # load packages -----------------------------------------------------------
 library(tidyverse) ## if you use this you dont need dplyr and stringr, tidyr
 
@@ -206,7 +210,6 @@ length(traits_high_23) ## 70 columns
 dput(colnames(traits_high_23))
 
 # delete superfluous columns ----------------------------------------------
-
 traits_high_23 <- traits_high_23 %>%
   select(
     where(
@@ -216,8 +219,16 @@ traits_high_23 <- traits_high_23 %>%
 
 length(traits_high_23) ## 47 columns
 
-# change column names -----------------------------------
 
+# fix missing block -------------------------------------------------------
+# block 6 for supra in e4
+traits_high_23 <- traits_high_23 |> 
+  mutate(block = case_when(treat == "f" & species == "sucpra" & 
+                              coord == "e4" ~ 6,
+                            TRUE ~ block))
+
+
+# change column names -----------------------------------
 ## get column names
 dput(colnames(yearly_demographic))
 
@@ -456,20 +467,21 @@ head(metadata_NOR)
 dput(colnames(metadata))
 dput(colnames(traits_23))
 
-traits_2023 <- left_join(traits_23, metadata,
-                         by = c("region", "site", "block_ID_original", "plot_ID_original",
+demo_traits_2023 <- left_join(traits_23, metadata,
+                         by = c("region", "site", "block_ID_original",
+                                "plot_ID_original",
                                 "position_ID_original", "species"))
 
 
 
-dput(colnames(traits_2023))
+dput(colnames(demo_traits_2023))
 dput(colnames(yearly_demographic))
 
-# adapt traits_2023 in the format of yearly demographics ------------------
+# adapt demo_traits_2023 in the format of yearly demographics ------------------
 
 ## add all columns that are in yearly demo but not in traits 2023
 
-traits_2023 <- traits_2023 %>%
+demo_traits_2023 <- demo_traits_2023 %>%
   dplyr::mutate(
     collector = NA,
     vegetative_width = NA,
@@ -483,14 +495,14 @@ traits_2023 <- traits_2023 %>%
     mean_inflorescence_size = NA
   )
 
-dput(colnames(traits_2023))
+dput(colnames(demo_traits_2023))
 
 ## delete "region", "site", "block_ID_original", "plot_ID_original", 
 ## "position_ID_original","treat_warming", "treat_competition", 
 ## "added_focals", "block_ID", "position_ID", "unique_plot_ID"
 
 ## delete unnecessary columns
-traits_2023 <- traits_2023 %>%
+demo_traits_2023 <- demo_traits_2023 %>%
   dplyr::select(-region, -site, -block_ID_original, -plot_ID_original, 
                 -position_ID_original, -treat_warming, -treat_competition, 
                 -added_focals, -block_ID, -position_ID, -unique_plot_ID) %>% 
@@ -499,8 +511,8 @@ traits_2023 <- traits_2023 %>%
 ## Adding missing grouping variables: `site`, `block_ID_original`, `plot_ID_original`
 ## WHY cant I delete them
 
-dput(colnames(traits_2023))
-length(traits_2023) # 33
+dput(colnames(demo_traits_2023))
+length(demo_traits_2023) # 33
 length(yearly_demographic) # 23
 
 
@@ -514,7 +526,7 @@ col_order_traits_23 <- c("site", "block_ID_original", "plot_ID_original","unique
                          "number_leaves", "number_tillers", "number_branches", "number_leafclusters", 
                          "number_flowers", "mean_inflorescence_size", "herbivory")
 
-rangex_traits_23 <- traits_2023[, col_order_traits_23]
+rangex_traits_23 <- demo_traits_2023[, col_order_traits_23]
 rangex_traits_23
 
 
@@ -537,9 +549,7 @@ dput(colnames(yearly_demographic))
 
 
 # save csv file -----------------------------------------------------------
-
-# write.csv(rangex_traits_23, "C:/Users/naart3294/OneDrive - University of Bergen/PhD_RangeX/R codes/RangeX_data_cleaning/Data_traits/RangeX_clean_traits_2023.csv",
-#            row.names = FALSE)
+# write.csv(rangex_traits_23, "Data/Data_demographic_traits/RangeX_clean_traits_2023.csv", row.names = FALSE)
 
 ## read cleaned data
 data_23 <- read.csv("Data/Data_demographic_traits/RangeX_clean_traits_2023.csv")
