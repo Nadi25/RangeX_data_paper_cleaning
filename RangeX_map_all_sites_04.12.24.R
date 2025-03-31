@@ -105,5 +105,42 @@ ggplot(data = world) +
   )
 
 
+# globe -------------------------------------------------------------------
+
+# Load world map data
+world <- ne_countries(scale = "medium", returnclass = "sf")
+
+# Convert to sf and match the projection
+locations_sf <- st_as_sf(locations, coords = c("lon", "lat"), crs = 4326)
+locations_sf <- st_transform(locations_sf, crs = "+proj=ortho +lat_0=30 +lon_0=20")
+
+
+globe <- ggplot(data = world) +
+  geom_sf(fill = "gray", color = "grey1") +  # World map
+  geom_sf(data = locations_sf, aes(color = site), size = 9) +  # Points
+  scale_color_manual(values = c("grey2", "turquoise4", "grey2", "orange3")) +  # Colors
+  coord_sf(crs = "+proj=ortho +lat_0=30 +lon_0=20") +  # Orthographic projection
+  geom_label_repel(data = locations_sf,  
+                   aes(x = st_coordinates(locations_sf)[,1], 
+                       y = st_coordinates(locations_sf)[,2], 
+                       label = site, color = site), 
+                   size = 20, box.padding = 1, max.overlaps = 10) +  
+  theme_bw() +
+  theme(
+    axis.title = element_blank(),  
+    axis.text = element_blank(),   
+    legend.position = "none",
+    plot.title = element_text(size = 16, face = "bold"),
+    
+    # Make graticule (grid) lines darker and more visible
+    panel.grid.major = element_line(color = "gray40", size = 0.6),
+    panel.grid.minor = element_line(color = "gray40", size = 0.6)
+  )
+globe
+
+ggsave(filename = "RangeX_map_globe_all_sites.png", 
+       plot = globe, 
+       path = "Data", 
+       width = 15, height = 15)
 
 
