@@ -2,8 +2,10 @@
 
 # RangeX data cleaning for traits 2021 -------------------------------------------------
 
-## Data used: RangeX_raw_traits_high_2021.csv, RangeX_raw_traits_low_2021.csv, 
-##            RangeX_Metadata.csv, RangeX_YearlyDemographics.csv
+## Data used: RangeX_raw_traits_high_2021.csv, 
+##            RangeX_raw_traits_low_2021.csv, 
+##            RangeX_Metadata.csv, 
+##            RangeX_YearlyDemographics.csv
 ## Date:      22.06.23
 ## Author:    Nadine Arzt
 ## Purpose:   Clean the complete raw data file 
@@ -11,8 +13,12 @@
 ##            Implausible values? Wrong column names? 
 ##            Data classes defined? and add treatments & Plant_ID 
 
-# load packages -----------------------------------------------------------
 
+# comments ----------------------------------------------------------------
+# we have petiole_length1, petiole_length2, petiole_length3
+# but in country metadata only petiole_length
+
+# load packages -----------------------------------------------------------
 library(dplyr)
 library(tidyr) # data manipulation
 library(ggplot2) # test-plotting
@@ -426,7 +432,7 @@ length(yearly_demographics) # 23
 
 ## make correct order as in yearly_demographics
 col_order_traits_21 <- c("site", "block_ID_original", "plot_ID_original","unique_plant_ID", 
-                         "species", "year", "collector", "height_vegetative_str", 
+                         "species", "date", "year", "collector", "height_vegetative_str", 
                          "height_reproductive_str", "height_vegetative", "height_reproductive", 
                          "vegetative_width", "vegetative_length", "stem_diameter",
                          "leaf_length1", "leaf_length2", "leaf_length3", "leaf_width",
@@ -445,24 +451,33 @@ rangex_traits_21
 
 
 
-# save csv file -----------------------------------------------------------
+# update column names -----------------------------------------------------
+# height total = total stretched height minus flower 
+rangex_traits_21_clean <- rangex_traits_21 |> 
+  rename("date_measurement" = "date") |> 
+  mutate("date_planting" = NA,
+         "survival" = NA,
+         "height_total" =NA) |> 
+  select(unique_plant_ID, species, date_measurement, date_planting,
+         collector, survival, height_vegetative_str, height_reproductive_str,
+         height_vegetative, height_reproductive,
+         vegetative_width, height_total, stem_diameter, 
+         leaf_length1, leaf_length2, leaf_length3, leaf_width, 
+         petiole_length1, petiole_length2, petiole_length3,
+         number_leaves, number_tillers, number_branches, number_flowers,
+         mean_inflorescence_size, sam, herbivory)
 
-# write.csv(rangex_traits_21, "C:/Users/nadin/OneDrive - University of Bergen/PhD_RangeX/R codes/RangeX_data_cleaning/Data_traits/RangeX_clean_traits_2021.csv",
-#           row.names = FALSE)
+
+# survival  ---------------------------------------------------------------
+rangex_traits_21_clean <- rangex_traits_21_clean |> 
+  mutate(survival = if_else(!is.na(leaf_length1), 1, 0))
+# all survived
+
+# save csv file -----------------------------------------------------------
+# write.csv(rangex_traits_21_clean, "Data/Data_demographic_traits/RangeX_clean_demographic_traits_2021.csv")
 
 ## read cleaned data
-data_21 <- read.csv("RangeX_clean_traits_2021.csv")
-
-
-
-
-
-
-
-
-
-
-
+data_21 <- read.csv("Data/Data_demographic_traits/RangeX_clean_demographic_traits_2021.csv")
 
 
 
