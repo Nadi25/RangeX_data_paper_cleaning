@@ -20,8 +20,8 @@ theme_set(theme_bw())
 # https://tomst.com/web/en/systems/tms/software/
 # temp1 is in soil, temp2 at 0cm and temp3 20cm above ground
 
-# 2023: high out: "08.06.2023" and "20.06.2023" - "23.10.2023"
-# 2023: low out: "12.05.2023" and "19.06.2023" - "24.10.2023"
+# how to deal with the loggers that we took out after digging roots?
+# filter shorter time period for them?
 
 # source script with functions --------------------------------------------
 source("RangeX_data_paper_functions.R")
@@ -90,4 +90,97 @@ plot_codes_clean_24 <- plot_codes_clean_24 |>
 # combine tomst data with plot labels -------------------------------------
 tomst_24_raw <- left_join(plot_codes_clean_24, tomst_data_24, by = "tomst")
 head(tomst_24_raw)
+
+# Add treat_warming and treat_competition columns based on treat ----------
+# why does it not work with .default ~ NA
+tomst_24_raw <- tomst_24_raw |> 
+  mutate(
+    treat_warming = case_when(
+      site == "hi" & treat %in% c("A", "C", "E") ~ "warm",
+      site == "hi" & treat %in% c("B", "D", "F") ~ "ambi",
+      site == "lo" & treat %in% c("A", "B") ~ "ambi",  
+      TRUE ~ NA  # Assign NA to unexpected cases
+    ),
+    treat_competition = case_when(
+      site == "hi" & treat %in% c("A", "B") ~ "vege",
+      site == "hi" & treat %in% c("C", "D") ~ "control",
+      site == "hi" & treat %in% c("E", "F") ~ "bare",
+      site == "lo" & treat == "A" ~ "vege",  
+      site == "lo" & treat == "B" ~ "bare",
+      TRUE ~ NA
+    )
+  )
+
+# delete empty columns -----------------------------------------------------
+tomst_24_raw <- tomst_24_raw |> 
+  select(where(~ !all(is.na(.))))
+
+# delete loggers due to very low soil moisture in sep ---------------------
+tomst_24_raw <- tomst_24_raw |> 
+  filter(tomst != "94217327") |> 
+  filter(tomst != "94201716") |> 
+  filter(tomst != "94217340") |> 
+  filter(tomst != "94217338")
+
+
+# calculate soil moisture -----------------------------------------------------------
+# function to calculate soil moisture from raw values in function script
+# RangeX_data_paper_functions.R
+# apply the soil moisture function here
+tomst_24_raw <- tomst_24_raw |> 
+  mutate(TMS_moist = calc_soil_moist(rawsoilmoist = Soilmoisture_raw, 
+                                     soil_temp = TMS_T1, 
+                                     soilclass ="silt_loam"))
+
+# combined treatment column -----------------------------------------------
+tomst_24_raw <- tomst_24_raw |> 
+  mutate(treat_combined = paste(site, treat_warming, treat_competition, sep = "_"))
+
+# filter field season already here ----------------------------------------
+# high: 30.05 - 15.10.24
+# low: 12.05 - 15.10.24
+start_date <- as.Date("2024-05-31") 
+end_date <- as.Date("2024-10-14")
+
+# Filter the data for the specified date range
+tomst_24_raw_filtered <- tomst_24_raw |> 
+  filter(between(date_time, left = start_date, right = end_date))
+
+# plot soil moisture ------------------------------------------------------
+# one line per logger
+s <- ggplot(tomst_24_raw_filtered, aes(x = date_time, y = TMS_moist, color = tomst)) +
+  geom_line() +
+  theme(legend.position = "none")
+s
+# ok, what we see is some loggers with very low soil moisture in sep
+# maybe when we took out some loggers after digging out roots?
+
+# check if you can identify loggers that have these low values---------------------------------
+negative_moisture_loggers <- tomst_24_raw_filtered |> 
+  filter(between(date_time, as.Date("2024-09-01"), as.Date("2024-09-20"))) |> 
+  filter(TMS_moist < 0) |> 
+  distinct(tomst)
+# but its 18 loggers, we didn't remove that many
+# something is wrong with them
+
+# plot only negative_moisture_loggers
+filtered_loggers <- tomst_24_raw_filtered |> 
+  filter(tomst %in% negative_moisture_loggers$tomst) |> 
+  filter(between(date_time, as.Date("2024-09-01"), as.Date("2024-09-20")))
+
+s %+% filtered_loggers+
+  theme(legend.position = "right")
+
+# plot one logger
+one_logger <- filtered_loggers |> 
+  filter(tomst == 94217338)
+
+s %+% one_logger
+
+#15 94217327, 94201716, 94217340 are very weird
+# what if you take these 3 out
+
+# we still have 15 loggers that have a drop around sep
+
+
 
