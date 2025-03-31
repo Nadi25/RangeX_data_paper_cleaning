@@ -547,6 +547,12 @@ climate_23_filtered <- climate_23_filtered |>
   summarise(value = mean(Radiation_Avg))
 
 # Perform 95% quantile regression to determine sunniness for each site at each hour of the day
+# # use sth like this: 
+# dat %>% 
+#   nest(data = -Species) %>%
+#   mutate(model = map(data, ~lm(Flipper.Length..mm.~Body.Mass..g., data = .))
+# 
+# # instead of do
 predictions <- climate_23_filtered |> 
   group_by(site, hour) |> 
   do({
@@ -585,7 +591,7 @@ sunniness <- sunniness |>
 # filter same timeframe as sunniness (peak season)
 # rename date column to match with sunniness
 climate_23_filt <- climate_23_plot |> 
-  filter(format(date_time, "%Y-%m-%d") >= "2023-06-15" & format(date_time, "%Y-%m-%d") <= "2023-09-15") |> 
+  filter(format(date_time, "%Y-%m-%d") >= ymd"2023-06-15", format(date_time, "%Y-%m-%d") <= "2023-09-15") |> 
   rename(date = date_time)
 
 climate_23_sun <- left_join(climate_23_filt, sunniness, 
