@@ -192,64 +192,75 @@ ggplot(tomst_22_raw_filtered_clean, aes(x = date_time, y = TMS_T3, color = tomst
 
 
 
-
-
-
-
-# Convert tomst to numeric
-tomst_22_raw_filtered_clean$tomst <- as.numeric(tomst_22_raw_filtered_clean$tomst)
-
-# which loggers are ok now? 56
-unique(tomst_22_raw_filtered_clean$tomst)
-
-
-tomst_22_raw_filtered_clean <- tomst_22_raw_filtered_clean |> 
-  mutate(TMS_T2 = if_else(TMS_T2 == 10, NA_real_, TMS_T2))
-
-tomst_22_raw_filtered_clean <- tomst_22_raw_filtered_clean |> 
-  mutate(TMS_T2 = if_else(TMS_T2 == 0, NA_real_, TMS_T2))
-
-
-
-
-tomst_22_raw_filtered_clean <- tomst_22_raw_filtered_clean |> 
-  group_by(tomst) |> 
-  mutate(TMS_T2 = case_when(
-    all(TMS_T2 == first(TMS_T2)) ~ NA_real_,
-    TRUE ~ TMS_T2
-  )) |> 
-  ungroup()
-
-
-
-
-# Filter out faulty loggers from the original dataset
-tomst_22_raw_filtered_clean <- tomst_22_raw_filtered |> 
-  anti_join(tomst_loggers_faulty, by = "tomst")
-
-ggplot(tomst_22_raw_filtered_clean, aes(x = date_time, y = TMS_T3, color = tomst)) +
+# fix TMS_2 ---------------------------------------------------------------
+ggplot(tomst_22_raw_filtered_clean, aes(x = date_time, y = TMS_T2, color = tomst)) +
   geom_line() +
   theme(legend.position = "none")
+# definitely something weird going on here with 0
+# plot all individually?
 
+# identify porblem loggers
+# get all logger numbers
+loggers <- unique(tomst_22_raw_filtered_clean$tomst)
+
+# Open a PDF  for plotting TMS_2 for each logger seperately
+pdf("Data/Data_tomst_loggers/tomst_loggers_TMS_2_22.pdf")
+
+# Loop through each logger and create a plot
+for (logger in loggers) {
+  # Filter data for the current logger
+  logger_data <- subset(tomst_22_raw_filtered_clean, tomst == logger)
+  
+  # Create the plot
+  p <- ggplot(logger_data, aes(x = date_time, y = TMS_T2, color = tomst)) +
+    geom_line() +
+    theme(legend.position = "none") +
+    ggtitle(paste("Logger:", logger))
+  
+  # Print the plot to the PDF
+  print(p)
+}
+
+# Close the pdf
+dev.off()
+
+# go manually though them and check which ones look wrong
+
+# these are faulty:
+# Define the vector of logger numbers to set TMS_T2 to NA
+loggers_to_na <- c("94217346", "94217307", "94217333", "94217344",
+                   "94217328", "94217326", "94217332", "94217310",
+                   "94217320", "94217348", "94217318", "94217327",
+                   "94217321", "94217322", "94217330", "94217345", 
+                   "94217325", "94217301", "94217323", "94217308",
+                   "94217306", "94217349", "94217317", "94217303",
+                   "94217341", "94217305", "94217324", "94217335",
+                   "94217316", "94217302", "94217334", "94217347",
+                   "94217343", "94217331", "94217329", "94217314",
+                   "94217336", "94217338", "94217311", "94217340",
+                   "94217339", "94217337", "94217315") #
+
+# make the values in TMS_2 for these faulty loggers NA
+tomst_22_raw_filtered_clean$TMS_T2[tomst_22_raw_filtered_clean$tomst %in% loggers_to_na] <- NA
+  
+# plot TMS_2 again
 ggplot(tomst_22_raw_filtered_clean, aes(x = date_time, y = TMS_T2, color = tomst)) +
   geom_line() +
   theme(legend.position = "none")
 
-ggplot(tomst_22_raw_filtered_clean, aes(x = date_time, y = TMS_T1, color = tomst)) +
-  geom_line() +
-  theme(legend.position = "none")
+# looks better now
 
-unique(tomst_22_raw_filtered_clean$tomst)
-# only 18 loggers 
 
-# Reshape the data into long format
-tomst_22_long <- tomst_22_raw_filtered_clean |> 
-  pivot_longer(cols = starts_with("TMS_T"), names_to = "TMS_Position", values_to = "Temperature")
 
-# Plot all three TMS positions in the same plot
-ggplot(tomst_22_long, aes(x = date_time, y = Temperature, color = TMS_Position)) +
-  geom_line() +
-  theme(legend.position = "right")
+
+
+
+
+
+
+
+
+
 
 
 
