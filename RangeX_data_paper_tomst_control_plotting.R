@@ -781,5 +781,25 @@ combined_plot <- ggarrange(temp_sun_cloud, humidity_plot, ncol = 1, nrow = 2, al
 combined_plot
 
 
+# delta temperature -------------------------------------------------------
+
+avg_temp_daily_long_23 <- tomst_23_raw_filtered |>
+  filter(site == "hi") |>
+  mutate(date = as.Date(date_time)) |>
+  pivot_longer(cols = starts_with("TMS_T"),
+               names_to = "sensor",
+               values_to = "temperature") |>
+  group_by(date, treat_warming, sensor) |>
+  summarise(mean_temp = mean(temperature, na.rm = TRUE), .groups = "drop") |>
+  pivot_wider(names_from = treat_warming, values_from = mean_temp) |>
+  mutate(delta_temp = warm - ambi)
+
+ggplot(avg_temp_daily_long_23, aes(x = date, y = delta_temp, color = sensor)) +
+  geom_point() +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  labs(x = "Date", y = "Δ Temperature (warm - ambi)", 
+       title = "Daily Temperature Difference per Sensor (High Site)",
+       color = "Sensor")
+
 
 
