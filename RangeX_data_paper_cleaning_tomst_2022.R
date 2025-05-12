@@ -1,3 +1,4 @@
+
 # Climate data TOMST loggers NOR 2022 --------------------------------------------
 
 ## Data used: Data/Data_tomst_loggers/tomst_2022/,
@@ -200,17 +201,17 @@ loggers_to_na <- c("94217346", "94217307", "94217333", "94217344",
                    "94217339", "94217337", "94217315") 
 
 # make the values in TMS_2 for these faulty loggers NA
-tomst_22_raw_filtered_clean$TMS_T2[tomst_22_raw_filtered$tomst %in% loggers_to_na] <- NA
+tomst_22_raw_filtered$TMS_T2[tomst_22_raw_filtered$tomst %in% loggers_to_na] <- NA
   
 # plot TMS_2 again
-ggplot(tomst_22_raw_filtered_clean, aes(x = date_time, y = TMS_T2, color = tomst)) +
+ggplot(tomst_22_raw_filtered, aes(x = date_time, y = TMS_T2, color = tomst)) +
   geom_line() +
   theme(legend.position = "none")
 # good now
 
 # plot TMS_3  ------------------------------------------------------
 # one line per logger
-ggplot(tomst_22_raw_filtered_clean, aes(x = date_time, y = TMS_T3, color = tomst)) +
+ggplot(tomst_22_raw_filtered, aes(x = date_time, y = TMS_T3, color = tomst)) +
   geom_line() +
   theme(legend.position = "none")
 # many show -82
@@ -218,7 +219,7 @@ ggplot(tomst_22_raw_filtered_clean, aes(x = date_time, y = TMS_T3, color = tomst
 
 
 # filter out tomst loggers with faulty values for TMS_3
-tomst_loggers_faulty <- tomst_22_raw_filtered_clean |> 
+tomst_loggers_faulty <- tomst_22_raw_filtered |> 
   filter(TMS_T3 == -82) |> 
   select(tomst) |> 
   distinct()
@@ -226,15 +227,15 @@ tomst_loggers_faulty
 # 38 loggers
 
 # make NA instead of -82 values to keep the loggers for TMS_1 which seems fine
-tomst_22_raw_filtered_clean <- tomst_22_raw_filtered_clean |> 
+tomst_22_raw_filtered <- tomst_22_raw_filtered |> 
   mutate(TMS_T3 = if_else(TMS_T3 == -82, NA_real_, TMS_T3))
 
-ggplot(tomst_22_raw_filtered_clean, aes(x = date_time, y = TMS_T3, color = tomst)) +
+ggplot(tomst_22_raw_filtered, aes(x = date_time, y = TMS_T3, color = tomst)) +
   geom_line() +
   theme(legend.position = "none")
 
 # add column VWC ----------------------------------------------------------
-tomst_22_raw_filtered_clean <- tomst_22_raw_filtered_clean |> 
+tomst_22_raw_filtered <- tomst_22_raw_filtered |> 
   mutate(VWC = NA)
 
 # import metadata -------------------------------------------------------
@@ -244,14 +245,14 @@ metadata <- metadata |>
 
 # fix col names --------------------------------------------------------
 names(metadata)
-names(tomst_22_raw_filtered_clean)
+names(tomst_22_raw_filtered)
 
-tomst_22_raw_filtered_clean <- tomst_22_raw_filtered_clean |> 
+tomst_22_raw_filtered <- tomst_22_raw_filtered |> 
   rename("block_ID_original" = "block",
          "plot_ID_original" = "treat")
 
 # to match plot_ID_original
-tomst_22_raw_filtered_clean <- tomst_22_raw_filtered_clean |> 
+tomst_22_raw_filtered <- tomst_22_raw_filtered |> 
   mutate(plot_ID_original = case_when(
     plot_ID_original == "A" ~ "a",
     plot_ID_original == "B" ~ "b",
@@ -266,20 +267,25 @@ tomst_22_raw_filtered_clean <- tomst_22_raw_filtered_clean |>
 metadata <- metadata |> 
   mutate(across(c(block_ID_original, plot_ID_original), as.character))
 
-tomst_22_raw_filtered_clean <- tomst_22_raw_filtered_clean |> 
+tomst_22_raw_filtered <- tomst_22_raw_filtered |> 
   mutate(across(c(block_ID_original, plot_ID_original), as.character))
 
-tomst_22_clean<- left_join(metadata, tomst_22_raw_filtered_clean, 
+tomst_22_clean<- left_join(metadata, tomst_22_raw_filtered, 
                            by = c( "site", "block_ID_original",
                                    "plot_ID_original",
                                    "treat_warming", "treat_competition"))
 
+# some rows are NA everywhere except unique_plot_ID
+# delete these rows
+tomst_22_clean <- tomst_22_clean |> 
+  filter(!is.na(date_time))
 
 # select only columns needed for clean data on OSF ------------------------
 rx_tomst_22_clean <- tomst_22_clean |> 
   select(unique_plot_ID, date_time, 
          TMS_T1, TMS_T2, TMS_T3, 
          TMS_moist, VWC)
+
 
 
 # save clean data ---------------------------------------------------------
