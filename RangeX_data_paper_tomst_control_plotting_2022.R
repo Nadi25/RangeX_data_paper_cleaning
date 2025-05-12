@@ -111,7 +111,7 @@ ggplot(temp_high_average) +
 temp_high_avg <- temp_high |> 
   group_by(date_time) |> 
   summarize(avg_temp_soil = mean(TMS_T1, na.rm = TRUE),
-            avg_temp_ground = mean(TMS_T2, na.rm = TRUE),
+            avg_temp_surface = mean(TMS_T2, na.rm = TRUE),
             avg_temp_air = mean(TMS_T3, na.rm = TRUE),.groups = 'drop')
 head(temp_high_avg)
 
@@ -152,7 +152,7 @@ ks.test(temp_high_avg_long$temperature, "pnorm",
 temp_high_avg_OTC <- temp_high |> 
   group_by(date_time, treat_warming) |> 
   summarize(avg_temp_soil = mean(TMS_T1, na.rm = TRUE),
-            avg_temp_ground = mean(TMS_T2, na.rm = TRUE),
+            avg_temp_surface = mean(TMS_T2, na.rm = TRUE),
             avg_temp_air = mean(TMS_T3, na.rm = TRUE),.groups = 'drop')
 head(temp_high_avg_OTC)
 
@@ -182,7 +182,7 @@ temp_daily <- temp_high |>
   group_by(date_time, treat_warming) |> 
   summarize(
     avg_temp_soil = mean(TMS_T1, na.rm = TRUE),
-    avg_temp_ground = mean(TMS_T2, na.rm = TRUE),
+    avg_temp_surface = mean(TMS_T2, na.rm = TRUE),
     avg_temp_air = mean(TMS_T3, na.rm = TRUE),
     .groups = 'drop'
   ) |> 
@@ -193,7 +193,7 @@ temp_daily <- temp_high |>
 
 ggplot(temp_daily, aes(x = date_time, y = temperature, color = treat_warming)) +
   geom_line() +
-  facet_wrap(~ measurement_position, scales = "free_y") +  # Separate panels for soil, ground, air
+  facet_wrap(~ measurement_position, scales = "free_y") +  # Separate panels for soil, surface, air
   theme_minimal() +
   scale_color_manual(values = c("warm" = "pink3", "ambi" = "turquoise"))+
   labs(color = "Warming treatment", y = "Daily mean temperature")
@@ -207,9 +207,9 @@ temp_daily_high <- temp_high |>
     max_temp_soil = max(TMS_T1, na.rm = TRUE),
     min_temp_soil = min(TMS_T1, na.rm = TRUE),
     
-    avg_temp_ground = mean(TMS_T2, na.rm = TRUE),
-    max_temp_ground = max(TMS_T2, na.rm = TRUE),
-    min_temp_ground = min(TMS_T2, na.rm = TRUE),
+    avg_temp_surface = mean(TMS_T2, na.rm = TRUE),
+    max_temp_surface = max(TMS_T2, na.rm = TRUE),
+    min_temp_surface = min(TMS_T2, na.rm = TRUE),
     
     avg_temp_air = mean(TMS_T3, na.rm = TRUE),
     max_temp_air = max(TMS_T3, na.rm = TRUE),
@@ -230,13 +230,129 @@ temp_ribbon <- temp_daily_high |>
 ggplot(temp_ribbon, aes(x = date_time)) +
   geom_ribbon(aes(ymin = min_temp_air, ymax = max_temp_air, fill = "Air"), alpha = 0.2) +
   geom_ribbon(aes(ymin = min_temp_soil, ymax = max_temp_soil, fill = "Soil"), alpha = 0.2) +
-  geom_ribbon(aes(ymin = min_temp_ground, ymax = max_temp_ground, fill = "Ground"), alpha = 0.2) +
+  geom_ribbon(aes(ymin = min_temp_surface, ymax = max_temp_surface, fill = "Surface"), alpha = 0.2) +
   geom_line(aes(y = avg_temp_air, color = "Air")) +
   geom_line(aes(y = avg_temp_soil, color = "Soil")) +
-  geom_line(aes(y = avg_temp_ground, color = "Ground")) +
+  geom_line(aes(y = avg_temp_surface, color = "Surface")) +
   facet_wrap(~ treat_warming) +
   labs(title = "Daily Temperature Range", y = "Temperature (°C)", x = "Date") +
   theme_minimal()
+
+
+# include block as random factor ------------------------------------------
+temp_daily_high_comp_block <- tomst_22_clean |> 
+  filter(site == "hi") |> 
+  mutate(date_time = as.Date(date_time)) |> # only keeps day, not time
+  group_by(date_time, treat_competition, block_ID_original) |> 
+  summarize(
+    avg_temp_soil = mean(TMS_T1, na.rm = TRUE),
+    avg_temp_surface = mean(TMS_T2, na.rm = TRUE),
+    avg_temp_air = mean(TMS_T3, na.rm = TRUE),
+    .groups = 'drop'
+  ) |> 
+  pivot_longer(cols = starts_with("avg_temp"), 
+               names_to = "measurement_position", 
+               values_to = "temperature")
+
+temp_daily_high_comp_block <- temp_daily_high_comp_block |> 
+  mutate(measurement_position = factor(measurement_position, 
+                                       levels = c("avg_temp_air", 
+                                                  "avg_temp_surface", 
+                                                  "avg_temp_soil")))
+
+
+ggplot(temp_daily_high_comp_block, aes(x = date_time, y = temperature, color = treat_competition)) +
+  geom_line() +
+  facet_wrap(vars(measurement_position)) +  # Separate panels for soil, ground, air
+  scale_color_manual(values = c("bare" = "blue", "vege" = "green", "control" = "pink3"))+
+  labs(color = "Competition treatment", y = "Daily mean temperature")
+
+lmm_soil_comp_b <- lmerTest::lmer(temperature ~ treat_competition + (1 | date_time)+ (1 | block_ID_original), data = temp_daily_high_comp_block[temp_daily_high_comp_block$measurement_position == "avg_temp_soil", ])
+summary(lmm_soil_comp_b)
+# 0.07089 warmer in vege
+
+lmm_surface_comp_b <- lme4::lmer(temperature ~ treat_competition + (1 | date_time)+ (1 | block_ID_original), data = temp_daily_high_comp_block[temp_daily_high_comp_block$measurement_position == "avg_temp_surface", ])
+summary(lmm_surface_comp_b)
+# 0.52498 warmer in vege
+
+lmm_air_comp_b <- lme4::lmer(temperature ~ treat_competition + (1 | date_time)+ (1 | block_ID_original), data = temp_daily_high_comp_block[temp_daily_high_comp_block$measurement_position == "avg_temp_air", ])
+summary(lmm_air_comp_b)
+# 0.15186 warmer in vege
+
+ggplot(temp_daily_high_comp_block, aes(x = treat_competition, y = temperature, fill = treat_competition)) +
+  geom_boxplot() +
+  facet_wrap(vars(measurement_position)) +
+  labs(title = "Temperature Comparison: Vege vs. bare",
+       x = "Treatment Group",
+       y = "Temperature (°C)") +
+  scale_fill_manual(values = c("bare" = "blue", "vege" = "green", "control" = "pink3"))
+
+
+
+# Delta temperature: warm-ambi --------------------------------------------
+# Summarise temperature per time point and treatment
+avg_temp <- tomst_22_clean |> 
+  filter(site == "hi") |> # use only high site
+  group_by(date_time, treat_warming) |> 
+  summarise(mean_temp = mean(TMS_T1, na.rm = TRUE), .groups = "drop") |> 
+  pivot_wider(names_from = treat_warming, values_from = mean_temp) |> 
+  mutate(delta_temp = warm - ambi)
+
+# Plot the delta over time
+ggplot(avg_temp, aes(x = date_time, y = delta_temp)) +
+  geom_line(color = "red") +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  labs(x = "Time", y = "Δ Temperature (warm - ambi)", 
+       title = "Temperature Difference Between Warm and Ambient Treatments")
+
+ggplot(avg_temp, aes(x = date_time, y = delta_temp)) +
+  geom_point(color = "red") +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  labs(x = "Time", y = "Δ Temperature (warm - ambi)", 
+       title = "Temperature Difference Between Warm and Ambient Treatments")
+
+# daily average
+avg_temp_daily <- tomst_22_clean |>
+  filter(site == "hi") |>
+  mutate(date = as.Date(date_time)) |>  # extract date only
+  group_by(date, treat_warming) |>
+  summarise(mean_temp = mean(TMS_T1, na.rm = TRUE), .groups = "drop") |>
+  pivot_wider(names_from = treat_warming, values_from = mean_temp) |>
+  mutate(delta_temp = warm - ambi)
+
+# Plot daily delta
+ggplot(avg_temp_daily, aes(x = date, y = delta_temp)) +
+  geom_point(color = "red") +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  labs(x = "Date", y = "Δ Temperature (warm - ambi)", 
+       title = "Daily Temperature Difference (High Site)")
+
+# ok this is the mean per day but you should maybe filter out night
+
+
+
+
+avg_temp_daily_long <- tomst_22_clean |>
+  filter(site == "hi") |>
+  mutate(date = as.Date(date_time)) |>
+  pivot_longer(cols = starts_with("TMS_T"),
+               names_to = "sensor",
+               values_to = "temperature") |>
+  group_by(date, treat_warming, sensor) |>
+  summarise(mean_temp = mean(temperature, na.rm = TRUE), .groups = "drop") |>
+  pivot_wider(names_from = treat_warming, values_from = mean_temp) |>
+  mutate(delta_temp = warm - ambi)
+
+ggplot(avg_temp_daily_long, aes(x = date, y = delta_temp, color = sensor)) +
+  geom_point() +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  labs(x = "Date", y = "Δ Temperature (warm - ambi)", 
+       title = "Daily Temperature Difference per Sensor (High Site)",
+       color = "Sensor")
+
+
+
+
 
 
 
