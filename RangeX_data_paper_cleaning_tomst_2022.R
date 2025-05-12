@@ -143,6 +143,8 @@ ggplot(tomst_22_raw_filtered, aes(x = date_time, y = TMS_moist, color = tomst)) 
   geom_line() +
   theme(legend.position = "none")
 
+# 94217337 has quite low values in September but keep?
+
 # plot TMS_1  ------------------------------------------------------
 # one line per logger
 ggplot(tomst_22_raw_filtered, aes(x = date_time, y = TMS_T1, color = tomst)) +
@@ -155,78 +157,35 @@ ggplot(tomst_22_raw_filtered, aes(x = date_time, y = TMS_T1, color = tomst)) +
 ggplot(tomst_22_raw_filtered, aes(x = date_time, y = TMS_T2, color = tomst)) +
   geom_line() +
   theme(legend.position = "none")
-# definitely something weird going on here with 0
-
-tomst_loggers_faulty <- tomst_22_raw_filtered |> 
-  filter(TMS_T2 == 0) |> 
-  select(tomst) |> 
-  distinct()
-tomst_loggers_faulty
-
-
-
-# plot TMS_3  ------------------------------------------------------
-# one line per logger
-ggplot(tomst_22_raw_filtered, aes(x = date_time, y = TMS_T3, color = tomst)) +
-  geom_line() +
-  theme(legend.position = "none")
-# many show -82
-# 94217346, 94217307, 94217333, 94217328 have -82 --> delete logger?
-
-
-# filter out tomst loggers with faulty values for TMS_3
-tomst_loggers_faulty <- tomst_22_raw_filtered |> 
-  filter(TMS_T3 == -82) |> 
-  select(tomst) |> 
-  distinct()
-tomst_loggers_faulty
-# 38 loggers
-
-# make NA instead of -82 values to keep the loggers for TMS_1 which seems fine
-tomst_22_raw_filtered_clean <- tomst_22_raw_filtered |> 
-  mutate(TMS_T3 = if_else(TMS_T3 == -82, NA_real_, TMS_T3))
-
-ggplot(tomst_22_raw_filtered_clean, aes(x = date_time, y = TMS_T3, color = tomst)) +
-  geom_line() +
-  theme(legend.position = "none")
-
-
+# definitely something weird going on here
 
 # fix TMS_2 ---------------------------------------------------------------
-ggplot(tomst_22_raw_filtered_clean, aes(x = date_time, y = TMS_T2, color = tomst)) +
-  geom_line() +
-  theme(legend.position = "none")
-# definitely something weird going on here with 0
 # plot all individually?
 
-# identify porblem loggers
+# identify problem loggers
 # get all logger numbers
-loggers <- unique(tomst_22_raw_filtered_clean$tomst)
+loggers <- unique(tomst_22_raw_filtered$tomst)
 
-# Open a PDF  for plotting TMS_2 for each logger seperately
-pdf("Data/Data_tomst_loggers/tomst_loggers_TMS_2_22.pdf")
+# create pdf with one plot for TMS_2 per logger
+pdf("Data/Data_tomst_loggers/Graphs/RangeX_plots_tomst_loggers_TMS_2_22.pdf")
 
-# Loop through each logger and create a plot
-for (logger in loggers) {
-  # Filter data for the current logger
-  logger_data <- subset(tomst_22_raw_filtered_clean, tomst == logger)
-  
-  # Create the plot
-  p <- ggplot(logger_data, aes(x = date_time, y = TMS_T2, color = tomst)) +
-    geom_line() +
-    theme(legend.position = "none") +
-    ggtitle(paste("Logger:", logger))
-  
-  # Print the plot to the PDF
-  print(p)
-}
+# Create and print plots for each logger using map
+unique(tomst_22_raw_filtered$tomst) |> 
+  map(~ {
+    logger_data <- subset(tomst_22_raw_filtered, tomst == .x)
+    p <- ggplot(logger_data, aes(x = date_time, y = TMS_T2, color = tomst)) +
+      geom_line() +
+      theme(legend.position = "none") +
+      ggtitle(paste("Logger:", .x))
+    print(p)
+  })
 
-# Close the pdf
+# Close the PDF
 dev.off()
 
 # go manually though them and check which ones look wrong
 
-# these are faulty:
+# these are faulty loggers:
 # Define the vector of logger numbers to set TMS_T2 to NA
 loggers_to_na <- c("94217346", "94217307", "94217333", "94217344",
                    "94217328", "94217326", "94217332", "94217310",
@@ -238,17 +197,97 @@ loggers_to_na <- c("94217346", "94217307", "94217333", "94217344",
                    "94217316", "94217302", "94217334", "94217347",
                    "94217343", "94217331", "94217329", "94217314",
                    "94217336", "94217338", "94217311", "94217340",
-                   "94217339", "94217337", "94217315") #
+                   "94217339", "94217337", "94217315") 
 
 # make the values in TMS_2 for these faulty loggers NA
-tomst_22_raw_filtered_clean$TMS_T2[tomst_22_raw_filtered_clean$tomst %in% loggers_to_na] <- NA
+tomst_22_raw_filtered_clean$TMS_T2[tomst_22_raw_filtered$tomst %in% loggers_to_na] <- NA
   
 # plot TMS_2 again
 ggplot(tomst_22_raw_filtered_clean, aes(x = date_time, y = TMS_T2, color = tomst)) +
   geom_line() +
   theme(legend.position = "none")
+# good now
 
-# looks better now
+# plot TMS_3  ------------------------------------------------------
+# one line per logger
+ggplot(tomst_22_raw_filtered_clean, aes(x = date_time, y = TMS_T3, color = tomst)) +
+  geom_line() +
+  theme(legend.position = "none")
+# many show -82
+# e.g. 94217346, 94217307, 94217333, 94217328 have -82 --> delete logger?
+
+
+# filter out tomst loggers with faulty values for TMS_3
+tomst_loggers_faulty <- tomst_22_raw_filtered_clean |> 
+  filter(TMS_T3 == -82) |> 
+  select(tomst) |> 
+  distinct()
+tomst_loggers_faulty
+# 38 loggers
+
+# make NA instead of -82 values to keep the loggers for TMS_1 which seems fine
+tomst_22_raw_filtered_clean <- tomst_22_raw_filtered_clean |> 
+  mutate(TMS_T3 = if_else(TMS_T3 == -82, NA_real_, TMS_T3))
+
+ggplot(tomst_22_raw_filtered_clean, aes(x = date_time, y = TMS_T3, color = tomst)) +
+  geom_line() +
+  theme(legend.position = "none")
+
+# add column VWC ----------------------------------------------------------
+tomst_22_raw_filtered_clean <- tomst_22_raw_filtered_clean |> 
+  mutate(VWC = NA)
+
+# import metadata -------------------------------------------------------
+metadata <- read.csv("Data/RangeX_metadata_plot_NOR.csv")
+metadata <- metadata |> 
+  select(-"X")
+
+# fix col names --------------------------------------------------------
+names(metadata)
+names(tomst_22_raw_filtered_clean)
+
+tomst_22_raw_filtered_clean <- tomst_22_raw_filtered_clean |> 
+  rename("block_ID_original" = "block",
+         "plot_ID_original" = "treat")
+
+# to match plot_ID_original
+tomst_22_raw_filtered_clean <- tomst_22_raw_filtered_clean |> 
+  mutate(plot_ID_original = case_when(
+    plot_ID_original == "A" ~ "a",
+    plot_ID_original == "B" ~ "b",
+    plot_ID_original == "C" ~ "c",
+    plot_ID_original == "D" ~ "d",
+    plot_ID_original == "E" ~ "e",
+    plot_ID_original == "F" ~ "f"
+  ))
+
+
+# merge metadata with tomst_22_raw_filtered_clean ----------------------
+metadata <- metadata |> 
+  mutate(across(c(block_ID_original, plot_ID_original), as.character))
+
+tomst_22_raw_filtered_clean <- tomst_22_raw_filtered_clean |> 
+  mutate(across(c(block_ID_original, plot_ID_original), as.character))
+
+tomst_22_clean<- left_join(metadata, tomst_22_raw_filtered_clean, 
+                           by = c( "site", "block_ID_original",
+                                   "plot_ID_original",
+                                   "treat_warming", "treat_competition"))
+
+
+# select only columns needed for clean data on OSF ------------------------
+rx_tomst_22_clean <- tomst_22_clean |> 
+  select(unique_plot_ID, date_time, 
+         TMS_T1, TMS_T2, TMS_T3, 
+         TMS_moist, VWC)
+
+
+# save clean data ---------------------------------------------------------
+# write.csv(rx_tomst_22_clean, "Data/Data_tomst_loggers/RangeX_clean_tomst_NOR_2022.csv")
+
+tomst <- read_csv("Data/Data_tomst_loggers/RangeX_clean_tomst_NOR_2022.csv")
+
+
 
 
 
