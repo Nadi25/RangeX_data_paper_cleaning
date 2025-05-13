@@ -347,8 +347,64 @@ ggplot(avg_temp_daily_long, aes(x = date, y = delta_temp, color = sensor)) +
   geom_point() +
   geom_hline(yintercept = 0, linetype = "dashed") +
   labs(x = "Date", y = "Δ Temperature (warm - ambi)", 
-       title = "Daily Temperature Difference per Sensor (High Site)",
+       title = "Daily Temperature Difference day and night (High Site)",
        color = "Sensor")
+
+
+
+# midday 8-15 day --------------------------------------------------------
+# calculate means per day
+# define day as 8-15 when solar radiation is strongest
+tomst_midday_8_15 <- tomst_22_clean |> 
+  mutate(hour = hour(date_time),  # Extract hour from datetime
+         day_night = ifelse(hour >= 8 & hour <= 15, "day", "night"))
+
+# filter only day ---------------------------------------------------------
+tomst_midday_8_15 <- tomst_midday_8_15 |> 
+  filter(day_night == "day")
+
+avg_temp_day_long <- tomst_midday_8_15 |>
+  filter(site == "hi") |>
+  mutate(date = as.Date(date_time)) |>
+  pivot_longer(cols = starts_with("TMS_T"),
+               names_to = "sensor",
+               values_to = "temperature") |>
+  group_by(date, treat_warming, sensor) |>
+  summarise(mean_temp = mean(temperature, na.rm = TRUE), .groups = "drop") |>
+  pivot_wider(names_from = treat_warming, values_from = mean_temp) |>
+  mutate(delta_temp = warm - ambi)
+
+ggplot(avg_temp_day_long, aes(x = date, y = delta_temp, color = sensor)) +
+  geom_point() +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  labs(x = "Date", y = "Δ Temperature (warm - ambi)", 
+       title = "Daily Temperature Difference 8-15 (High Site)",
+       color = "Sensor")
+
+
+# boxplot delta temp ------------------------------------------------------
+ggplot(avg_temp_day_long, aes(x = sensor, y = delta_temp, fill = sensor)) +
+  geom_boxplot(alpha = 0.7) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  labs(x = "Sensor", y = "Δ Temperature (warm - ambi)", 
+       title = "Daily Warming Effect (8–15h) per Sensor (High Site)") 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
