@@ -330,18 +330,23 @@ ggplot(avg_temp_daily, aes(x = date, y = delta_temp)) +
 # ok this is the mean per day but you should maybe filter out night
 
 
-
-
+# delta temp warm-ambi day and night all positions ------------------------
 avg_temp_daily_long <- tomst_22_clean |>
   filter(site == "hi") |>
   mutate(date = as.Date(date_time)) |>
   pivot_longer(cols = starts_with("TMS_T"),
                names_to = "sensor",
                values_to = "temperature") |>
+  mutate(sensor = recode(sensor,
+                         "TMS_T1" = "avg_temp_soil",
+                         "TMS_T2" = "avg_temp_surface",
+                         "TMS_T3" = "avg_temp_air")) |> 
   group_by(date, treat_warming, sensor) |>
   summarise(mean_temp = mean(temperature, na.rm = TRUE), .groups = "drop") |>
   pivot_wider(names_from = treat_warming, values_from = mean_temp) |>
-  mutate(delta_temp = warm - ambi)
+  mutate(delta_temp = warm - ambi) |> 
+  mutate(sensor = factor(sensor,
+                         levels = c("avg_temp_air", "avg_temp_surface", "avg_temp_soil")))
 
 ggplot(avg_temp_daily_long, aes(x = date, y = delta_temp, color = sensor)) +
   geom_point() +
@@ -350,6 +355,18 @@ ggplot(avg_temp_daily_long, aes(x = date, y = delta_temp, color = sensor)) +
        title = "Daily Temperature Difference day and night (High Site)",
        color = "Sensor")
 
+# boxplot
+delta_temp_box <- ggplot(avg_temp_daily_long, aes(x = sensor, y = delta_temp, fill = sensor)) +
+  geom_boxplot(alpha = 0.7) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  labs(x = "Sensor", y = "Δ Temperature (warm - ambi)", 
+       title = "Daily Warming Effect (High Site)") 
+delta_temp_box
+
+ggsave(filename = "RangeX_tomst_delta_temp_box_22.png", 
+       plot = delta_temp_box, 
+       path = "Data/Data_tomst_loggers/Graphs/", 
+       width = 8, height = 6)
 
 
 # midday 8-15 day --------------------------------------------------------
@@ -369,10 +386,16 @@ avg_temp_day_long <- tomst_midday_8_15 |>
   pivot_longer(cols = starts_with("TMS_T"),
                names_to = "sensor",
                values_to = "temperature") |>
+  mutate(sensor = recode(sensor,
+                         "TMS_T1" = "avg_temp_soil",
+                         "TMS_T2" = "avg_temp_surface",
+                         "TMS_T3" = "avg_temp_air")) |> 
   group_by(date, treat_warming, sensor) |>
   summarise(mean_temp = mean(temperature, na.rm = TRUE), .groups = "drop") |>
   pivot_wider(names_from = treat_warming, values_from = mean_temp) |>
-  mutate(delta_temp = warm - ambi)
+  mutate(delta_temp = warm - ambi) |> 
+  mutate(sensor = factor(sensor,
+                         levels = c("avg_temp_air", "avg_temp_surface", "avg_temp_soil")))
 
 ggplot(avg_temp_day_long, aes(x = date, y = delta_temp, color = sensor)) +
   geom_point() +
@@ -383,11 +406,17 @@ ggplot(avg_temp_day_long, aes(x = date, y = delta_temp, color = sensor)) +
 
 
 # boxplot delta temp ------------------------------------------------------
-ggplot(avg_temp_day_long, aes(x = sensor, y = delta_temp, fill = sensor)) +
+delta_temp_box_8_15 <- ggplot(avg_temp_day_long, aes(x = sensor, y = delta_temp, fill = sensor)) +
   geom_boxplot(alpha = 0.7) +
   geom_hline(yintercept = 0, linetype = "dashed") +
   labs(x = "Sensor", y = "Δ Temperature (warm - ambi)", 
-       title = "Daily Warming Effect (8–15h) per Sensor (High Site)") 
+       title = "Daily Warming Effect (8–15h) (High Site)")
+delta_temp_box_8_15
+
+ggsave(filename = "RangeX_tomst_delta_temp_box_8_15_22.png", 
+       plot = delta_temp_box_8_15, 
+       path = "Data/Data_tomst_loggers/Graphs/", 
+       width = 8, height = 6)
 
 
 
