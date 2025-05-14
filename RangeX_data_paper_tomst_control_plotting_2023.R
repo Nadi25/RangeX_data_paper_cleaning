@@ -769,7 +769,7 @@ ggsave(filename = "RangeX_tomst_temp_sunny_cloudy_23.png",
 # surface and soil temp are colder in OTC
 # makes no sense!!!
 
-# delta temp ------------------------------------------------------
+# delta temp sun cloud ------------------------------
 temp_delta_plot_sun <- temp_daily_avg_23_sun |>
   filter(site == "hi") |> 
   select(date, treat_warming, measurement_position, daily_avg_temp, sun_status) |>
@@ -785,7 +785,7 @@ ggplot(temp_delta_plot_sun, aes(x = date, y = delta_temp, color = measurement_po
        title = "Daily Temperature Difference 8-15 (High Site)",
        color = "Sensor")
 
-# boxplot delta temp ------------------------------------------------------
+# boxplot delta temp sun cloud ------------------------------------------------------
 sun_23_boxplot_delta_temp <- ggplot(temp_delta_plot_sun, aes(x = measurement_position, y = delta_temp, fill = measurement_position)) +
   facet_grid(~ sun_status)+
   geom_boxplot(alpha = 0.7) +
@@ -812,7 +812,7 @@ combined_plot <- ggarrange(temp_sun_cloud, humidity_plot, ncol = 1, nrow = 2, al
 combined_plot
 
 
-# delta temperature -------------------------------------------------------
+# delta temperature day and night -------------------------------------------------------
 avg_temp_daily_long_23 <- tomst_23_raw_filtered |>
   filter(site == "hi") |>
   mutate(date = as.Date(date_time)) |>
@@ -847,7 +847,7 @@ delta_temp_box <- ggplot(avg_temp_daily_long_23, aes(x = sensor, y = delta_temp,
   geom_boxplot(alpha = 0.7) +
   geom_hline(yintercept = 0, linetype = "dashed") +
   labs(x = "Sensor", y = "Δ Temperature (warm - ambi)", 
-       title = "Daily Warming Effect (High Site)") 
+       title = "Daily Warming Effect 23 (High Site)") 
 delta_temp_box
 
 ggsave(filename = "RangeX_tomst_delta_temp_box_23.png", 
@@ -1032,7 +1032,7 @@ delta_temp_box_peak <- ggplot(avg_temp_daily_long_23_peak, aes(x = sensor, y = d
   geom_boxplot(alpha = 0.7) +
   geom_hline(yintercept = 0, linetype = "dashed") +
   labs(x = "Sensor", y = "Δ Temperature (warm - ambi)", 
-       title = "Daily Warming Effect peak season (High Site)") 
+       title = "Daily Warming Effect peak season 23 (High Site)") 
 delta_temp_box_peak
 
 ggsave(filename = "RangeX_tomst_delta_temp_box_peak_23.png", 
