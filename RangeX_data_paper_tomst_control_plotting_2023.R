@@ -855,6 +855,85 @@ ggsave(filename = "RangeX_tomst_delta_temp_box_23.png",
        path = "Data/Data_tomst_loggers/Graphs/", 
        width = 8, height = 6)
 
+# delta temp peak season day and night -----------------------------------
+start_date <- as.Date("2023-06-15")
+end_date <- as.Date("2023-09-15")
+
+# filter peak growing season
+avg_temp_daily_long_23_peak <- avg_temp_daily_long_23 |> 
+  filter(between(date, left = start_date, right = end_date))
+
+delta_temp_peak <- ggplot(avg_temp_daily_long_23_peak, aes(x = date, y = delta_temp, color = sensor)) +
+  geom_point() +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  labs(x = "Date", y = "Δ Temperature (warm - ambi)", 
+       title = "Daily Temperature Difference peak season 23 (High Site)",
+       color = "Sensor")
+delta_temp_peak
+
+ggsave(filename = "RangeX_tomst_delta_temp_peak_23_points.png", 
+       plot = delta_temp_peak, 
+       path = "Data/Data_tomst_loggers/Graphs/", 
+       width = 8, height = 6)
+
+delta_temp_box_peak <- ggplot(avg_temp_daily_long_23_peak, aes(x = sensor, y = delta_temp, fill = sensor)) +
+  geom_boxplot(alpha = 0.7) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  labs(x = "Sensor", y = "Δ Temperature (warm - ambi)", 
+       title = "Daily Warming Effect peak season 23 (High Site)") 
+delta_temp_box_peak
+
+ggsave(filename = "RangeX_tomst_delta_temp_box_peak_23.png", 
+       plot = delta_temp_box_peak, 
+       path = "Data/Data_tomst_loggers/Graphs/", 
+       width = 8, height = 6)
+
+
+# delta temperature peak day and night competition-------------------------
+# keep treat competition
+avg_temp_daily_long_comp_peak_23 <- tomst_23_raw_filtered |>
+  filter(site == "hi") |>
+  mutate(date = as.Date(date_time)) |>
+  pivot_longer(cols = starts_with("TMS_T"),
+               names_to = "sensor",
+               values_to = "temperature") |>
+  mutate(sensor = recode(sensor,
+                         "TMS_T1" = "avg_temp_soil",
+                         "TMS_T2" = "avg_temp_surface",
+                         "TMS_T3" = "avg_temp_air")) |> 
+  group_by(date, treat_warming, treat_competition, sensor) |>
+  summarise(mean_temp = mean(temperature, na.rm = TRUE), .groups = "drop") |>
+  pivot_wider(names_from = treat_warming, values_from = mean_temp) |>
+  mutate(delta_temp = warm - ambi) |> 
+  mutate(sensor = factor(sensor,
+                         levels = c("avg_temp_air", "avg_temp_surface", "avg_temp_soil"))) |> 
+  filter(between(date, left = start_date, right = end_date))
+
+delta_temp_comp <- ggplot(avg_temp_daily_long_comp_peak_23, aes(x = date, y = delta_temp, color = sensor)) +
+  geom_point() +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  facet_wrap(vars(treat_competition))+
+  labs(x = "Date", y = "Δ Temperature (warm - ambi)", 
+       title = "Daily Temperature Difference 23 (High Site)",
+       color = "Sensor")
+delta_temp_comp
+
+delta_temp_box_comp_peak <- ggplot(avg_temp_daily_long_comp_peak_23, aes(x = sensor, y = delta_temp, fill = sensor)) +
+  geom_boxplot(alpha = 0.7) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  facet_wrap(vars(treat_competition))+
+  labs(x = "", y = "Δ Temperature (warm - ambi)", 
+       title = "Daily Warming Effect peak season competition 23 (High Site)") 
+delta_temp_box_comp_peak
+
+ggsave(filename = "RangeX_tomst_delta_temp_box_peak_comp_23.png", 
+       plot = delta_temp_box_comp_peak, 
+       path = "Data/Data_tomst_loggers/Graphs/", 
+       width = 15, height = 6)
+# in bare ground temp is warmer in the OTCs also for surface
+# in vege temp is much colder in soil indicating shading effect of vegetation
+
+
 # midday 8-15 day --------------------------------------------------------
 # calculate means per day
 # define day as 8-15 when solar radiation is strongest
