@@ -36,7 +36,6 @@ ggplot(temp_average, aes(x = date_time, y = avg_temp_1, color = treat_combined))
   theme(legend.position = "right")
 
 # control plotting  --------------------------------------------------------
-# temp1 all loggers -------------------------------------------------------
 # Create the plot for Temp1 per logger with the filtered data
 ggplot(tomst_24_raw_filtered, 
        aes(x = date_time, y = TMS_T1, color = tomst)) +
