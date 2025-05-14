@@ -219,6 +219,38 @@ summary(lmm_air_daily_hi)
 # higher buffer capapcity of soil
 # colder soil in OTCs?
 
+# daily temp timeline competition ----------------------------------------
+# include competition
+temp_daily_comp <- tomst_23_raw_filtered |> 
+  filter(site == "hi") |>
+  mutate(date_time = as.Date(date_time)) |> # only keeps day, not time
+  group_by(date_time, treat_competition, treat_warming) |> 
+  summarize(
+    soil = mean(TMS_T1, na.rm = TRUE),
+    surface = mean(TMS_T2, na.rm = TRUE),
+    air = mean(TMS_T3, na.rm = TRUE),
+    .groups = 'drop'
+  ) |> 
+  pivot_longer(cols = c(soil, surface, air), 
+               names_to = "measurement_position", 
+               values_to = "temperature") |> 
+  mutate(measurement_position = factor(measurement_position,
+                         levels = c("air", "surface", "soil")))
+
+
+timeline_warming <- ggplot(temp_daily_comp, aes(x = date_time, y = temperature, color = treat_warming)) +
+  geom_line() +
+  facet_grid(rows = vars(measurement_position), cols = vars(treat_competition))+
+  scale_color_manual(values = c("warm" = "pink3", "ambi" = "turquoise"))+
+  labs(color = "Warming treatment", 
+       y = expression("Daily mean temperature ("*degree*C*")"), 
+       x = "Time", title = "2023")
+timeline_warming
+
+ggsave(filename = "RangeX_tomst_timeline_warming_competition_23.png", 
+       plot = timeline_warming, 
+       path = "Data/Data_tomst_loggers/Graphs/", 
+       width = 8, height = 6)
 
 # calculate max and min temp per day --------------------------------------
 temp_daily_high_date <- tomst_23_raw_filtered |>
