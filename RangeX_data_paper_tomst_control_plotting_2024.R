@@ -70,6 +70,39 @@ ggplot(tomst_24_raw_filtered,
   geom_point() +
   theme(legend.position = "none")
 
+# daily temp timeline competition ----------------------------------------
+# include competition
+temp_daily_comp <- tomst_24_raw_filtered |> 
+  filter(site == "hi") |>
+  mutate(date_time = as.Date(date_time)) |> # only keeps day, not time
+  group_by(date_time, treat_competition, treat_warming) |> 
+  summarize(
+    soil = mean(TMS_T1, na.rm = TRUE),
+    surface = mean(TMS_T2, na.rm = TRUE),
+    air = mean(TMS_T3, na.rm = TRUE),
+    .groups = 'drop'
+  ) |> 
+  pivot_longer(cols = c(soil, surface, air), 
+               names_to = "measurement_position", 
+               values_to = "temperature") |> 
+  mutate(measurement_position = factor(measurement_position,
+                                       levels = c("air", "surface", "soil")))
+
+
+timeline_warming <- ggplot(temp_daily_comp, aes(x = date_time, y = temperature, color = treat_warming)) +
+  geom_line() +
+  facet_grid(rows = vars(measurement_position), cols = vars(treat_competition))+
+  scale_color_manual(values = c("warm" = "pink3", "ambi" = "turquoise"))+
+  labs(color = "Warming treatment", 
+       y = expression("Daily mean temperature ("*degree*C*")"), 
+       x = "Time", title = "2024")
+timeline_warming
+
+ggsave(filename = "RangeX_tomst_timeline_warming_competition_24.png", 
+       plot = timeline_warming, 
+       path = "Data/Data_tomst_loggers/Graphs/", 
+       width = 8, height = 6)
+
 
 # delta temp midday 8-15 day --------------------------------------------------------
 # calculate means per day
@@ -266,13 +299,69 @@ ggsave(filename = "RangeX_tomst_delta_temp_box_peak_comp_24.png",
 # in bare ground temp is warmer in the OTCs also for surface
 # in vege temp is much colder in soil indicating shading effect of vegetation
 
+# violin plot
+delta_temp_viol_comp_peak <- ggplot(avg_temp_daily_long_comp_peak_24, aes(x = sensor, y = delta_temp, fill = sensor)) +
+  geom_violin(alpha = 0.7) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  facet_wrap(vars(treat_competition))+
+  labs(x = "", y = "Δ Temperature (warm - ambi)", 
+       title = "Daily Warming Effect peak season competition 24 (High Site)")+
+  scale_fill_manual(values = c("#999999", "#E69F00", "#56B4E9"))
+delta_temp_viol_comp_peak
 
+ggsave(filename = "RangeX_tomst_delta_temp_violoin_peak_comp_24.png", 
+       plot = delta_temp_viol_comp_peak, 
+       path = "Data/Data_tomst_loggers/Graphs/", 
+       width = 15, height = 6)
 
+delta_temp_viol_comp_peak + 
+  stat_summary(fun.data=mean_sdl, mult=1,
+               geom="pointrange", color="black")
 
+delta_temp_viol_comp_peak +
+  geom_boxplot(width=0.1, fill="white")
 
+# try pairwise comparison of warm vs ambi first -------------------------------
+avg_temp_pairwise <- tomst_24_raw_filtered |>
+  filter(site == "hi") |>
+  mutate(date = as.Date(date_time)) |>
+  pivot_longer(cols = starts_with("TMS_T"),
+               names_to = "sensor",
+               values_to = "temperature") |>
+  mutate(sensor = recode(sensor,
+                         "TMS_T1" = "avg_temp_soil",
+                         "TMS_T2" = "avg_temp_surface",
+                         "TMS_T3" = "avg_temp_air")) |>
+  group_by(date, block, treat_warming, treat_competition,
+           sensor) |>
+  summarise(mean_temp = mean(temperature, na.rm = TRUE), .groups = "drop") |>
+  pivot_wider(names_from = treat_warming, values_from = mean_temp) |>
+  mutate(delta_temp = warm - ambi)
 
+delta_summary <- avg_temp_pairwise |>
+  group_by(date, sensor) |>
+  summarise(mean_delta = mean(delta_temp, na.rm = TRUE),
+            sd_delta = sd(delta_temp, na.rm = TRUE),
+            .groups = "drop")
 
+ggplot(delta_summary, aes(x = date, y = mean_delta, color = sensor)) +
+  geom_line() +
+  geom_ribbon(aes(ymin = mean_delta - sd_delta, ymax = mean_delta + sd_delta, fill = sensor), alpha = 0.2, color = NA) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  labs(x = "Date", y = "Δ Temperature (warm - ambi)", title = "Mean Daily ΔT per Sensor (pairwise)", color = "Sensor", fill = "Sensor")
 
+ggplot(avg_temp_pairwise, aes(x = sensor, y = delta_temp, fill = sensor)) +
+  geom_violin() +
+  facet_wrap(vars(treat_competition))+
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  labs(x = "Sensor", y = "Δ Temperature (warm - ambi)", title = "Pairwise ΔT Distribution per Sensor")
+
+ggplot(avg_temp_pairwise, aes(x = sensor, y = delta_temp, fill = sensor)) +
+  geom_boxplot() +
+  facet_wrap(vars(treat_competition))+
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  labs(x = "Sensor", y = "Δ Temperature (warm - ambi)", 
+       title = "Paired Daily ΔT per Sensor across Blocks")
 
 
 
