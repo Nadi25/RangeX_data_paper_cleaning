@@ -1,3 +1,4 @@
+
 # Climate data TOMST loggers NOR 2024 --------------------------------------------
 
 ## Data used: Data/Data_tomst_loggers/tomst_2024/,
@@ -79,7 +80,7 @@ plot_low_24 <- plot_low_24 |>
          comment = comment.1)
 
 # combine again under each other
-plot_codes_clean_24 <- bind_rows(hi = plot_high_, lo = plot_low_24, .id = "site")
+plot_codes_clean_24 <- bind_rows(hi = plot_high_24, lo = plot_low_24, .id = "site")
 head(plot_codes_clean_24)
 str(plot_codes_clean_24) # tomst = int 
 
@@ -181,6 +182,5 @@ s %+% one_logger
 # what if you take these 3 out
 
 # we still have 15 loggers that have a drop around sep
-
 
 
