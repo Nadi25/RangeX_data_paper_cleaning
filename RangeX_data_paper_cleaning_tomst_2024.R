@@ -140,7 +140,7 @@ tomst_24_raw <- tomst_24_raw |>
 # filter field season already here ----------------------------------------
 # high: 30.05 - 15.10.24
 # low: 12.05 - 15.10.24
-start_date <- as.Date("2024-05-31") 
+start_date <- as.Date("2024-06-06") # 3 loggers came in later
 end_date <- as.Date("2024-10-14")
 
 # Filter the data for the specified date range
@@ -182,5 +182,32 @@ s %+% one_logger
 # what if you take these 3 out
 
 # we still have 15 loggers that have a drop around sep
+
+
+# label outlier --------------------------------------------
+# flag data points that have a temp dif of > 5 degree within 15 min
+tomst_24_raw_filtered_flagged <- tomst_24_raw_filtered |>
+  arrange(tomst, date_time) |>  # important for time order
+  group_by(tomst) |>  # do per logger
+  mutate(
+    diff_forward = abs(TMS_T1 - lead(TMS_T1)),
+    temp_outlier = ifelse(diff_forward > 5, TRUE, FALSE)  # set threshold here
+  ) |> 
+  ungroup()
+
+
+ggplot(tomst_24_raw_filtered_flagged, aes(x = date_time, y = TMS_T1, color = temp_outlier)) +
+  geom_point()
+
+# delete flagged outlier
+# Remove only the flagged outlier rows
+tomst_24_raw_filtered <- tomst_24_raw_filtered_flagged |>
+  filter(!temp_outlier)
+
+
+# delete everything > 28 --------------------------------------------------
+tomst_24_raw_filtered <- tomst_24_raw_filtered |>
+  filter(TMS_T1 <= 28)
+
 
 
