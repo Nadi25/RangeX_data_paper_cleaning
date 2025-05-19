@@ -298,14 +298,14 @@ avg_temp_daily_long_21 <- tomst_21_raw_filtered |>
                          levels = c("avg_temp_air", "avg_temp_surface", "avg_temp_soil")))
 
 delta_temp_points_21 <- ggplot(avg_temp_daily_long_21, aes(x = date, y = delta_temp, color = sensor)) +
-  geom_point() +
+  geom_line() +
   geom_hline(yintercept = 0, linetype = "dashed") +
   labs(x = "Date", y = "Δ Temperature (warm - ambi)", 
        title = "Daily Temperature Difference sep - oct 21 (High Site)",
        color = "Sensor")
 delta_temp_points_21
 
-ggsave(filename = "RangeX_tomst_delta_temp_points_21.png", 
+ggsave(filename = "RangeX_tomst_delta_temp_line_21.png", 
        plot = delta_temp_points_21, 
        path = "Data/Data_tomst_loggers/Graphs/", 
        width = 8, height = 6)
@@ -320,6 +320,21 @@ delta_temp_box_21
 
 ggsave(filename = "RangeX_tomst_delta_temp_box_21.png", 
        plot = delta_temp_box_21, 
+       path = "Data/Data_tomst_loggers/Graphs/", 
+       width = 8, height = 6)
+
+delta_temp_viol_21 <- ggplot(avg_temp_daily_long_21, aes(x = sensor, y = delta_temp, fill = sensor)) +
+  geom_violin()+
+  geom_boxplot(width = 0.1) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  labs(x = "", y = "Δ Temperature (warm - ambi)", 
+       title = "Daily Warming Effect sep - oct 21 (High Site)") +
+  theme(legend.position = "none", axis.text = element_text(size = 15))+
+  scale_fill_manual(values = c("#999999", "#E69F00", "#56B4E9"))
+delta_temp_viol_21
+
+ggsave(filename = "RangeX_tomst_delta_temp_violin_21.png", 
+       plot = delta_temp_viol_21, 
        path = "Data/Data_tomst_loggers/Graphs/", 
        width = 8, height = 6)
 
