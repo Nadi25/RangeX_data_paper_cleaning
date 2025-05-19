@@ -423,6 +423,23 @@ ggsave(filename = "RangeX_tomst_delta_temp_box_peak_22.png",
        path = "Data/Data_tomst_loggers/Graphs/", 
        width = 8, height = 6)
 
+delta_temp_viol_peak <- ggplot(avg_temp_daily_long_peak, aes(x = sensor, y = delta_temp, fill = sensor)) +
+  geom_violin()+
+  geom_boxplot(width = 0.1) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  labs(x = "Sensor", y = "Δ Temperature (warm - ambi)", 
+       title = "Daily Warming Effect peak season 22 (High Site)") +
+  theme(legend.position = "none")+
+  scale_fill_manual(values = c("#999999", "#E69F00", "#56B4E9"))
+delta_temp_viol_peak
+
+ggsave(filename = "RangeX_tomst_delta_temp_violin_peak_22.png", 
+       plot = delta_temp_viol_peak, 
+       path = "Data/Data_tomst_loggers/Graphs/", 
+       width = 8, height = 6)
+
+
+
 # delta temperature peak day and night competition-------------------------
 # keep treat competition
 avg_temp_daily_long_comp_peak_22 <- tomst_22_clean |>
@@ -444,7 +461,7 @@ avg_temp_daily_long_comp_peak_22 <- tomst_22_clean |>
   filter(between(date, left = start_date, right = end_date))
 
 delta_temp_comp <- ggplot(avg_temp_daily_long_comp_peak_22, aes(x = date, y = delta_temp, color = sensor)) +
-  geom_point() +
+  geom_line() +
   geom_hline(yintercept = 0, linetype = "dashed") +
   facet_wrap(vars(treat_competition))+
   labs(x = "Date", y = "Δ Temperature (warm - ambi)", 
@@ -467,6 +484,21 @@ ggsave(filename = "RangeX_tomst_delta_temp_box_peak_comp_22.png",
 # there is no control
 # is that all the corrupt loggers?
 
+delta_temp_viol_comp_peak <- ggplot(avg_temp_daily_long_comp_peak_22, aes(x = sensor, y = delta_temp, fill = sensor)) +
+  geom_violin()+
+  geom_boxplot(width = 0.1) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  facet_wrap(vars(treat_competition))+
+  labs(x = "", y = "Δ Temperature (warm - ambi)", 
+       title = "Daily Warming Effect peak season competition 22 (High Site)") +
+  theme(legend.position = "none")+
+  scale_fill_manual(values = c("#999999", "#E69F00", "#56B4E9"))
+delta_temp_viol_comp_peak
+
+ggsave(filename = "RangeX_tomst_delta_temp_violin_peak_comp_22.png", 
+       plot = delta_temp_viol_comp_peak, 
+       path = "Data/Data_tomst_loggers/Graphs/", 
+       width = 15, height = 6)
 
 # midday 8-15 day --------------------------------------------------------
 # calculate means per day
