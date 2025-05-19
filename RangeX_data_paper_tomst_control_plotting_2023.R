@@ -863,10 +863,10 @@ avg_temp_daily_long_23 <- tomst_23_raw_filtered |>
                          levels = c("avg_temp_air", "avg_temp_surface", "avg_temp_soil")))
 
 delta_temp <- ggplot(avg_temp_daily_long_23, aes(x = date, y = delta_temp, color = sensor)) +
-  geom_point() +
+  geom_line() +
   geom_hline(yintercept = 0, linetype = "dashed") +
   labs(x = "Date", y = "Δ Temperature (warm - ambi)", 
-       title = "Daily Temperature Difference (High Site)",
+       title = "Daily Temperature Difference 23 (High Site)",
        color = "Sensor")
 delta_temp
 
@@ -887,6 +887,15 @@ ggsave(filename = "RangeX_tomst_delta_temp_box_23.png",
        path = "Data/Data_tomst_loggers/Graphs/", 
        width = 8, height = 6)
 
+delta_temp_viol <- ggplot(avg_temp_daily_long_23, aes(x = sensor, y = delta_temp, fill = sensor)) +
+  geom_violin(alpha = 0.7) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  labs(x = "Sensor", y = "Δ Temperature (warm - ambi)", 
+       title = "Daily Warming Effect 23 (High Site)") 
+delta_temp_viol
+
+
+
 # delta temp peak season day and night -----------------------------------
 start_date <- as.Date("2023-06-15")
 end_date <- as.Date("2023-09-15")
@@ -896,14 +905,14 @@ avg_temp_daily_long_23_peak <- avg_temp_daily_long_23 |>
   filter(between(date, left = start_date, right = end_date))
 
 delta_temp_peak <- ggplot(avg_temp_daily_long_23_peak, aes(x = date, y = delta_temp, color = sensor)) +
-  geom_point() +
+  geom_line() +
   geom_hline(yintercept = 0, linetype = "dashed") +
   labs(x = "Date", y = "Δ Temperature (warm - ambi)", 
        title = "Daily Temperature Difference peak season 23 (High Site)",
        color = "Sensor")
 delta_temp_peak
 
-ggsave(filename = "RangeX_tomst_delta_temp_peak_23_points.png", 
+ggsave(filename = "RangeX_tomst_delta_temp_peak_23_line.png", 
        plot = delta_temp_peak, 
        path = "Data/Data_tomst_loggers/Graphs/", 
        width = 8, height = 6)
@@ -919,6 +928,22 @@ ggsave(filename = "RangeX_tomst_delta_temp_box_peak_23.png",
        plot = delta_temp_box_peak, 
        path = "Data/Data_tomst_loggers/Graphs/", 
        width = 8, height = 6)
+
+delta_temp_viol_peak <- ggplot(avg_temp_daily_long_23_peak, aes(x = sensor, y = delta_temp, fill = sensor)) +
+  geom_violin(alpha = 0.7) +
+  geom_boxplot(width = 0.1)+
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  labs(x = "", y = "Δ Temperature (warm - ambi)", 
+       title = "Daily Warming Effect peak season 23 (High Site)")+
+  scale_fill_manual(values = c("#999999", "#E69F00", "#56B4E9"))+
+  theme(legend.position = "none")
+delta_temp_viol_peak
+
+ggsave(filename = "RangeX_tomst_delta_temp_viol_peak_23.png", 
+       plot = delta_temp_viol_peak, 
+       path = "Data/Data_tomst_loggers/Graphs/", 
+       width = 8, height = 6)
+
 
 
 # delta temperature peak day and night competition-------------------------
@@ -942,7 +967,7 @@ avg_temp_daily_long_comp_peak_23 <- tomst_23_raw_filtered |>
   filter(between(date, left = start_date, right = end_date))
 
 delta_temp_comp <- ggplot(avg_temp_daily_long_comp_peak_23, aes(x = date, y = delta_temp, color = sensor)) +
-  geom_point() +
+  geom_line() +
   geom_hline(yintercept = 0, linetype = "dashed") +
   facet_wrap(vars(treat_competition))+
   labs(x = "Date", y = "Δ Temperature (warm - ambi)", 
@@ -965,6 +990,21 @@ ggsave(filename = "RangeX_tomst_delta_temp_box_peak_comp_23.png",
 # in bare ground temp is warmer in the OTCs also for surface
 # in vege temp is much colder in soil indicating shading effect of vegetation
 
+delta_temp_viol_comp_peak <- ggplot(avg_temp_daily_long_comp_peak_23, aes(x = sensor, y = delta_temp, fill = sensor)) +
+  geom_violin()+
+  geom_boxplot(width = 0.1) +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  facet_wrap(vars(treat_competition))+
+  labs(x = "", y = "Δ Temperature (warm - ambi)", 
+       title = "Daily Warming Effect peak season competition 23 (High Site)")+
+  theme(legend.position = "none")+
+  scale_fill_manual(values = c("#999999", "#E69F00", "#56B4E9"))
+delta_temp_viol_comp_peak
+
+ggsave(filename = "RangeX_tomst_delta_temp_violin_peak_comp_23.png", 
+       plot = delta_temp_viol_comp_peak, 
+       path = "Data/Data_tomst_loggers/Graphs/", 
+       width = 15, height = 6)
 
 # midday 8-15 day --------------------------------------------------------
 # calculate means per day
@@ -1073,6 +1113,90 @@ ggsave(filename = "RangeX_tomst_delta_temp_box_peak_23.png",
        width = 8, height = 6)
 
 
+# soil moisture ----------------------------------------------------------
+soil_moisture_average <- tomst_23_raw_filtered |> 
+  group_by(date_time, treat_combined) |> 
+  summarize(soilmoisture = mean(TMS_moist, na.rm = TRUE),
+            .groups = 'drop')
+head(soil_moisture_average)
+
+# plot average temp per treat
+ggplot(soil_moisture_average, aes(x = date_time, y = soilmoisture, color = treat_combined)) +
+  geom_line() +
+  theme(legend.position = "right")
+
+
+# daily soil moisture warming effect --------------------------------------------
+soil_moisture_average_OTC <- tomst_23_raw_filtered |>
+  filter(site == "hi") |> # low site has no OTCs
+  group_by(date_time, treat_warming) |> 
+  mutate(date_time = as.Date(date_time)) |>
+  summarize(soilmoisture = mean(TMS_moist, na.rm = TRUE)
+            ,.groups = 'drop')
+soil_moisture_average_OTC
+
+soil_moist_23 <- ggplot(soil_moisture_average_OTC, aes(x = date_time, y = soilmoisture, color = treat_warming)) +
+  geom_line() +
+  labs(color = "treat_warming")+
+  scale_color_manual(values = c("warm" = "pink2", "ambi" = "turquoise3"))
+soil_moist_23
+
+ggsave(filename = "RangeX_tomst_soil_moisture_23.png", 
+       plot = soil_moist_23, 
+       path = "Data/Data_tomst_loggers/Graphs/", 
+       width = 8, height = 6)
+
+# daily delta soil moisture peak season day and night -----------------------------------
+start_date <- as.Date("2023-06-15")
+end_date <- as.Date("2023-09-15")
+
+# filter peak growing season
+soil_moisture_average_OTC_peak <- soil_moisture_average_OTC |> 
+  filter(between(date_time, left = start_date, right = end_date))
+
+delta_soil_moisture_average_OTC_peak <- tomst_23_raw_filtered |>
+  filter(site == "hi") |> # low site has no OTCs
+  group_by(date_time, treat_warming, treat_competition) |> 
+  mutate(date_time = as.Date(date_time)) |>
+  summarize(soilmoisture = mean(TMS_moist, na.rm = TRUE)
+            ,.groups = 'drop') |> 
+  pivot_wider(names_from = treat_warming, values_from = soilmoisture) |>
+  mutate(delta_s_moist = warm - ambi)
+
+delta_soil_moist_peak <- ggplot(delta_soil_moisture_average_OTC_peak, aes(x = date_time, y = delta_s_moist, colour = treat_competition)) +
+  geom_point() +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  labs(x = "Date", y = "Δ soil moisture (warm - ambi)", 
+       title = "Daily soil moisture difference peak season 23 (High Site)")
+delta_soil_moist_peak
+
+ggsave(filename = "RangeX_tomst_delta_soil_moisture_peak_23_points.png", 
+       plot = delta_soil_moist_peak, 
+       path = "Data/Data_tomst_loggers/Graphs/", 
+       width = 8, height = 6)
+
+delta_soil_moist_peak_box <- ggplot(delta_soil_moisture_average_OTC_peak, aes(x = treat_competition, y = delta_s_moist, colour = treat_competition)) +
+  geom_boxplot() +
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  labs(x = "", y = "Δ soil moisture (warm - ambi)", 
+       title = "Daily soil moisture difference peak season 23 (High Site)")+
+  theme(legend.position = "none")
+delta_soil_moist_peak_box
+
+delta_soil_moist_peak_violin <- ggplot(delta_soil_moisture_average_OTC_peak, aes(x = treat_competition, y = delta_s_moist, fill = treat_competition)) +
+  geom_violin() +
+  geom_boxplot(width=0.1)+
+  geom_hline(yintercept = 0, linetype = "dashed") +
+  labs(x = "Date", y = "Δ soil moisture (warm - ambi)", 
+       title = "Daily soil moisture difference peak season 23 (High Site)")+
+  theme(legend.position = "none")+
+  scale_fill_manual(values = c("#999999", "#E69F00", "#56B4E9"))
+delta_soil_moist_peak_violin
+
+ggsave(filename = "RangeX_tomst_delta_soil_moisture_peak_23_violin.png", 
+       plot = delta_soil_moist_peak_violin, 
+       path = "Data/Data_tomst_loggers/Graphs/", 
+       width = 8, height = 6)
 
 
 
