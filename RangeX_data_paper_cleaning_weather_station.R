@@ -195,6 +195,18 @@ ggplot(daily_rainfall_21) +
   scale_y_continuous(limits = c(0, 5.0))
 
 
+# yearly average 21 -------------------------------------------------------
+climate_21_yearly <- climate_21 |> 
+  mutate(date_time = as.Date(date_time)) |> 
+  group_by(site, year) |> 
+  summarize(AirTemp = mean(AirTemp_Avg, na.rm = TRUE),
+            Humidity = mean(Humidity_Avg, na.rm = TRUE),
+            WindDir = mean(WindDir_Avg, na.rm = TRUE),
+            WindSpd = mean(WindSpd_Avg, na.rm = TRUE),
+            Radiation = mean(Radiation_Avg, na.rm = TRUE),.groups = 'drop')
+climate_21_yearly
+
+
 # 2022 --------------------------------------------------------------------
 # import data hi 22 ----------------------------------------------------------
 climate_hi_22 <- read_table("Data/Data_climate_station/2022/RangeX_HIGH_2022_fall.txt", col_names = FALSE)
@@ -342,6 +354,18 @@ ggplot(daily_rainfall_22) +
   labs(title = "Daily Rainfall 22", x = "Date", y = "Sum rainfall per day (mm)")+
   scale_fill_manual(values = c("lo" = "orange", "hi" = "turquoise"))+
   scale_y_continuous(limits = c(0, 5.0))
+
+
+# yearly average 22 summer --------------------------------------------------
+climate_22_summer_yearly <- climate_22 |> 
+  mutate(date_time = as.Date(date_time)) |> 
+  group_by(site, year) |> 
+  summarize(AirTemp = mean(AirTemp_Avg, na.rm = TRUE),
+            Humidity = mean(Humidity_Avg, na.rm = TRUE),
+            WindDir = mean(WindDir_Avg, na.rm = TRUE),
+            WindSpd = mean(WindSpd_Avg, na.rm = TRUE),
+            Radiation = mean(Radiation_Avg, na.rm = TRUE),.groups = 'drop')
+climate_22_summer_yearly
 
 # 2022 spring ----------------------------------------------------------------
 # import data hi 22 ----------------------------------------------------------
@@ -491,6 +515,17 @@ ggplot(daily_rainfall_22_spring) +
   scale_fill_manual(values = c("lo" = "orange", "hi" = "turquoise"))+
   scale_y_continuous(limits = c(0, 5.0))
 
+# yearly average 22 spring --------------------------------------------------
+climate_22_spring_yearly <- climate_22_spring |> 
+  mutate(date_time = as.Date(date_time)) |> 
+  group_by(site, year) |> 
+  summarize(AirTemp = mean(AirTemp_Avg, na.rm = TRUE),
+            Humidity = mean(Humidity_Avg, na.rm = TRUE),
+            WindDir = mean(WindDir_Avg, na.rm = TRUE),
+            WindSpd = mean(WindSpd_Avg, na.rm = TRUE),
+            Radiation = mean(Radiation_Avg, na.rm = TRUE),.groups = 'drop')
+climate_22_spring_yearly
+
 
 # 2023 --------------------------------------------------------------------
 # import data hi 23 ----------------------------------------------------------
@@ -558,14 +593,6 @@ str(climate_lo_23)
 # make date_time a date format
 climate_lo_23 <- climate_lo_23 |> 
   mutate(date_time = dmy_hms(date_time))
-
-# # filter time as for tomst loggers ----------------------------------------
-# start_date <- as.Date("2023-06-21") 
-# end_date <- as.Date("2023-10-23") # were collected on 24.10
-# 
-# # Filter the data for the specified date range
-# climate_lo_23 <- climate_lo_23 |> 
-#   filter(between(date_time, left = start_date, right = end_date))
 
 # Replace commas with . and convert to numeric
 climate_lo_23 <- climate_lo_23 |> 
@@ -649,6 +676,16 @@ ggplot(daily_rainfall_23) +
   scale_fill_manual(values = c("lo" = "orange", "hi" = "turquoise"))+
   scale_y_continuous(limits = c(0, 5.0))
 
+# yearly average 23 summer --------------------------------------------------
+climate_23_summer_yearly <- climate_23 |> 
+  mutate(date_time = as.Date(date_time)) |> 
+  group_by(site, year) |> 
+  summarize(AirTemp = mean(AirTemp_Avg, na.rm = TRUE),
+            Humidity = mean(Humidity_Avg, na.rm = TRUE),
+            WindDir = mean(WindDir_Avg, na.rm = TRUE),
+            WindSpd = mean(WindSpd_Avg, na.rm = TRUE),
+            Radiation = mean(Radiation_Avg, na.rm = TRUE),.groups = 'drop')
+climate_23_summer_yearly
 
 # 2023 spring ----------------------------------------------------------------
 # import data hi 23 ----------------------------------------------------------
@@ -789,7 +826,16 @@ ggplot(daily_rainfall_23_spring) +
   scale_fill_manual(values = c("lo" = "orange", "hi" = "turquoise"))+
   scale_y_continuous(limits = c(0, 5.0))
 
-
+# yearly average 23 spring --------------------------------------------------
+climate_23_spring_yearly <- climate_23_spring |> 
+  mutate(date_time = as.Date(date_time)) |> 
+  group_by(site, year) |> 
+  summarize(AirTemp = mean(AirTemp_Avg, na.rm = TRUE),
+            Humidity = mean(Humidity_Avg, na.rm = TRUE),
+            WindDir = mean(WindDir_Avg, na.rm = TRUE),
+            WindSpd = mean(WindSpd_Avg, na.rm = TRUE),
+            Radiation = mean(Radiation_Avg, na.rm = TRUE),.groups = 'drop')
+climate_23_spring_yearly
 
 # 2024 --------------------------------------------------------------------
 # import data hi 24 ----------------------------------------------------------
@@ -848,14 +894,6 @@ str(climate_lo_24)
 # make date_time a date format
 climate_lo_24 <- climate_lo_24 |> 
   mutate(date_time = dmy_hms(date_time))
-
-# # filter time as for tomst loggers ----------------------------------------
-# start_date <- as.Date("2023-06-21") 
-# end_date <- as.Date("2023-10-23") # were collected on 24.10
-# 
-# # Filter the data for the specified date range
-# climate_lo_23 <- climate_lo_23 |> 
-#   filter(between(date_time, left = start_date, right = end_date))
 
 # Replace commas with . and convert to numeric
 climate_lo_24 <- climate_lo_24 |> 
@@ -940,6 +978,17 @@ ggplot(daily_rainfall_24) +
   scale_y_continuous(limits = c(0, 5.0))
 
 # yes, low site didn't record rainfall
+
+# yearly average 24 summer --------------------------------------------------
+climate_24_yearly <- climate_24 |> 
+  mutate(date_time = as.Date(date_time)) |> 
+  group_by(site, year) |> 
+  summarize(AirTemp = mean(AirTemp_Avg, na.rm = TRUE),
+            Humidity = mean(Humidity_Avg, na.rm = TRUE),
+            WindDir = mean(WindDir_Avg, na.rm = TRUE),
+            WindSpd = mean(WindSpd_Avg, na.rm = TRUE),
+            Radiation = mean(Radiation_Avg, na.rm = TRUE),.groups = 'drop')
+climate_24_yearly
 
 # 2024 spring----------------------------------------------------------------
 # import data hi 24 ----------------------------------------------------------
@@ -1073,6 +1122,17 @@ ggplot(daily_rainfall_24_spring) +
   scale_fill_manual(values = c("lo" = "orange", "hi" = "turquoise"))+
   scale_y_continuous(limits = c(0, 5.0))
 
+# yearly average 24 spring --------------------------------------------------
+climate_24_spring_yearly <- climate_24_spring |> 
+  mutate(date_time = as.Date(date_time)) |> 
+  group_by(site, year) |> 
+  summarize(AirTemp = mean(AirTemp_Avg, na.rm = TRUE),
+            Humidity = mean(Humidity_Avg, na.rm = TRUE),
+            WindDir = mean(WindDir_Avg, na.rm = TRUE),
+            WindSpd = mean(WindSpd_Avg, na.rm = TRUE),
+            Radiation = mean(Radiation_Avg, na.rm = TRUE),.groups = 'drop')
+climate_24_spring_yearly
+
 # 2025 spring----------------------------------------------------------------
 # import data hi 25 ----------------------------------------------------------
 climate_hi_25_spring <- read_table("Data/Data_climate_station/2025/RangeX_HIGH_08.05.25.txt", col_names = FALSE)
@@ -1142,7 +1202,7 @@ climate_25_spring <- climate_25_spring |>
          WindDir_Avg, WindSpd_Avg, Radiation_Avg, Rainfall)
 
 # save clean data 25 spring -------------------------------------------------
-write.csv(climate_25_spring, "Data/Data_climate_station/2025/RangeX_clean_climate_station_NOR_spring_2025.csv")
+# write.csv(climate_25_spring, "Data/Data_climate_station/2025/RangeX_clean_climate_station_NOR_spring_2025.csv")
 
 # control plotting 25 spring--------------------------------------------------
 climate_25_spring_plot <- climate_25_spring |> 
@@ -1205,14 +1265,105 @@ ggplot(daily_rainfall_25_spring) +
   scale_fill_manual(values = c("lo" = "orange", "hi" = "turquoise"))+
   scale_y_continuous(limits = c(0, 5.0))
 
+# yearly average 25 spring --------------------------------------------------
+climate_25_spring_yearly <- climate_25_spring |> 
+  mutate(date_time = as.Date(date_time)) |> 
+  group_by(site, year) |> 
+  summarize(AirTemp = mean(AirTemp_Avg, na.rm = TRUE),
+            Humidity = mean(Humidity_Avg, na.rm = TRUE),
+            WindDir = mean(WindDir_Avg, na.rm = TRUE),
+            WindSpd = mean(WindSpd_Avg, na.rm = TRUE),
+            Radiation = mean(Radiation_Avg, na.rm = TRUE),.groups = 'drop')
+climate_25_spring_yearly
+
+# 2021 - 2025 -------------------------------------------------------------
+yearly_climate_all_years <- bind_rows(climate_21_yearly, climate_22_spring_yearly,
+                               climate_22_summer_yearly, climate_23_spring_yearly,
+                               climate_23_summer_yearly, climate_24_spring_yearly,
+                               climate_24_yearly, climate_25_spring_yearly)
+yearly_climate_all_years
+
 
 # arrange plots of all years together -------------------------------------
-
 climate_all_years <- bind_rows(climate_21, climate_22_spring,
                        climate_22, climate_23_spring,
                        climate_23, climate_24_spring,
                        climate_24, climate_25_spring)
 
+# save clean data 21-25 -------------------------------------------------
+# write.csv(climate_all_years, "Data/Data_climate_station/RangeX_clean_climate_station_NOR_2021-2025.csv")
+
+
+# calculate yearly averages -----------------------------------------------
+climate_all_years_yearly_avg <- climate_all_years |> 
+  group_by(year, site) |> 
+  summarize(AirTemp = mean(AirTemp_Avg, na.rm = TRUE),
+            Humidity = mean(Humidity_Avg, na.rm = TRUE),
+            WindDir = mean(WindDir_Avg, na.rm = TRUE),
+            WindSpd = mean(WindSpd_Avg, na.rm = TRUE),
+            Radiation = mean(Radiation_Avg, na.rm = TRUE),.groups = 'drop')
+climate_all_years_yearly_avg
+
+# write.csv(climate_all_years_yearly_avg, "Data/Data_climate_station/RangeX_clean_climate_station_NOR_yearly_avg_2021-2025.csv")
+
+
+# calculate site averages and sd --------------------------------------------
+climate_site <- climate_all_years |> 
+  group_by(site) |> 
+  summarize(
+    AirTemp_mean = mean(AirTemp_Avg, na.rm = TRUE),
+    AirTemp_sd = sd(AirTemp_Avg, na.rm = TRUE),
+    Humidity_mean = mean(Humidity_Avg, na.rm = TRUE),
+    Humidity_sd = sd(Humidity_Avg, na.rm = TRUE),
+    WindDir_mean = mean(WindDir_Avg, na.rm = TRUE),
+    WindDir_sd = sd(WindDir_Avg, na.rm = TRUE),
+    WindSpd_mean = mean(WindSpd_Avg, na.rm = TRUE),
+    WindSpd_sd = sd(WindSpd_Avg, na.rm = TRUE),
+    Radiation_mean = mean(Radiation_Avg, na.rm = TRUE),
+    Radiation_sd = sd(Radiation_Avg, na.rm = TRUE),
+    .groups = 'drop'
+  )
+climate_site
+# is this biased by two winters without summer (21 and 25)?
+
+# filter only 2022, 23 and 24
+climate_site_22_23_24 <- climate_all_years |> 
+  filter(year %in% c(2022, 2023, 2024)) |> 
+  group_by(site) |> 
+  summarize(
+    AirTemp_mean = mean(AirTemp_Avg, na.rm = TRUE),
+    AirTemp_sd = sd(AirTemp_Avg, na.rm = TRUE),
+    Humidity_mean = mean(Humidity_Avg, na.rm = TRUE),
+    Humidity_sd = sd(Humidity_Avg, na.rm = TRUE),
+    WindDir_mean = mean(WindDir_Avg, na.rm = TRUE),
+    WindDir_sd = sd(WindDir_Avg, na.rm = TRUE),
+    WindSpd_mean = mean(WindSpd_Avg, na.rm = TRUE),
+    WindSpd_sd = sd(WindSpd_Avg, na.rm = TRUE),
+    Radiation_mean = mean(Radiation_Avg, na.rm = TRUE),
+    Radiation_sd = sd(Radiation_Avg, na.rm = TRUE),
+    .groups = 'drop'
+  )
+climate_site_22_23_24
+
+write.csv(climate_site_22_23_24, "Data/Data_climate_station/RangeX_clean_climate_station_NOR_site_average.csv")
+
+
+# yearly rain -------------------------------------------------------------
+# Aggregate rainfall data by year
+rainfall_year <- climate_all_years |>
+  filter(year %in% c(2022, 2023, 2024)) |>
+  group_by(year, site) |> 
+  summarize(total_rainfall = sum(Rainfall, na.rm = TRUE), .groups = 'drop')
+rainfall_year
+
+rainfall_year_mean <- rainfall_year |> 
+  group_by(site) |> 
+  summarize(
+    total_rainfall_mean = mean(total_rainfall, na.rm = TRUE),
+    total_rainfall_sd = sd(total_rainfall, na.rm = TRUE), .groups = 'drop')
+rainfall_year_mean
+
+# plot climate all years daily average -----------------------------
 climate_all_years_plot <- climate_all_years |> 
   mutate(date_time = as.Date(date_time)) |> 
   group_by(date_time, site) |> 
@@ -1225,7 +1376,9 @@ climate_all_years_plot
 
 temp <- ggplot(climate_all_years_plot, aes(x = date_time, y = AirTemp, colour = site)) +
   geom_line()+
-  labs(title = "Daily temperature 2m above ground", y = "Temperature (°C)", x = "Date")+
+  labs(title = "Daily temperature 2m above ground", 
+       y = expression("Temperature ("*~degree*C*")"),
+       x = "Date")+
   scale_color_manual(values = c("lo" = "orange", "hi" = "turquoise"))
 temp
 

@@ -533,22 +533,22 @@ ggsave(filename = "RangeX_tomst_delta_soil_moisture_peak_24_comp_violin.png",
 # plot data later in season ----------------------------------------------------
 # to check if cutting the vegetated plots shows a difference in temp
 # there seems to be a temp drop in Sep but hard to say if that is because of cutting or ecause it got colder
-start_date <- as.Date("2024-09-08") # 3 loggers came in later
+start_date <- as.Date("2024-08-08") # 3 loggers came in later
 end_date <- as.Date("2024-09-18")
 
 # Filter the data for the specified date range
 tomst_24_raw_ <- tomst_24_raw |> 
   filter(between(date_time, left = start_date, right = end_date)) |> 
-  filter(treat_competition == "vege")
+  filter(site != "lo")
 
-ggplot(tomst_24_raw_, aes(x = date_time, y = TMS_T3, color = treat_warming)) +
+ggplot(tomst_24_raw_, aes(x = date_time, y = TMS_T3, color = treat_combined)) +
   geom_point() +
-  theme(legend.position = "none")
+  theme(legend.position = "right")
 
 
-ggplot(tomst_24_raw_, aes(x = date_time, y = TMS_T2, color = tomst)) +
-  geom_line() +
-  theme(legend.position = "none")
+ggplot(tomst_24_raw_, aes(x = date_time, y = TMS_T2, color = treat_combined)) +
+  geom_point() +
+  theme(legend.position = "right")
 
 
 ggplot(tomst_24_raw_, aes(x = date_time, y = TMS_T1, color = tomst)) +
