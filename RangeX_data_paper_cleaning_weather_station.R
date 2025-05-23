@@ -1294,6 +1294,49 @@ climate_all_years <- bind_rows(climate_21, climate_22_spring,
 # write.csv(climate_all_years, "Data/Data_climate_station/RangeX_clean_climate_station_NOR_2021-2025.csv")
 
 
+# calculate monthly averages ----------------------------------------------
+climate_monthly <- climate_all_years |> 
+  mutate(date_time = as.Date(date_time),
+         year = year(date_time),
+         month = month(date_time)) |> 
+  group_by(site, year, month) |> 
+  summarize(
+    AirTemp_mean = mean(AirTemp_Avg, na.rm = TRUE),
+    AirTemp_min = min(AirTemp_Avg, na.rm = TRUE),
+    AirTemp_max = max(AirTemp_Avg, na.rm = TRUE),
+    
+    Humidity_mean = mean(Humidity_Avg, na.rm = TRUE),
+    Humidity_min = min(Humidity_Avg, na.rm = TRUE),
+    Humidity_max = max(Humidity_Avg, na.rm = TRUE),
+    
+    WindDir_mean = mean(WindDir_Avg, na.rm = TRUE),
+    WindDir_min = min(WindDir_Avg, na.rm = TRUE),
+    WindDir_max = max(WindDir_Avg, na.rm = TRUE),
+    
+    WindSpd_mean = mean(WindSpd_Avg, na.rm = TRUE),
+    WindSpd_min = min(WindSpd_Avg, na.rm = TRUE),
+    WindSpd_max = max(WindSpd_Avg, na.rm = TRUE),
+    
+    Radiation_mean = mean(Radiation_Avg, na.rm = TRUE),
+    Radiation_min = min(Radiation_Avg, na.rm = TRUE),
+    Radiation_max = max(Radiation_Avg, na.rm = TRUE),
+    
+    .groups = 'drop'
+  )
+climate_monthly
+
+ggplot(climate_monthly, aes(x = month, y = AirTemp_mean, color = factor(year), group = year)) +
+  geom_line() +
+  geom_ribbon(aes(ymin = AirTemp_min, ymax = AirTemp_max, fill = factor(year)), alpha = 0.2, color = NA) +
+  facet_wrap(~ site) +
+  scale_x_continuous(breaks = 1:12, labels = month.abb) +
+  labs(x = "Time", 
+       y = expression("Temperature ("*~degree*C*")"), 
+       color = "Year", 
+       fill = "Year",
+       title = "Monthly Air Temperature (mean, min, max)")
+
+
 # calculate yearly averages -----------------------------------------------
 climate_all_years_yearly_avg <- climate_all_years |> 
   group_by(year, site) |> 
@@ -1452,19 +1495,6 @@ ggsave(filename = "RangeX_climate_station_radiation_21_22_23_24.png",
        plot = radiation, 
        path = "Data/Data_climate_station/Graphs", 
        width = 15, height = 6)
-
-
-
-
-# continues timeline ------------------------------------------------------
-
-
-
-
-
-
-
-
 
 
 
