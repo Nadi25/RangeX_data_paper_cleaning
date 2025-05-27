@@ -1,13 +1,24 @@
 
-# Climate data weather station NOR 2021, 2023 --------------------------------------------
+# Climate data weather station NOR 2021, 2022, 2023, 2024, 2025 --------------------------------------------
 
 ## Data used: RangeX_HIGH_fall_2023.txt
 ##            RangeX_LOW_fall_2023.txt,
+##            RangeX_HIGH_Spring2023.txt,
+##            RangeX_LOW_Spring2023.txt
+##            RangeX_HIGH_2022_fall.txt,
+##            RangeX_LOW_2022_fall.txt,
+##            weather_high_mai_2022.txt,
 ##            weather_high_2021_fall.txt
-##            weather_low_2021_fall.txt
+##            weather_low_2021_fall.txt,
+##            RangeX_HIGH_15.10.24.txt,
+##            RangeX_LOW_15.10.24.txt,
+##            RangeX_HIGH_21.05.24.txt,
+##            RangeX_LOW_21.05.24.txt,
+##            RangeX_HIGH_08.05.25.txt,
+##            RangeX_LOW_16.04.25.txt
 ## Date:      12.03.2025
 ## Author:    Nadine Arzt
-## Purpose:   Clean weather station data 2021, 2023
+## Purpose:   Clean weather station data 2021, 2022, 2023, 2024 and spring 2025
 
 
 # load library ------------------------------------------------------------
@@ -25,11 +36,10 @@ theme_set(theme_bw())
 # comments ----------------------------------------------------------------
 # change to 23 first and fix Ra ditation problem in 21
 
-# should I use all days that have been recorded or shorten it to same as 
-# tomst logger time frame? Kept everything for now
+# should I use all days that have been recorded or shorten it to same as in tomst logger time frame? --> Kept everything for now
 
 # 2021 --------------------------------------------------------------------
-# import data hi 21 ----------------------------------------------------------
+# import data hi 21 ---------------------------------------------------------
 climate_hi_21 <- read_table("Data/Data_climate_station/2021/weather_high_2021_fall.txt", col_names = FALSE)
 
 # Extract labels and units ------------------------------------------------
