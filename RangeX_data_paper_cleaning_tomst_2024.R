@@ -124,7 +124,7 @@ tomst_24_raw <- tomst_24_raw |>
   filter(tomst != "94217338")
 
 
-# calculate soil moisture -----------------------------------------------------------
+# calculate soil moisture ----------------------------------------------------------
 # function to calculate soil moisture from raw values in function script
 # RangeX_data_paper_functions.R
 # apply the soil moisture function here
@@ -185,16 +185,15 @@ s %+% one_logger
 
 
 # label outlier --------------------------------------------
-# flag data points that have a temp dif of > 5 degree within 15 min
+# flag data points that have a temp dif of > 4 degree within 15 min
 tomst_24_raw_filtered_flagged <- tomst_24_raw_filtered |>
   arrange(tomst, date_time) |>  # important for time order
   group_by(tomst) |>  # do per logger
   mutate(
     diff_forward = abs(TMS_T1 - lead(TMS_T1)),
-    temp_outlier = ifelse(diff_forward > 5, TRUE, FALSE)  # set threshold here
+    temp_outlier = ifelse(diff_forward > 4, TRUE, FALSE)  # set threshold here
   ) |> 
   ungroup()
-
 
 ggplot(tomst_24_raw_filtered_flagged, aes(x = date_time, y = TMS_T1, color = temp_outlier)) +
   geom_point()
@@ -208,6 +207,103 @@ tomst_24_raw_filtered <- tomst_24_raw_filtered_flagged |>
 # delete everything > 28 --------------------------------------------------
 tomst_24_raw_filtered <- tomst_24_raw_filtered |>
   filter(TMS_T1 <= 28)
+
+
+# flag more ----------------------------------------------
+tomst_flagged <- tomst_24_raw_filtered |>
+  arrange(tomst, date_time) |>  # important for time order
+  group_by(tomst) |>  # do per logger
+  mutate(
+    diff_forward = abs(TMS_T1 - lead(TMS_T1)),
+    temp_outlier = ifelse(diff_forward > 4, TRUE, FALSE)  # set threshold here (e.g. 2°C)
+  ) |> 
+  ungroup()
+
+ggplot(tomst_flagged, aes(x = date_time, y = TMS_T1, color = temp_outlier)) +
+  geom_point()
+
+tomst_24_raw_filtered <- tomst_flagged |>
+  filter(!temp_outlier)
+
+# flag again  --------------------------------------------
+tomst_flagged_2 <- tomst_24_raw_filtered |>
+  arrange(tomst, date_time) |>  # important for time order
+  group_by(tomst) |>  # do per logger
+  mutate(
+    diff_forward = abs(TMS_T1 - lead(TMS_T1)),
+    temp_outlier = ifelse(diff_forward > 4, TRUE, FALSE)  
+  ) |> 
+  ungroup()
+
+ggplot(tomst_flagged_2, aes(x = date_time, y = TMS_T1, color = temp_outlier)) +
+  geom_point()
+
+tomst_24_raw_filtered <- tomst_flagged_2 |>
+  filter(!temp_outlier)
+
+# add column VWC ----------------------------------------------------------
+tomst_24_raw_filtered <- tomst_24_raw_filtered |> 
+  mutate(VWC = NA)
+
+# import metadata -------------------------------------------------------
+metadata <- read.csv("Data/RangeX_metadata_plot_NOR.csv")
+metadata <- metadata |> 
+  select(-"X")
+
+# fix col names --------------------------------------------------------
+names(metadata)
+names(tomst_24_raw_filtered)
+
+tomst_24_raw_filtered <- tomst_24_raw_filtered |> 
+  rename("block_ID_original" = "block",
+         "plot_ID_original" = "treat")
+
+# to match plot_ID_original
+tomst_24_raw_filtered <- tomst_24_raw_filtered |> 
+  mutate(plot_ID_original = case_when(
+    plot_ID_original == "A" ~ "a",
+    plot_ID_original == "B" ~ "b",
+    plot_ID_original == "C" ~ "c",
+    plot_ID_original == "D" ~ "d",
+    plot_ID_original == "E" ~ "e",
+    plot_ID_original == "F" ~ "f"
+  ))
+
+
+# merge metadata with tomst_24_raw_filtered -------------------------------
+metadata <- metadata |> 
+  mutate(across(c(block_ID_original, plot_ID_original), as.character))
+
+tomst_24_raw_filtered <- tomst_24_raw_filtered |> 
+  mutate(across(c(block_ID_original, plot_ID_original), as.character))
+
+tomst_24_clean<- left_join(metadata, tomst_24_raw_filtered, 
+                           by = c( "site", "block_ID_original",
+                                   "plot_ID_original",
+                                   "treat_warming", "treat_competition"))
+
+
+# delete empty rows -------------------------------------------------------
+tomst_24_clean <- tomst_24_clean |> 
+  filter(!is.na(tomst))
+
+# select only columns needed for clean data on OSF ------------------------
+rx_tomst_24_clean <- tomst_24_clean |> 
+  select(unique_plot_ID, date_time, 
+         TMS_T1, TMS_T2, TMS_T3, 
+         TMS_moist, VWC)
+
+
+# save clean data ---------------------------------------------------------
+# write.csv(rx_tomst_24_clean, "Data/Data_tomst_loggers/RangeX_clean_tomst_NOR_2024.csv")
+
+tomst <- read_csv("Data/Data_tomst_loggers/RangeX_clean_tomst_NOR_2024.csv")
+
+
+
+
+
+
 
 
 
