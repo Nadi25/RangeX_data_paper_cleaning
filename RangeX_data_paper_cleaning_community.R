@@ -38,12 +38,11 @@ library(glue)
 
 
 # import general metadata file -------------------------------------------------
-
 metadata_plot <- read.csv("Data/RangeX_metadata_plot_NOR.csv", header = TRUE)
 
 metadata_plot <- metadata_plot |> 
-  select(region, site, block_id_original, plot_id_original, treat_warming, 
-         treat_competition, added_focals, block_id, unique_plot_id)
+  select(region, site, block_ID_original, plot_ID_original, treat_warming, 
+         treat_competition, added_focals, block_ID, unique_plot_ID)
 
 # we don't need bare plots here
 metadata_NOR_com <- metadata_plot |> 
@@ -51,11 +50,12 @@ metadata_NOR_com <- metadata_plot |>
 # 50 plots now
 
 metadata_NOR_com <- metadata_NOR_com |> 
-  mutate(block_id_original = as.character(block_id_original))
+  mutate(block_ID_original = as.character(block_ID_original))
 
 
 # import community metadata -----------------------------------------------
-files <- dir(path = "Data/Data_community/", pattern = "\\.xlsx$", full.names = TRUE, recursive = TRUE)
+files_all <- dir(path = "Data/Data_community/", pattern = "\\.xlsx$", full.names = TRUE, recursive = TRUE)
+files <- grep("^.*/RangeX_raw_", files_all, value = TRUE)
 
 #Function to read in meta data
 meta_com_raw <- map_df(set_names(files), function (file) {
@@ -138,18 +138,18 @@ community_data <- community_data %>%
 
 # fix community_data columns -----------------------------------------------------
 community_data_raw <- community_data |> 
-  rename("block_id_original" = "block",
-         "plot_id_original" = "plot") |> 
+  rename("block_ID_original" = "block",
+         "plot_ID_original" = "plot") |> 
   mutate(site = case_when(site == "low" ~ "lo",
                           site == "high" ~ "hi",
                           TRUE ~ site)) |> 
-  mutate(across(c(block_id_original, plot_id_original, recorder, 
+  mutate(across(c(block_ID_original, plot_ID_original, recorder, 
                   scribe, species), as.character)) |> 
-  mutate(plot_id_original = case_when(plot_id_original == "A" ~ "a",
-                                      plot_id_original == "B" ~ "b",
-                                      plot_id_original == "C" ~ "c",
-                                      plot_id_original == "D" ~ "d",
-                                      TRUE ~ plot_id_original))
+  mutate(plot_ID_original = case_when(plot_ID_original == "A" ~ "a",
+                                      plot_ID_original == "B" ~ "b",
+                                      plot_ID_original == "C" ~ "c",
+                                      plot_ID_original == "D" ~ "d",
+                                      TRUE ~ plot_ID_original))
   
 # replace NAs with 0 ------------------------------------------------------
 community_data_raw <- community_data_raw |> 
@@ -228,8 +228,8 @@ unique(community_data_raw$collector)
 # merge metadata with all years veg data ----------------------------------
 
 community_data_raw_NOR <- left_join(community_data_raw, metadata_NOR_com,
-                                    by = c("site", "block_id_original", 
-                                           "plot_id_original"))
+                                    by = c("site", "block_ID_original", 
+                                           "plot_ID_original"))
   
 
 
@@ -251,13 +251,23 @@ community_data_raw_NOR <- community_data_raw_NOR |>
 #     cover = str_remove(cover, "f") # Optional: Remove the "f" from `cover`
 #   )
 
+# 2021: switch plots hi 3A and 3B -----------------------------------------
+# change to b = NOR.hi.warm.vege.wf.03 and a = NOR.hi.ambi.vege.wf.03
+community_data_raw_NOR <- community_data_raw_NOR |>
+  mutate(temp_plot_ID = case_when(
+    year == 2021 & unique_plot_ID == "NOR.hi.warm.vege.wf.03" ~ "NOR.hi.ambi.vege.wf.03",
+    year == 2021 & unique_plot_ID == "NOR.hi.ambi.vege.wf.03" ~ "NOR.hi.warm.vege.wf.03",
+    TRUE ~ unique_plot_ID
+  )) |>
+  mutate(unique_plot_ID = temp_plot_ID) |>
+  select(-temp_plot_ID)
+
 
 # check NAs in unique_plot_id ---------------------------------------------
-
 community_data_NA <- community_data_raw_NOR |> 
-  filter(is.na(unique_plot_id))
+  filter(is.na(unique_plot_ID))
 
-sum(is.na(community_data_raw_NOR$unique_plot_id)) # 0
+sum(is.na(community_data_raw_NOR$unique_plot_ID)) # 0
 
 
 # turfmapper --------------------------------------------------------------
@@ -323,14 +333,14 @@ grid <- make_grid(ncol = 4)
 # test with plot NOR.hi.warm.vege.wf.01 -----------------------------------
 community_data_raw_NOR_long |>
   mutate(subturf = as.numeric(subturf)) |> 
-  filter(unique_plot_id %in% c("NOR.hi.warm.vege.wf.01")) |> 
+  filter(unique_plot_ID %in% c("NOR.hi.warm.vege.wf.01")) |> 
   # mutate(subturf = as.numeric(subturf)) |> 
   # mutate(cover = as.numeric(cover)) |> 
   make_turf_plot(
     data = _,
     year = year, species = species, cover = cover, subturf = subturf,
     site_id = site,
-    turf_id = unique_plot_id,
+    turf_id = unique_plot_ID,
     grid_long = grid
   )
 
@@ -338,32 +348,44 @@ community_data_raw_NOR_long |>
 # plot NOR.lo.ambi.vege.wf.01
 community_data_raw_NOR_long |>
   mutate(subturf = as.numeric(subturf)) |> 
-  filter(unique_plot_id %in% c("NOR.hi.warm.vege.wf.02")) |> 
+  filter(unique_plot_ID %in% c("NOR.hi.warm.vege.wf.02")) |> 
   # mutate(subturf = as.numeric(subturf)) |> 
   # mutate(cover = as.numeric(cover)) |> 
   make_turf_plot(
     data = _,
     year = year, species = species, cover = cover, subturf = subturf,
     site_id = site,
-    turf_id = unique_plot_id,
+    turf_id = unique_plot_ID,
     grid_long = grid
   )
 
-
+# plot NOR.hi.warm.vege.wf.03
+community_data_raw_NOR_long |>
+  mutate(subturf = as.numeric(subturf)) |> 
+  filter(unique_plot_ID %in% c("NOR.hi.warm.vege.wf.03")) |> 
+  # mutate(subturf = as.numeric(subturf)) |> 
+  # mutate(cover = as.numeric(cover)) |> 
+  make_turf_plot(
+    data = _,
+    year = year, species = species, cover = cover, subturf = subturf,
+    site_id = site,
+    turf_id = unique_plot_ID,
+    grid_long = grid
+  )
 
 # loops through all plots -------------------------------------------------
 # Open a single PDF document
-pdf("Data/Data_community/Turfmapper_21_23_all_plots_comparison.pdf", width = 8, height = 12)
+pdf("Data/Data_community/Turfmapper_21_22_23_all_plots_comparison.pdf", width = 8, height = 12)
 
 # Group, nest, and prepare data for plotting
 nested_data <- community_data_raw_NOR_long |> 
   # mutate(
   #   year_collector = paste(year, collector, sep = "_") # Combine year and collector
   # ) |> 
-  group_by(site, plot_id_original, unique_plot_id) |> # Group by plot-level identifiers only
+  group_by(site, unique_plot_ID) |> # Group by plot-level identifiers only
   nest() |> 
   mutate(
-    plot_title = glue("Site {site} : Turf {unique_plot_id} - Comparison 2021 vs 2023")
+    plot_title = glue("Site {site} : Turf {unique_plot_ID} - Comparison 2021, 2022, 2023")
   )
 
 
@@ -420,7 +442,7 @@ dev.off()
 
 # keep only relevant columns for OSF --------------------------------------
 community_data_clean_NOR <- community_data_raw_NOR |> 
-  select(unique_plot_id, date, species, total_cover,
+  select(unique_plot_ID, date, species, total_cover,
          collector, added_focals)|> 
   rename("date_measurement" = "date",
          "cover" = "total_cover")
@@ -512,11 +534,11 @@ community_data_clean_NOR <- community_data_clean_NOR |>
 
 
 # prepare species data set to check spelling of species names -----------------------------------------
-
+# make list of unique species names
 species_to_check <- community_data_clean_NOR |> 
   select(species) |> 
   distinct(species) |> 
-  arrange(species)
+  arrange(species) # sort alphabetically
 
 # add column with unique identifier = row number
 species_to_check <- species_to_check |> 
