@@ -263,6 +263,26 @@ community_data_raw_NOR <- community_data_raw_NOR |>
   select(-temp_plot_ID)
 
 
+# 2023: luzmul ? ----------------------------------------------------------
+# Luzula multiflora 2023 in NOR.lo.ambi.vege.wf.01, subplot 14: delete ?
+# community_data_raw_NOR <- community_data_raw_NOR |> 
+#   mutate("14" = case_when(
+#     species == "Luzula multiflora*" & unique_plot_ID == "NOR.lo.ambi.vege.wf.01" & year == "2023" ~ "0",
+#     TRUE ~ "14"
+#   ))
+
+community_data_raw_NOR <- community_data_raw_NOR |>
+  mutate(`14` = if_else(
+    species == "Luzula multiflora*" & 
+      unique_plot_ID == "NOR.lo.ambi.vege.wf.01" & 
+      year == 2023, 
+    "0", 
+    `14`
+  ))
+
+
+
+
 # check NAs in unique_plot_id ---------------------------------------------
 community_data_NA <- community_data_raw_NOR |> 
   filter(is.na(unique_plot_ID))
