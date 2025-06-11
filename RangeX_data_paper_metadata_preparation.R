@@ -119,7 +119,7 @@ control_plots <- expand.grid(
     treat_warming = if_else(plot_ID_original == "c", "warm", "ambi"), 
     block_ID = as.integer(block_ID_original), # Ensure block_ID matches block_ID_original
     unique_plot_ID = paste0(
-      region, site, ".", treat_warming, ".", treat_competition, ".", added_focals, ".",
+      region, ".", site, ".", treat_warming, ".", treat_competition, ".", added_focals, ".",
       sprintf("%02d", block_ID) # Format block_ID as two digits
     ),
     block_ID_original = as.integer(block_ID_original)
