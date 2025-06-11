@@ -14,10 +14,16 @@
 # check! ------------------------------------------------------------------
 # 2021: is hi 3A and 3B switched? changed to b = NOR.hi.warm.vege.wf.03 and a = NOR.hi.ambi.vege.wf.03
 
+# Circle grass = Festuca pratensis
+
 # ?Galium: NOR.lo.ambi.vege.wf.06: lo 6A, 2021-08-30
 # ?Melica nutans (grass 2 ): NOR.hi.warm.vege.wf.06, hi 6A: 2021-08-13
 
 # Geranium sylvaticum in NOR.hi.ambi.vege.wf.03
+
+# Cirsium helenoides and Cirsium arvense
+
+# fix in community_data_raw_NOR_long to keep the subturf data and save clean version for only total cover later?
 
 # library -----------------------------------------------------------------
 library(openxlsx)
@@ -31,6 +37,8 @@ community_data_clean_NOR
 # import file with species names that need to be corrected ----------------
 # this was created in script "Check_species_names_with_TNRS.R"
 species_names_to_correct <- read.xlsx("Data/Data_community/Species_names_to_correct.xlsx")
+
+
 
 # 1: ???
 # NOR.hi.ambi.vege.wf.01 (hi, 1B) in 23
@@ -97,6 +105,21 @@ community_data_clean_NOR_fixed <- community_data_clean_NOR_fixed |>
     TRUE ~ species
   ))
 
+# 8: ?Poa
+# NOR.lo.ambi.vege.wf.01: 2021-09-01
+# NOR.lo.ambi.vege.wf.01: 2022-07-21
+# Poa pratensis is in other subplots
+
+# 9: ?Pyrola
+# NOR.hi.ambi.vege.wf.06: 2021-08-11 in subturf 9
+# NOR.hi.ambi.vege.wf.06: 2022-07-19 in subturf 9
+# 2023 has it in subplot 5 
+# could be possible --> we accept
+community_data_clean_NOR_fixed <- community_data_clean_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "?Pyrola" & unique_plot_ID == "NOR.hi.ambi.vege.wf.06" ~ "Pyrola minor",
+    TRUE ~ species
+  ))
 
 
 
@@ -107,11 +130,10 @@ community_data_clean_NOR_fixed <- community_data_clean_NOR_fixed |>
 
 
 
-
-
-
-
-
+# 84: Circle grass = Festuca pratensis
+community_data_clean_NOR_fixed <- community_data_clean_NOR_fixed |> 
+  mutate(species = case_when(species == "Circle grass" ~ "Festuca pratensis",
+                             TRUE ~ species))
 
 
 
