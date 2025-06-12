@@ -11,7 +11,7 @@
 ## Purpose:   Cleaning of the complete raw data files of community 2021-2023
 
 
-# check! ------------------------------------------------------------------
+# check and discuss! ----------------------------------------------------------
 # 2021: is hi 3A and 3B switched? changed to b = NOR.hi.warm.vege.wf.03 and a = NOR.hi.ambi.vege.wf.03
 
 # Circle grass = Festuca pratensis
@@ -23,7 +23,40 @@
 
 # Cirsium helenoides and Cirsium arvense
 
-# fix in community_data_raw_NOR_long to keep the subturf data and save clean version for only total cover later?
+# ?Stellaria graminea at high site?: NOR.hi.warm.vege.nf.06, hi 6C and NOR.hi.ambi.vege.wf.07, hi 7B
+
+# Arve sp: NOR.hi.warm.vege.wf.06, hi 6A
+
+# Avenella flexuosa (Deschampsia): NOR.hi.ambi.vege.wf.01, hi 1B
+# is now called Deschampsia flexuosa
+# so we can change it
+# but doesn't say that it's was determined correct in 21 since it's not in 22 and 23
+
+# Big grass: NOR.lo.ambi.vege.wf.07 - check also 24 and field
+
+# Blue sedge: NOR.hi.ambi.vege.wf.06, hi 6B
+
+# Carex bigetowii?: NOR.hi.ambi.vege.nf.03, hi 3D - check 24 and field
+
+
+
+
+
+
+# check in the field ------------------------------------------------------
+# hi 8d: ?Rubus chamaemorus, NOR.hi.ambi.vege.nf.08 = Filipendula ulmaria
+
+# ?Stellaria graminea at high site?: NOR.hi.warm.vege.nf.06, hi 6C and NOR.hi.ambi.vege.wf.07, hi 7B
+
+# ?Veronica officinalis: NOR.hi.warm.vege.nf.03, hi 3C
+
+# Ajuga?Bald?: NOR.hi.warm.vege.nf.02, hi 2C
+# Bold Ajuga?: NOR.hi.ambi.vege.nf.01, hi 1D
+# probably Ajia pyramidalis without hairs
+
+
+
+
 
 # library -----------------------------------------------------------------
 library(openxlsx)
@@ -32,7 +65,7 @@ library(openxlsx)
 source("RangeX_data_paper_cleaning_community.R")
 
 community_data_clean_NOR
-
+community_data_raw_NOR
 
 # import file with species names that need to be corrected ----------------
 # this was created in script "Check_species_names_with_TNRS.R"
@@ -47,8 +80,7 @@ species_names_to_correct <- read.xlsx("Data/Data_community/Species_names_to_corr
 # 2: ?Antennaria dioica
 # NOR.hi.ambi.vege.wf.04 only in 21
 # maybe Omalotheca sylvatic?
-
-community_data_clean_NOR_fixed <- community_data_clean_NOR |> 
+community_data_raw_NOR_fixed <- community_data_raw_NOR |> 
   mutate(species = case_when(species == "?Antennaria dioica" & unique_plot_ID == "NOR.hi.ambi.vege.wf.04" ~ "Omalotheca sylvatica",
     TRUE ~ species))
 
@@ -62,7 +94,7 @@ community_data_clean_NOR_fixed <- community_data_clean_NOR |>
 # wasn't recognized much in 2021
 # will accept 
 
-community_data_clean_NOR_fixed <- community_data_clean_NOR_fixed |> 
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
   mutate(species = case_when(
     species == "?Festuca rubra" ~ "Festuca rubra",
     TRUE ~ species
@@ -79,7 +111,7 @@ community_data_clean_NOR_fixed <- community_data_clean_NOR_fixed |>
 # NOR.hi.ambi.vege.wf.09, hi 9B: 2021-08-21
 # same subplots in 23
 # so we believe it?
-community_data_clean_NOR_fixed <- community_data_clean_NOR_fixed |> 
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
   mutate(species = case_when(
     species == "?Hypochaeris radicata" ~ "Hypochaeris radicata",
     TRUE ~ species
@@ -93,13 +125,13 @@ community_data_clean_NOR_fixed <- community_data_clean_NOR_fixed |>
 # 7: ?Omalotheca
 # NOR.hi.ambi.vege.wf.03, hi 3B: 2021-08-08
 # there is also Omalotheca in 22 in same subplot after 3a and 3b have been switched as indicated on 22 datasheet
-community_data_clean_NOR_fixed <- community_data_clean_NOR_fixed |> 
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
   mutate(species = case_when(
     species == "?Omalotheca" ~ "Omalotheca sylvatica",
     TRUE ~ species
   ))
 # and Omalotheca to Omalotheca sylvatica in NOR.hi.ambi.vege.wf.03 in 22
-community_data_clean_NOR_fixed <- community_data_clean_NOR_fixed |> 
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
   mutate(species = case_when(
     species == "Omalotheca" & unique_plot_ID == "NOR.hi.ambi.vege.wf.03" ~ "Omalotheca sylvatica",
     TRUE ~ species
@@ -115,9 +147,170 @@ community_data_clean_NOR_fixed <- community_data_clean_NOR_fixed |>
 # NOR.hi.ambi.vege.wf.06: 2022-07-19 in subturf 9
 # 2023 has it in subplot 5 
 # could be possible --> we accept
-community_data_clean_NOR_fixed <- community_data_clean_NOR_fixed |> 
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
   mutate(species = case_when(
     species == "?Pyrola" & unique_plot_ID == "NOR.hi.ambi.vege.wf.06" ~ "Pyrola minor",
+    TRUE ~ species
+  ))
+
+#10: ?Rubus chamaemorus
+# NOR.hi.ambi.vege.nf.08: 2021-08-20
+# could it be Filipendula ulmaria? 
+# it's the same subplot in 23
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "?Rubus chamaemorus" & unique_plot_ID == "NOR.hi.ambi.vege.nf.08" ~ "Filipendula ulmaria",
+    TRUE ~ species
+  ))
+
+# 11: ?Salix = Salix herbacea in 22 and 23?
+# NOR.hi.ambi.vege.wf.06: 2021
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "?Salix" & unique_plot_ID == "NOR.hi.ambi.vege.wf.06" ~ "Salix herbacea",
+    species == "Salix herbacea?" & unique_plot_ID == "NOR.hi.ambi.vege.wf.06" ~ "Salix herbacea",
+    TRUE ~ species
+  ))
+
+
+# 12: ?Stellaria graminea: NOR.hi.warm.vege.nf.06 
+# and NOR.hi.ambi.vege.wf.07 but here not in 22 or 23
+# 21 and 22
+# accept for now but need to discuss
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "?Stellaria graminea" & unique_plot_ID == "NOR.hi.warm.vege.nf.06" ~ "Stellaria graminea",
+    species == "?Stellaria graminea" & unique_plot_ID == "NOR.hi.ambi.vege.wf.07" ~ "Stellaria graminea",
+    TRUE ~ species
+  ))
+
+# carex capillaris in NOR.hi.ambi.vege.wf.07
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "carex capillaris" & unique_plot_ID == "NOR.hi.ambi.vege.wf.07" ~ "Carex capillaris",
+    TRUE ~ species
+  ))
+
+# 13: ?Stellaria graminea ?longifolia: NOR.hi.ambi.vege.nf.06
+# same subplot in 23, so we accept
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "?Stellaria graminea ?longifolia" & unique_plot_ID == "NOR.hi.ambi.vege.nf.06" ~ "Stellaria graminea",
+    TRUE ~ species
+  ))
+
+# 14: ?Veronica officinalis: NOR.hi.warm.vege.nf.03
+# not sure! Accept fo rnow but check
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "?Veronica officinalis" & unique_plot_ID == "NOR.hi.warm.vege.nf.03" ~ "Veronica officinalis",
+    TRUE ~ species
+  ))
+
+# 19: Ajuga?Bald?: NOR.hi.warm.vege.nf.02
+# maybe it was Ajuga
+# accept for now
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Ajuga?Bald?" & unique_plot_ID == "NOR.hi.warm.vege.nf.02" ~ "Ajuga pyramidalis",
+    TRUE ~ species
+  ))
+
+# 21: Alchemilla sp
+# we don't know better
+
+# 22: Anemone nemoralis: NOR.hi.ambi.vege.nf.05
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Anemone nemoralis" & unique_plot_ID == "NOR.hi.ambi.vege.nf.05" ~ "Anemone nemorosa",
+    TRUE ~ species
+  ))
+
+# 25: 	Anglica sylvestris: NOR.lo.ambi.vege.wf.04
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Anglica sylvestris" & unique_plot_ID == "NOR.lo.ambi.vege.wf.04" ~ "Angelica sylvestris",
+    TRUE ~ species
+  ))
+
+# 26: Ant nest: NOR.hi.warm.vege.nf.02 and NOR.hi.warm.vege.nf.04
+# good to know but delete here
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |>
+  filter(!(species == "Ant nest" & unique_plot_ID %in% c("NOR.hi.warm.vege.nf.02", "NOR.hi.warm.vege.nf.04")))
+
+# 30: Arve sp: NOR.hi.warm.vege.wf.06
+# don't know what that is
+# delete?
+
+# 32: Avenella flexuosa (Deschampsia): 
+# NOR.hi.ambi.vege.wf.01
+# is now called Deschampsia flexuosa
+# so we can change it
+# but doesn't say that it's was determined correct in 21 since it's not in 22 and 23
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Avenella flexuosa" & unique_plot_ID == "NOR.hi.ambi.vege.wf.01" ~ "Deschampsia flexuosa",
+    species == "Avenella flexuosa (Deschampsia)" & unique_plot_ID == "NOR.hi.ambi.vege.wf.01" ~ "Deschampsia flexuosa",
+    TRUE ~ species
+  ))
+
+# 33: Betuala pubescens: NOR.hi.warm.vege.wf.06
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Betuala pubescens" & unique_plot_ID == "NOR.hi.warm.vege.wf.06" ~ "Betula pubescens",
+    TRUE ~ species
+  ))
+
+# 34: Betula bubescens: NOR.hi.warm.vege.wf.06 and 
+# 35: Betula bunescens: NOR.hi.ambi.vege.nf.06
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Betula bubescens" & unique_plot_ID == "NOR.hi.warm.vege.wf.06" ~ "Betula pubescens",
+    species == "Betula bunescens" & unique_plot_ID == "NOR.hi.ambi.vege.nf.06" ~ "Betula pubescens",
+    TRUE ~ species
+  ))
+
+# 37 Big grass: NOR.lo.ambi.vege.wf.07
+
+# 38: Big hole: NOR.hi.warm.vege.nf.03
+# good to know but delete for now
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |>
+  filter(!(species == "Big hole" & unique_plot_ID %in% c("NOR.hi.warm.vege.nf.03")))
+
+# 41: Blue sedge: NOR.hi.ambi.vege.wf.06
+# probably Carex panicea
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Blue sedge" & unique_plot_ID == "NOR.hi.ambi.vege.wf.06" ~ "Carex panicea",
+    TRUE ~ species
+  ))
+
+# 42: Blus sedge: NOR.hi.ambi.vege.wf.06
+# delete because no values
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |>
+  filter(!(species == "Blus sedge" & unique_plot_ID %in% c("NOR.hi.ambi.vege.wf.06")))
+
+# 43: Bold Ajuga?: NOR.hi.ambi.vege.nf.01
+# probably Ajia pyramidalis without hairs but check in the field
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Bold Ajuga?" & unique_plot_ID == "NOR.hi.ambi.vege.nf.01" ~ "Ajuga pyramidalis",
+    TRUE ~ species
+  ))
+
+# 44: Calluna sp: NOR.hi.warm.vege.nf.04
+# 45: Calluna sp.: NOR.hi.ambi.vege.wf.05
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Calluna sp" & unique_plot_ID == "NOR.hi.warm.vege.nf.04" ~ "Calluna vulgaris",
+    species == "Calluna sp." & unique_plot_ID == "NOR.hi.ambi.vege.wf.05" ~ "Calluna vulgaris",
+    TRUE ~ species
+  ))
+
+# 52: Carex bigetowii?: NOR.hi.ambi.vege.nf.03
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Carex bigetowii?" & unique_plot_ID == "NOR.hi.ambi.vege.nf.03" ~ "Carex cf. bigelowii",
     TRUE ~ species
   ))
 
@@ -130,8 +323,9 @@ community_data_clean_NOR_fixed <- community_data_clean_NOR_fixed |>
 
 
 
+
 # 84: Circle grass = Festuca pratensis
-community_data_clean_NOR_fixed <- community_data_clean_NOR_fixed |> 
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
   mutate(species = case_when(species == "Circle grass" ~ "Festuca pratensis",
                              TRUE ~ species))
 
