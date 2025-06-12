@@ -59,6 +59,11 @@
 
 # Omalotheca supinum - Omalotheca sylvatica -  Omalotheca norwegica
 
+# Sedge 3 is Carex panicea in NOR.hi.ambi.vege.wf.04
+# don't know about NOR.hi.warm.vege.nf.04
+
+# Stellaria sp
+
 # check in the field ------------------------------------------------------
 # hi 8d: ?Rubus chamaemorus, NOR.hi.ambi.vege.nf.08 = Filipendula ulmaria
 
@@ -74,6 +79,9 @@
 # potentially Carex pilulifera??
 # not sure!! Ask Dagmar
 
+# Salix sp in hi8b, NOR.hi.ambi.vege.wf.08 --> Salix glauca x phylicifolia ?
+
+# check Taraxacum sp. and Taraxacum 2 - one is hairy - one not
 
 
 
@@ -651,6 +659,206 @@ community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |>
 # depends on number of nerves on leaves but hard to see
 
 
+# 164: Phleum pratensis is Phleum pratense
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Phleum pratensis" ~ "Phleum pratense",
+    TRUE ~ species
+  ))
+
+# 165: Phleum sp
+# probably also Phleum pratense
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Phleum sp" ~ "Phleum pratense",
+    TRUE ~ species
+  ))
+
+# 173: 	Poa sp
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Poa sp" ~ "Poa pratensis",
+    TRUE ~ species
+  ))
+
+# 181: Rock
+# good to know but delete here
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |>
+  filter(!(species == "Rock" & total_cover == "0"))
+
+# 183: Rubus sp
+# delete in 23 because no value but leave in 21 because we don't know
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |>
+  filter(!(species == "Rubus sp" & total_cover == "0"))
+
+# 185: Rush 1: NOR.hi.warm.vege.wf.05
+# 2022: Juncus filiformis
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Rush 1" & unique_plot_ID == "NOR.hi.warm.vege.wf.05" 
+    ~ "Juncus filiformis",
+    TRUE ~ species
+  ))
+
+# 187: Sagina sagnoides in NOR.hi.warm.vege.nf.02
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Sagina sagnoides" & unique_plot_ID == "NOR.hi.warm.vege.nf.02" 
+    ~ "Sagina saginoides",
+    TRUE ~ species
+  ))
+
+# 188: Sagina sp
+# don't know - leave
+
+# 189: 	Salix e in NOR.hi.warm.vege.wf.10
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Salix e" & unique_plot_ID == "NOR.hi.warm.vege.wf.10" 
+    ~ "Salix herbacea",
+    TRUE ~ species
+  ))
+
+# 192: Salix sp in hi8b, NOR.hi.ambi.vege.wf.08
+# Salix cf. glauca x phylicifolia
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Salix sp" & unique_plot_ID == "NOR.hi.ambi.vege.wf.08" 
+    ~ "Salix cf. glauca x phylicifolia",
+    TRUE ~ species
+  ))
+
+# 193: Sedge 1 is Carex panicea 
+# according to 22 data sheet for hi5b NOR.hi.ambi.vege.wf.05
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Sedge 1" & unique_plot_ID == "NOR.hi.ambi.vege.wf.05" 
+    ~ "Carex panicea",
+    TRUE ~ species
+  ))
+
+# 194: Sedge 3 is Carex panicea in NOR.hi.ambi.vege.wf.04
+# don't know about NOR.hi.warm.vege.nf.04
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Sedge 3" & unique_plot_ID == "NOR.hi.ambi.vege.wf.04" 
+    ~ "Carex panicea",
+    TRUE ~ species
+  ))
+
+# 195: Selaginalla selaginoides
+# 197: Selaginella selagineloides
+# 198: Selaginella selaginetoides
+# 200: Setaginella selagi
+# probably everything Selaginella selaginoides
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Selaginalla selaginoides" ~ "Selaginella selaginoides",
+    species == "Selaginella selagineloides" ~ "Selaginella selaginoides",
+    species == "Selaginella selaginetoides" ~ "Selaginella selaginoides",
+    species == "Setaginella selagi" ~ "Selaginella selaginoides",
+    species == "Setaginella" ~ "Selaginella selaginoides",
+    TRUE ~ species
+  ))
+
+# 202: Sibbaldia procumbens
+# should be correct
+
+# 203: Silena dioica*
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Silena dioica*" ~ "Silene dioica*",
+    TRUE ~ species
+  ))
+
+# 206: 	Stellaria sp
+# probably Stellaria graminea?
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Stellaria sp" ~ "Stellaria graminea",
+    TRUE ~ species
+  ))
+
+# 209: Taraxacum  sp.
+# 210: Taraxacum 2
+# 211: Taraxacum 2?
+# 212: Taraxacum sp
+# 213: Taraxacum sp.
+# there is two Taraxacum - one with hairs - one without
+
+# in NOR.hi.warm.vege.wf.08 it might be Taraxacum sp. 
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Taraxacum  sp." & unique_plot_ID == "NOR.hi.warm.vege.wf.08" 
+    ~ "Taraxacum sp.",
+    species == "Taraxacum 2?" & unique_plot_ID == "NOR.hi.warm.vege.wf.08" 
+    ~ "Taraxacum sp.",
+    species == "Taraxacum sp" & unique_plot_ID == "NOR.hi.warm.vege.wf.08" 
+    ~ "Taraxacum sp.",
+    TRUE ~ species
+  ))
+
+# in NOR.hi.ambi.vege.nf.09 it's probably Taraxacum 2 in 23 
+# because that was in 21
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Taraxacum sp" & unique_plot_ID == "NOR.hi.ambi.vege.nf.09" 
+    ~ "Taraxacum 2",
+    TRUE ~ species
+  ))
+
+
+
+# NOR.hi.warm.vege.wf.10 is Taraxacum 2
+# NOR.hi.warm.vege.nf.09 is Taraxacum 2
+# NOR.hi.warm.vege.nf.08 is Taraxacum 2
+# NOR.hi.warm.vege.nf.02 is Taraxacum 2
+# NOR.hi.ambi.vege.wf.02 is Taraxacum 2
+# NOR.hi.ambi.vege.nf.09 is Taraxacum 2
+# NOR.hi.ambi.vege.nf.08 is Taraxacum 2
+
+# NOR.hi.ambi.vege.wf.10 is Taraxacum sp.
+# because it's sp. in 23
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Taraxacum 2" & unique_plot_ID == "NOR.hi.ambi.vege.wf.10" 
+    ~ "Taraxacum sp.",
+    TRUE ~ species
+  ))
+
+# NOR.hi.ambi.vege.nf.10 is probably Taraxacum sp.
+# because it's sp. in 23
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Taraxacum" & unique_plot_ID == "NOR.hi.ambi.vege.nf.10" 
+    ~ "Taraxacum sp.",
+    species == "Taraxacum 2 " & unique_plot_ID == "NOR.hi.ambi.vege.nf.10" 
+    ~ "Taraxacum sp.",
+    TRUE ~ species
+  ))
+
+# NOR.hi.ambi.vege.nf.06 has Taraxacum sp. and 2
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Taraxacum sp" & unique_plot_ID == "NOR.hi.ambi.vege.nf.06" 
+    ~ "Taraxacum sp.",
+    TRUE ~ species
+  ))
+
+# change all Taraxacum sp to sp.
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Taraxacum sp" ~ "Taraxacum sp.",
+    TRUE ~ species
+  ))
+
+# 214: Trichophorum cae in NOR.hi.warm.vege.wf.06
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Trichophorum cae" & unique_plot_ID == "NOR.hi.warm.vege.wf.06" 
+    ~ "Trichophorum cespitosum",
+    TRUE ~ species
+  ))
 
 
 
