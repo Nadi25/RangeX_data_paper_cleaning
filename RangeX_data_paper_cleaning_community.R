@@ -262,6 +262,15 @@ community_data_raw_NOR <- community_data_raw_NOR |>
   mutate(unique_plot_ID = temp_plot_ID) |>
   select(-temp_plot_ID)
 
+# you need to change plot_ID_original too
+community_data_raw_NOR <- community_data_raw_NOR |>
+  mutate(temp_plot_ID_original  = case_when(
+    year == 2021 & plot_ID_original   == "a" ~ "b",
+    year == 2021 & plot_ID_original   == "b" ~ "a",
+    TRUE ~ plot_ID_original  
+  )) |>
+  mutate(plot_ID_original   = temp_plot_ID_original  ) |>
+  select(-plot_ID_original  )
 
 # 2023: luzmul ? ----------------------------------------------------------
 # Luzula multiflora 2023 in NOR.lo.ambi.vege.wf.01, subplot 14: delete ?
