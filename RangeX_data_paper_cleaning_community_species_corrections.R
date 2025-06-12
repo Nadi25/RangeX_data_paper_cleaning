@@ -64,6 +64,10 @@
 
 # Stellaria sp
 
+# Viola mess: Viola palustris, V. riviniana, V. canina - check 23 and 24!!
+
+# sedge 7? 
+
 # check in the field ------------------------------------------------------
 # hi 8d: ?Rubus chamaemorus, NOR.hi.ambi.vege.nf.08 = Filipendula ulmaria
 
@@ -83,6 +87,7 @@
 
 # check Taraxacum sp. and Taraxacum 2 - one is hairy - one not
 
+# NOR.hi.warm.vege.wf.06, hi6A is Ajuga pyramidalis? check in which subplots
 
 
 # library -----------------------------------------------------------------
@@ -859,6 +864,81 @@ community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |>
     ~ "Trichophorum cespitosum",
     TRUE ~ species
   ))
+
+# 220: Vaccinium myrtilles in NOR.hi.warm.vege.nf.01
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Vaccinium myrtilles" & unique_plot_ID == "NOR.hi.warm.vege.nf.01" 
+    ~ "Vaccinium myrtillus",
+    TRUE ~ species
+  ))
+
+# 224: Vaccinium vitis-idea
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Vaccinium vitis-idea" ~ "Vaccinium vitis-idaea",
+    TRUE ~ species
+  ))
+
+# 229: Veronica ?alpina: could not find this one
+# 230: Veronica alpina: this should be fine
+# 231: Veronica officinalis: this should be fine
+# Veronica officinalis? is without value in 23
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |>
+  filter(!(species == "Veronica officinalis?" & total_cover == "0"))
+
+# 232: Viccia cracca 
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Viccia cracca" ~ "Vicia cracca",
+    TRUE ~ species
+  ))
+
+# 234: Viola 2
+# 235: Viola 2 (canina?)
+# 238: Viola riviana should be Viola riviniana
+# 241: Viola sp
+# 241: Viola sp 2
+# 243: Voila palustris should be Viola palustris
+# Violas are a mess
+# there is at least two, maybe hybridizing
+# Viola palustris most common
+# some V. riviniana and some V. canina
+
+# just fix spelling for now
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Viola riviana" ~ "Viola riviniana",
+    species == "Voila palustris" ~ "Viola palustris",
+    TRUE ~ species
+  ))
+
+# 245: moss
+# we don't record moss
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |>
+  filter(!(species == "moss"))
+
+# 246: rosette in NOR.hi.warm.vege.wf.06
+# is Ajuga pyramidalis: datasheet from 22
+# BUT: it's in differnt subplots?
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "rosette" & unique_plot_ID == "NOR.hi.warm.vege.wf.06" 
+    ~ "Ajuga pyramidalis",
+    TRUE ~ species
+  ))
+
+# 247: 	sedge 7
+# not recorded in 22 and later
+# delete? 
+
+
+# save fixed data set from 12.06.25 ---------------------------------------
+# write.csv(community_data_raw_NOR_fixed, "Data/Data_community/Species_names_fixed_12.06.25.csv")
+
+
+
+
 
 
 
