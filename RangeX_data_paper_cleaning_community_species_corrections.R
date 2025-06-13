@@ -11,6 +11,15 @@
 ## Purpose:   Cleaning of the species names 2021-2023
 
 
+# comments general ----------------------------------------------------------------
+# I don't understand what the "only_focals" column means
+# Is the cover estimate only based on planted individuals of a focal species 
+# or are there naturally occuring individuals as well?
+# yes = only focals
+# no = additional naturally occuring individuals
+# NA = species with no artificially planted individuals
+
+
 # check and discuss! ----------------------------------------------------------
 # 2021: is hi 3A and 3B switched? changed to b = NOR.hi.warm.vege.wf.03 and a = NOR.hi.ambi.vege.wf.03
 
@@ -18,9 +27,10 @@
 # Carex flava = Carex demissa
 
 # ?Galium: NOR.lo.ambi.vege.wf.06: lo 6A, 2021-08-30
+
 # ?Melica nutans (grass 2 ): NOR.hi.warm.vege.wf.06, hi 6A: 2021-08-13
 
-# Geranium sylvaticum in NOR.hi.ambi.vege.wf.03
+# Geranium sylvaticum ? was this confused with e.g. Anemone? 
 
 # Cirsium helenoides and Cirsium arvense
 
@@ -89,6 +99,10 @@
 
 # NOR.hi.warm.vege.wf.06, hi6A is Ajuga pyramidalis? check in which subplots
 
+# NOR.hi.ambi.vege.wf.01 (hi, 1B) in 23 - Molinia?
+
+# Violas
+
 
 # library -----------------------------------------------------------------
 library(openxlsx)
@@ -96,7 +110,7 @@ library(openxlsx)
 # source community cleaning script 1 --------------------------------------
 source("RangeX_data_paper_cleaning_community.R")
 
-community_data_clean_NOR
+# work with this to have subturf information as well
 community_data_raw_NOR
 
 # import file with species names that need to be corrected ----------------
@@ -104,15 +118,22 @@ community_data_raw_NOR
 species_names_to_correct <- read.xlsx("Data/Data_community/Species_names_to_correct.xlsx")
 
 
+# fix species names -------------------------------------------------------
+# go through list and check original data sheets from all years to fix species names and 
+# figure out problems
+# save in community_data_raw_NOR_fixed
 
 # 1: ???
 # NOR.hi.ambi.vege.wf.01 (hi, 1B) in 23
-
+# Molinia?
+community_data_raw_NOR_fixed <- community_data_raw_NOR |> 
+  mutate(species = case_when(species == "???" & unique_plot_ID == "NOR.hi.ambi.vege.wf.01" 
+                             ~ "cf. Molinia caerulea", TRUE ~ species))
 
 # 2: ?Antennaria dioica
 # NOR.hi.ambi.vege.wf.04 only in 21
 # maybe Omalotheca sylvatic?
-community_data_raw_NOR_fixed <- community_data_raw_NOR |> 
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
   mutate(species = case_when(species == "?Antennaria dioica" & unique_plot_ID == "NOR.hi.ambi.vege.wf.04" ~ "Omalotheca sylvatica",
     TRUE ~ species))
 
@@ -125,7 +146,6 @@ community_data_raw_NOR_fixed <- community_data_raw_NOR |>
 # NOR.hi.warm.vege.nf.05: NA --> was not recorded in 2022
 # wasn't recognized much in 2021
 # will accept 
-
 community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
   mutate(species = case_when(
     species == "?Festuca rubra" ~ "Festuca rubra",
@@ -136,8 +156,11 @@ community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |>
 # NOR.lo.ambi.vege.wf.06: 2021-08-30
 # could be Galium boreale or uliginosum
 # more likely boreale because it has an occurrence in 
-# both subplots (12, 16) in 23
-
+# both subplots (15, 16) in 23
+# it says_ 4 leaves on 21 datasheet, so it must be boreale
+# but it is already with a 1 and 5 in those subturfs, so do we just delete ?Galium ?
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |>
+  filter(!(species == "?Galium" & unique_plot_ID %in% c("NOR.lo.ambi.vege.wf.06")))
 
 # 5: 5 ?Hypochaeris radicata
 # NOR.hi.ambi.vege.wf.09, hi 9B: 2021-08-21
@@ -221,7 +244,7 @@ community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |>
 # carex capillaris in NOR.hi.ambi.vege.wf.07
 community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
   mutate(species = case_when(
-    species == "carex capillaris" & unique_plot_ID == "NOR.hi.ambi.vege.wf.07" ~ "Carex capillaris",
+    species == "carex capillaris" ~ "Carex capillaris",
     TRUE ~ species
   ))
 
@@ -932,13 +955,296 @@ community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |>
 # not recorded in 22 and later
 # delete? 
 
+# turfmapper --------------------------------------------------------------
+# hi 3a = hi 3b !! 
 
-# save fixed data set from 12.06.25 ---------------------------------------
-# write.csv(community_data_raw_NOR_fixed, "Data/Data_community/Species_names_fixed_12.06.25.csv")
+# lange tabelle mit jahr species cover subturf presence 
+# make extra column "reproductive_capacity" with f in cover
+community_data_raw_NOR_fixed_long <- community_data_raw_NOR_fixed |> 
+  pivot_longer(
+    cols = "1":"16",
+    names_to = "subturf",
+    values_to = "cover") |>
+  filter(cover != 0) |> 
+  mutate(reproductive_capacity = if_else(str_detect(cover, "f"), 1, 0),
+         cover = str_remove(cover, "f")) |> 
+  mutate(subturf = as.numeric(subturf)) |> 
+  mutate(cover = as.numeric(cover)) 
+
+
+# fix Chinese reading style of 2023 ---------------------------------------
+# extra table with translation
+match_21_23_subplots <- data.frame(
+  subturf_2021 = 1:16,
+  subturf_2023 = c(1, 5, 9, 13,   # Column 1
+                   2, 6, 10, 14,  # Column 2
+                   3, 7, 11, 15,  # Column 3
+                   4, 8, 12, 16)  # Column 4
+)
+
+# Filter the 2023 data
+community_data_raw_23 <- community_data_raw_NOR_fixed_long |> 
+  filter(year == "2023")
+
+# Join the mapping table to align the 2023 subturf with the 2021 layout
+community_data_raw_23 <- community_data_raw_23 |> 
+  left_join(match_21_23_subplots, by = c("subturf" = "subturf_2023")) |> 
+  mutate(
+    subturf = subturf_2021 # Replace 2023 subturf with 2021 equivalent
+  ) |> 
+  select(-subturf_2021) # Drop unnecessary columns
+
+# Combine updated 2023 data with the rest of the dataset
+community_data_raw_NOR_fixed_long <- community_data_raw_NOR_fixed_long |> 
+  filter(year != "2023") |> # Exclude the old 2023 data
+  bind_rows(community_data_raw_23) # Add the updated 2023 data
+
+# set up subturf grid
+grid <- make_grid(ncol = 4)
+
+# test with plot NOR.hi.warm.vege.wf.01 -----------------------------------
+community_data_raw_NOR_fixed_long |>
+  mutate(subturf = as.numeric(subturf)) |> 
+  filter(unique_plot_ID %in% c("NOR.hi.warm.vege.wf.01")) |> 
+  # mutate(subturf = as.numeric(subturf)) |> 
+  # mutate(cover = as.numeric(cover)) |> 
+  make_turf_plot(
+    data = _,
+    year = year, species = species, cover = cover, subturf = subturf,
+    site_id = site,
+    turf_id = unique_plot_ID,
+    grid_long = grid
+  )
+
+# loops through all plots -------------------------------------------------
+# Open a single PDF document
+pdf("Data/Data_community/Turfmapper_21_22_23_all_plots_fixed_species_names.pdf", width = 8, height = 12)
+
+# Group, nest, and prepare data for plotting
+nested_data <- community_data_raw_NOR_fixed_long |> 
+  # mutate(
+  #   year_collector = paste(year, collector, sep = "_") # Combine year and collector
+  # ) |> 
+  group_by(site, unique_plot_ID) |> # Group by plot-level identifiers only
+  nest() |> 
+  mutate(
+    block_ID = map_chr(data, ~ first(.x$block_ID_original)),
+    plot_ID = map_chr(data, ~ first(.x$plot_ID_original)),
+    plot_title = glue("{site} {block_ID} {plot_ID} : {unique_plot_ID}")
+  )
+
+
+# Loop through the plots and add them to the PDF
+walk2(
+  .x = nested_data$data,
+  .y = nested_data$plot_title,
+  .f = ~{
+    # Ensure .x contains data for both years for the plot comparison
+    if (length(unique(.x$year)) > 1) {
+      plot <- make_turf_plot(
+        data = .x,
+        year = .x$year,  # Pass year_collector instead of just year
+        species = .x$species,     # Pass the species column
+        cover = .x$cover,         # Pass the cover column
+        subturf = .x$subturf,     # Pass the subturf column
+        title = .y,               # Use the title from glue
+        grid_long = grid          # Assuming grid is predefined
+      )
+      print(plot) # Add the plot to the PDF
+    }
+  }
+)
+
+# Close the PDF device
+dev.off()
 
 
 
+# VegSurveyGeneral --------------------------------------------------------
+# 1 m2 plot cover data for OSF --------------------------------------------
+# keep only relevant columns for OSF
+community_data_clean_NOR_plot <- community_data_raw_NOR_fixed |> 
+  select(unique_plot_ID, date, species, total_cover,
+         collector, added_focals)|> 
+  rename("date_measurement" = "date",
+         "cover" = "total_cover")
 
+# there is a lot of plots where it's more then one day
+
+# 2022 NAs ----------------------------------------------------------------
+# not all plots were recorded in 22 so they have NAs and cover = 0
+# delete all rows with date_measurement = NA and cover = 0
+date_NA <- community_data_clean_NOR_plot |> 
+  filter(is.na(date_measurement))
+
+community_data_clean_NOR_plot <- community_data_clean_NOR_plot |>
+  filter(!(is.na(date_measurement) & cover == "0"))
+
+
+# fix date ----------------------------------------------------------------
+# these need fixing
+# 16.08.2023 - 17.08.2023
+# 17.08.23 - 18.08.23
+# 26.07.23/14.08.23
+# 14.08./16.08.23
+# 22.08./23.08.23
+# 22.08/23.08.23
+# 18.08./19.08.23
+# 22.08/23.08.23
+# 21.08/22.08.23
+# 23.08./24.08.23
+# 24.08./28.08.23
+# 23.07./25.07./26.07.23
+# 28.08./29.08.23
+# 29.08./30.08.23
+# 4.8./9.8. 23
+# 3.8./4.8.23
+
+community_data_clean_NOR_plot <- community_data_clean_NOR_plot |> 
+  mutate(date_measurement = as.character(date_measurement)) |> 
+  mutate(date_measurement = case_when(
+    date_measurement ==  "16.08.2023 - 17.08.2023" ~ "2023-08-17",
+    date_measurement ==  "17.08.23 - 18.08.23" ~ "2023-08-18",
+    date_measurement ==  "26.07.23/14.08.23" ~ "2023-08-14",
+    date_measurement ==  "14.08./16.08.23" ~ "2023-08-16",
+    date_measurement ==  "22.08./23.08.23" ~ "2023-08-23",
+    date_measurement ==  "22.08/23.08.23" ~ "2023-08-23",
+    date_measurement ==  "18.08./19.08.23" ~ "2023-08-19",
+    date_measurement ==  "21.08/22.08.23" ~ "2023-08-22",
+    date_measurement ==  "23.08./24.08.23" ~ "2023-08-24",
+    date_measurement ==  "24.08./28.08.23" ~ "2023-08-28",
+    date_measurement ==  "23.07./25.07./26.07.23" ~ "2023-07-26",
+    date_measurement ==  "28.08./29.08.23" ~ "2023-08-29",
+    date_measurement ==  "29.08./30.08.23" ~ "2023-08-30",
+    date_measurement ==  "4.8./9.8. 23" ~ "2023-08-09",
+    date_measurement ==  "3.8./4.8.23" ~ "2023-08-04",
+    TRUE ~ date_measurement
+  )) |> 
+  mutate(date_measurement = as.Date(date_measurement))
+
+unique(community_data_clean_NOR_plot$date_measurement)
+
+# cover should stay character because of <1 
+# or should we change <1 to 1? or 0.1?
+
+# only focals column ------------------------------------------------------
+species <- sort(unique(community_data_clean_NOR_plot$species))
+species
+
+# added focals is in general in the plot
+# only focals says if the cover is only based on planted individuals 
+# of a focal or if there are naturally occurring individuals taken into 
+# account as well
+
+# we distinguished between focal and wild in the field
+# focals are indicated with *
+# therefore all focal should be yes and all others NA
+
+# change column name to only_focals
+
+community_data_clean_NOR_plot <- community_data_clean_NOR_plot |> 
+  rename("only_focals" = "added_focals")
+
+community_data_clean_NOR_plot <- community_data_clean_NOR_plot |> 
+  mutate(only_focals = case_when(species == "Cynosurus cristatus*" ~ "yes",
+                                 species == "Centaurea nigra*" ~ "yes",
+                                 species == "Hypericum maculatum*" ~ "yes",
+                                 species == "Leucanthemum vulgaris*" ~ "yes",
+                                 species == "Luzula multiflora*" ~ "yes",
+                                 species == "Pimpinella saxifraga*" ~ "yes",
+                                 species == "Plantago lanceolata*" ~ "yes",
+                                 species == "Silene dioica*" ~ "yes",
+                                 species == "Succisa pratensis*" ~ "yes",
+                                 species == "Trifolium pratense*" ~ "yes",
+                                 TRUE ~ NA_character_))
+
+
+# arrange better ----------------------------------------------------------
+community_data_clean_NOR_plot <- community_data_clean_NOR_plot |> 
+  arrange(unique_plot_ID, species, date_measurement)
+
+date_NA <- community_data_clean_NOR_plot |> 
+  filter(is.na(date_measurement))
+
+# save clean data cover plot ----------------------------------------------
+# write.csv(community_data_clean_NOR_plot, "Data/Data_community/RangeX_clean_VegSurveyGeneral_21_22_23_NOR.csv")
+veg_survey_general <- read_csv("Data/Data_community/RangeX_clean_VegSurveyGeneral_21_22_23_NOR.csv")
+
+
+# VegSurveyNOR ------------------------------------------------------------
+# 16 sub plots cover data for OSF --------------------------------------------
+# keep only relevant columns for OSF
+community_data_clean_NOR_subplots <- community_data_raw_NOR_fixed_long |> 
+  select(unique_plot_ID, date, species, subturf, cover,
+         collector, reproductive_capacity)|> 
+  rename("date_measurement" = "date",
+         "subplot" = "subturf")
+
+date_NA <- community_data_clean_NOR_subplots |> 
+  filter(is.na(date_measurement))
+
+# fix date ----------------------------------------------------------------
+# these need fixing
+# 16.08.2023 - 17.08.2023
+# 17.08.23 - 18.08.23
+# 26.07.23/14.08.23
+# 14.08./16.08.23
+# 22.08./23.08.23
+# 18.08./19.08.23
+# 22.08/23.08.23
+# 21.08/22.08.23
+# 23.08./24.08.23
+# 24.08./28.08.23
+# 23.07./25.07./26.07.23
+# 28.08./29.08.23
+# 29.08./30.08.23
+# 4.8./9.8. 23
+# 3.8./4.8.23
+
+community_data_clean_NOR_subplots <- community_data_clean_NOR_subplots |> 
+  mutate(date_measurement = as.character(date_measurement)) |> 
+  mutate(date_measurement = case_when(
+    date_measurement ==  "16.08.2023 - 17.08.2023" ~ "2023-08-17",
+    date_measurement ==  "17.08.23 - 18.08.23" ~ "2023-08-18",
+    date_measurement ==  "26.07.23/14.08.23" ~ "2023-08-14",
+    date_measurement ==  "14.08./16.08.23" ~ "2023-08-16",
+    date_measurement ==  "22.08./23.08.23" ~ "2023-08-23",
+    date_measurement ==  "22.08/23.08.23" ~ "2023-08-23",
+    date_measurement ==  "18.08./19.08.23" ~ "2023-08-19",
+    date_measurement ==  "21.08/22.08.23" ~ "2023-08-22",
+    date_measurement ==  "23.08./24.08.23" ~ "2023-08-24",
+    date_measurement ==  "24.08./28.08.23" ~ "2023-08-28",
+    date_measurement ==  "23.07./25.07./26.07.23" ~ "2023-07-26",
+    date_measurement ==  "28.08./29.08.23" ~ "2023-08-29",
+    date_measurement ==  "29.08./30.08.23" ~ "2023-08-30",
+    date_measurement ==  "4.8./9.8. 23" ~ "2023-08-09",
+    date_measurement ==  "3.8./4.8.23" ~ "2023-08-04",
+    TRUE ~ date_measurement
+  )) |> 
+  mutate(date_measurement = as.Date(date_measurement))
+
+unique(community_data_clean_NOR_subplots$date_measurement)
+
+# cover should stay character because of <1 
+# or should we change <1 to 1? or 0.1?
+
+# 2022 NAs ----------------------------------------------------------------
+# not all plots were recorded in 22 so they have NAs and cover = 0
+# delete all rows with date_measurement = NA and cover = 0
+# community_data_clean_NOR_subplots <- community_data_clean_NOR_subplots |>
+#   filter(!(is.na(date_measurement)))
+
+# arrange better ----------------------------------------------------------
+community_data_clean_NOR_subplots <- community_data_clean_NOR_subplots |> 
+  arrange(unique_plot_ID, species, date_measurement)
+
+date_NA <- community_data_clean_NOR_subplots |> 
+  filter(is.na(date_measurement))
+
+
+# save clean data cover subplots ----------------------------------------------
+# write.csv(community_data_clean_NOR_subplots, "Data/Data_community/RangeX_clean_VegSurveyNOR_21_22_23_NOR.csv")
+veg_survey_nor <- read_csv("Data/Data_community/RangeX_clean_VegSurveyNOR_21_22_23_NOR.csv")
 
 
 
