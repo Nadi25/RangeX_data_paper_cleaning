@@ -12,6 +12,11 @@
 ## Purpose:   Cleaning of the complete raw data files of community 2021-2023
 
 
+# comments ----------------------------------------------------------------
+# remember to fix Chinese reading style in 2023 when subplots were recorded in different order
+# fix this later also for 2024 and 25
+
+
 # load library ------------------------------------------------------------
 library(conflicted)
 conflict_prefer_all("dplyr", quiet = TRUE)
@@ -228,8 +233,7 @@ unique(community_data_raw$collector)
 # merge metadata with all years veg data ----------------------------------
 
 community_data_raw_NOR <- left_join(community_data_raw, metadata_NOR_com,
-                                    by = c("site", "block_ID_original", 
-                                           "plot_ID_original"))
+                                    by = c("site", "block_ID_original", "plot_ID_original"))
   
 
 
@@ -244,13 +248,6 @@ community_data_raw_NOR <- community_data_raw_NOR |>
   filter(species != "tomst")
 
 
-# dealing with f = fertile in 2023 data -------------------------------------------
-# make new column
-# community_data_raw_NOR <- community_data_raw_NOR |> 
-#   mutate(reproductive_capacity = if_else(str_detect(cover, "f"), 1, 0),
-#     cover = str_remove(cover, "f") # Optional: Remove the "f" from `cover`
-#   )
-
 # 2021: switch plots hi 3A and 3B -----------------------------------------
 # change to b = NOR.hi.warm.vege.wf.03 and a = NOR.hi.ambi.vege.wf.03
 community_data_raw_NOR <- community_data_raw_NOR |>
@@ -262,24 +259,10 @@ community_data_raw_NOR <- community_data_raw_NOR |>
   mutate(unique_plot_ID = temp_plot_ID) |>
   select(-temp_plot_ID)
 
-# you need to change plot_ID_original too
-community_data_raw_NOR <- community_data_raw_NOR |>
-  mutate(temp_plot_ID_original  = case_when(
-    year == 2021 & plot_ID_original   == "a" ~ "b",
-    year == 2021 & plot_ID_original   == "b" ~ "a",
-    TRUE ~ plot_ID_original  
-  )) |>
-  mutate(plot_ID_original   = temp_plot_ID_original  ) |>
-  select(-plot_ID_original  )
+# only unique_plot_ID is changed, th other columns stay
 
 # 2023: luzmul ? ----------------------------------------------------------
 # Luzula multiflora 2023 in NOR.lo.ambi.vege.wf.01, subplot 14: delete ?
-# community_data_raw_NOR <- community_data_raw_NOR |> 
-#   mutate("14" = case_when(
-#     species == "Luzula multiflora*" & unique_plot_ID == "NOR.lo.ambi.vege.wf.01" & year == "2023" ~ "0",
-#     TRUE ~ "14"
-#   ))
-
 community_data_raw_NOR <- community_data_raw_NOR |>
   mutate(`14` = if_else(
     species == "Luzula multiflora*" & 
@@ -288,8 +271,6 @@ community_data_raw_NOR <- community_data_raw_NOR |>
     "0", 
     `14`
   ))
-
-
 
 
 # check NAs in unique_plot_id ---------------------------------------------
