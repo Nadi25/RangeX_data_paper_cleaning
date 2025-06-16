@@ -33,6 +33,7 @@
 # ?Melica nutans (grass 2 ): NOR.hi.warm.vege.wf.06, hi 6A: 2021-08-13
 
 # Geranium sylvaticum ? was this confused with e.g. Anemone? 
+# e.g. in hi 5c?
 
 # Cirsium helenoides and Cirsium arvense
 
@@ -87,7 +88,7 @@
 
 # hi 2a: Carex ?capillaris
 
-# hi 2a: Phleum alpinum? 
+# Phleum alpinum? e.g. hi 2a, hi4d
 
 # hi 3b: Hairy seedling (hitchhiker?) in 21
 
@@ -96,7 +97,32 @@
 
 # ?Veronica officinalis: NOR.hi.warm.vege.nf.03 - 2021: rosette
 
-# 
+# Antennaria dioica in 2021 is something else?
+
+# Was Carex vaginate from 21 C. pillulifera in 23?
+
+# hi4d and hi5a: Anthoxanthum nipponicum? Ask Vigdis
+# is all A. odoratum actually nipponicum?
+
+# hi6a: Huperzia which? NOR.hi.warm.vege.wf.06
+
+# hi6a: sedge 7 21 no idea
+
+# hi6b: fern? Ask Susanne for picture
+
+# hi6d: Carex bigelowii? only 23 - maybe rather nigra
+
+# hi7a: 2021 Carex filiformis? is synonym of C. montana but that is not natice to Norway- ask Dagmar - might be something else
+# maybe pilulifera?
+
+
+
+
+
+
+
+
+
 
 # check in the field ------------------------------------------------------
 # hi 8d: ?Rubus chamaemorus, NOR.hi.ambi.vege.nf.08 = Filipendula ulmaria
@@ -107,7 +133,7 @@
 
 # Ajuga?Bald?: NOR.hi.warm.vege.nf.02, hi 2C
 # Bold Ajuga?: NOR.hi.ambi.vege.nf.01, hi 1D
-# probably Ajia pyramidalis without hairs
+# probably Ajua pyramidalis without hairs
 
 # Carex palustris: NOR.hi.warm.vege.wf.06, hi 6A
 # potentially Carex pilulifera??
@@ -128,6 +154,22 @@
 # hi 2d: Carex pillulifera was C. echinata and C. pallescens in 21?
 
 # hi 3b: Carex nigra? not found in 23
+
+# hi4a: viola sp = palustris and sp2 = riviniana
+
+# hi4a: Veronica officinalis?
+
+# Pleum alpinum: e.g. hi4a
+
+# hi4d: Anthoxanthum nipponicum? Ask Vigdis
+
+# hi4d: Omalotheca norwegica?
+
+# hi5a: euphrasia stricta  23 vigdis
+
+# hi5d: is Antennaria from 21 actually Omalotheca?
+
+
 
 
 # library -----------------------------------------------------------------
@@ -1120,7 +1162,154 @@ community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |>
   ))
 
 
+# Viola sp and sp2 hi 4a:NOR.hi.warm.vege.wf.04
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Viola sp" & unique_plot_ID == "NOR.hi.warm.vege.wf.04" ~ "Viola palustris",
+    species == "Viola sp 2" & unique_plot_ID == "NOR.hi.ambi.vege.nf.03" ~ "Viola cf. riviniana",
+    TRUE ~ species
+  ))
 
+# Sedge 3: hi4c is Carex panicea as said in 22 NOR.hi.warm.vege.nf.04
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Sedge 3" & unique_plot_ID == "NOR.hi.warm.vege.nf.04" ~ "Carex panicea",
+    TRUE ~ species
+  ))
+
+# Viola sp and sp2 hi 4a:NOR.hi.warm.vege.nf.04
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Viola sp" & unique_plot_ID == "NOR.hi.warm.vege.nf.04" ~ "Viola palustris",
+    species == "Viola sp 2" & unique_plot_ID == "NOR.hi.ambi.vege.nf.03" ~ "Viola cf. riviniana",
+    TRUE ~ species
+  ))
+
+# Omalotheca sylvatica is norwegica in hi4d: NOR.hi.ambi.vege.nf.04
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Omalotheca sylvatica" & unique_plot_ID == "NOR.hi.ambi.vege.nf.04" ~ "Omalotheca norvegica",
+    species == "Omalotheca norvegica?" & unique_plot_ID == "NOR.hi.ambi.vege.nf.04" ~ "Omalotheca norvegica",
+    TRUE ~ species
+  ))
+
+# Viola sp is palustris in hi4d: NOR.hi.ambi.vege.nf.04
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Viola sp" & unique_plot_ID == "NOR.hi.ambi.vege.nf.04" ~ "Viola palustris",
+    TRUE ~ species
+  ))
+
+# Euphrasia frigida might be stricta in hi5a: NOR.hi.warm.vege.wf.05
+# because vigdis said so in 23
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Euphrasia frigida" & unique_plot_ID == "NOR.hi.warm.vege.wf.05" ~ "Euphrasia stricta",
+    TRUE ~ species
+  ))
+
+# Selaginella is selaginoides? NOR.hi.warm.vege.wf.05
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Selaginella" & unique_plot_ID == "NOR.hi.warm.vege.wf.05" ~ "Selaginella selaginoides",
+    TRUE ~ species
+  ))
+
+# Viola sp is palustris in hi5a: NOR.hi.warm.vege.wf.05
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Viola sp" & unique_plot_ID == "NOR.hi.warm.vege.wf.05" ~ "Viola palustris",
+    TRUE ~ species
+  ))
+
+# Poa pratensis? is ok, hi5b: NOR.hi.ambi.vege.wf.05
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Poa pratensis?" & unique_plot_ID == "NOR.hi.ambi.vege.wf.05" ~ "Poa pratensis",
+    TRUE ~ species
+  ))
+
+# hi5b:
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Viola sp" & unique_plot_ID == "NOR.hi.ambi.vege.wf.05" ~ "Viola palustris",
+    TRUE ~ species
+  ))
+
+# hi5c: NOR.hi.warm.vege.nf.05
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Viola sp" & unique_plot_ID == "NOR.hi.warm.vege.nf.05" ~ "Viola palustris",
+    TRUE ~ species
+  ))
+
+# hi5d: NOR.hi.ambi.vege.nf.05
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Viola sp" & unique_plot_ID == "NOR.hi.ambi.vege.nf.05" ~ "Viola palustris",
+    TRUE ~ species
+  ))
+
+# hi6a: Viola NOR.hi.warm.vege.wf.06
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Viola sp" & unique_plot_ID == "NOR.hi.warm.vege.wf.06" ~ "Viola palustris",
+    TRUE ~ species
+  ))
+
+# hi6c: Viola NOR.hi.warm.vege.nf.06
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Viola sp" & unique_plot_ID == "NOR.hi.warm.vege.nf.06" ~ "Viola palustris",
+    TRUE ~ species
+  ))
+
+# hi 6d: Veronica ?alpina NOR.hi.ambi.vege.nf.06
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Veronica ?alpina" & unique_plot_ID == "NOR.hi.ambi.vege.nf.06" ~ "Veronica alpina",
+    TRUE ~ species
+  ))
+
+# hi 6d: Viola NOR.hi.ambi.vege.nf.06
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Viola sp" & unique_plot_ID == "NOR.hi.ambi.vege.nf.06" ~ "Viola palustris",
+    TRUE ~ species
+  ))
+
+# hi 7a: Leontodon sp is with hairs is also autumnalis NOR.hi.warm.vege.wf.07
+# delete then
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |>
+  filter(!(species == "Leontodon sp" & unique_plot_ID %in% c("NOR.hi.warm.vege.wf.07")))
+
+# hi 7a: Viola NOR.hi.warm.vege.wf.07
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Viola sp" & unique_plot_ID == "NOR.hi.warm.vege.wf.07" ~ "Viola palustris",
+    TRUE ~ species
+  ))
+
+# hi 7b: Viola NOR.hi.ambi.vege.wf.07
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Viola sp" & unique_plot_ID == "NOR.hi.ambi.vege.wf.07" ~ "Viola palustris",
+    TRUE ~ species
+  ))
+
+# hi 7c: Viola NOR.hi.warm.vege.nf.07
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Viola sp" & unique_plot_ID == "NOR.hi.warm.vege.nf.07" ~ "Viola palustris",
+    TRUE ~ species
+  ))
+
+# hi 7d: Viola NOR.hi.ambi.vege.nf.07
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Viola sp" & unique_plot_ID == "NOR.hi.ambi.vege.nf.07" ~ "Viola palustris",
+    TRUE ~ species
+  ))
 
 
 
@@ -1177,7 +1366,7 @@ grid <- make_grid(ncol = 4)
 # test with plot  -----------------------------------
 community_data_raw_NOR_fixed_long |>
   mutate(subturf = as.numeric(subturf)) |> 
-  filter(unique_plot_ID %in% c("NOR.hi.warm.vege.nf.03")) |> 
+  filter(unique_plot_ID %in% c("NOR.hi.ambi.vege.nf.03")) |> 
   # mutate(subturf = as.numeric(subturf)) |> 
   # mutate(cover = as.numeric(cover)) |> 
   make_turf_plot(
@@ -1188,15 +1377,17 @@ community_data_raw_NOR_fixed_long |>
     grid_long = grid
   )
 
+
+community_data_raw_NOR_fixed_long <- community_data_raw_NOR_fixed_long |> 
+  mutate(year_collector = paste(year, collector, sep = "_"))
+
 # loops through all plots -------------------------------------------------
 # Open a single PDF document
 pdf("Data/Data_community/Turfmapper_21_22_23_all_plots_fixed_species_names.pdf", width = 8, height = 12)
 
 # Group, nest, and prepare data for plotting
 nested_data <- community_data_raw_NOR_fixed_long |> 
-  # mutate(
-  #   year_collector = paste(year, collector, sep = "_") # Combine year and collector
-  # ) |> 
+  # mutate(year_collector = paste(year, collector, sep = "_")) |> 
   group_by(site, unique_plot_ID) |> # Group by plot-level identifiers only
   nest() |> 
   mutate(
@@ -1215,7 +1406,7 @@ walk2(
     if (length(unique(.x$year)) > 1) {
       plot <- make_turf_plot(
         data = .x,
-        year = .x$year,  # Pass year_collector instead of just year
+        year = .x$year_collector,  # Pass year_collector instead of just year
         species = .x$species,     # Pass the species column
         cover = .x$cover,         # Pass the cover column
         subturf = .x$subturf,     # Pass the subturf column
