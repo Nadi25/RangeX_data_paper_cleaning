@@ -23,6 +23,8 @@
 # check and discuss! ----------------------------------------------------------
 # 2021: is hi 3A and 3B switched? changed to b = NOR.hi.warm.vege.wf.03 and a = NOR.hi.ambi.vege.wf.03
 
+# make sp to sp. 
+
 # Circle grass = Festuca pratensis
 # Carex flava = Carex demissa
 
@@ -78,6 +80,24 @@
 
 # sedge 7? 
 
+# hi 1b: Antennaria dioica? only in 21
+# hi 1b: Fern vs Blechnum spicant
+
+# hi 1d: Carex ?pilulifera
+
+# hi 2a: Carex ?capillaris
+
+# hi 2a: Phleum alpinum? 
+
+# hi 3b: Hairy seedling (hitchhiker?) in 21
+
+# Veronica officinalis in hi3b and hi2c: somehow wrong in 21
+# Veronica alpina too in hi2d
+
+# ?Veronica officinalis: NOR.hi.warm.vege.nf.03 - 2021: rosette
+
+# 
+
 # check in the field ------------------------------------------------------
 # hi 8d: ?Rubus chamaemorus, NOR.hi.ambi.vege.nf.08 = Filipendula ulmaria
 
@@ -103,9 +123,17 @@
 
 # Violas
 
+# hi 1b: Fern vs Blechnum spicant
+
+# hi 2d: Carex pillulifera was C. echinata and C. pallescens in 21?
+
+# hi 3b: Carex nigra? not found in 23
+
 
 # library -----------------------------------------------------------------
 library(openxlsx)
+library(stringr)
+library(stringi)
 
 # source community cleaning script 1 --------------------------------------
 source("RangeX_data_paper_cleaning_community.R")
@@ -123,10 +151,38 @@ species_names_to_correct <- read.xlsx("Data/Data_community/Species_names_to_corr
 # figure out problems
 # save in community_data_raw_NOR_fixed
 
+# problem that e.g. Veronica officinalis was spelled exactly the same in different years but displayed as two different species
+# standardize species names
+# stri_trans_general(..., "Latin-ASCII") removes hidden Unicode variants.
+# str_squish() trims and removes extra internal spaces.
+community_data_raw_NOR_fixed <- community_data_raw_NOR
+
+# community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |>
+#  mutate(species = str_squish(stri_trans_general(species, "Latin-ASCII")))
+
+# community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |>
+#   mutate(species = str_trim(species))  # Only trims leading/trailing whitespace
+
+# but this also changes "?Veronica oficinalis" to "Veronica oficinalis"
+# which is not what I want
+# community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |>
+#   mutate(species = str_replace_all(species, "\u00A0", " "))
+
+
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = str_replace_all(species, "[\\u00a0\\s]+", " "))
+
+
+veronica <- community_data_raw_NOR_fixed |> 
+  filter(str_detect(species, "officinalis")) |> 
+  distinct(year, species)
+
+
+
 # 1: ???
 # NOR.hi.ambi.vege.wf.01 (hi, 1B) in 23
 # Molinia?
-community_data_raw_NOR_fixed <- community_data_raw_NOR |> 
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
   mutate(species = case_when(species == "???" & unique_plot_ID == "NOR.hi.ambi.vege.wf.01" 
                              ~ "cf. Molinia caerulea", TRUE ~ species))
 
@@ -256,13 +312,13 @@ community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |>
     TRUE ~ species
   ))
 
-# 14: ?Veronica officinalis: NOR.hi.warm.vege.nf.03
-# not sure! Accept fo rnow but check
-community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
-  mutate(species = case_when(
-    species == "?Veronica officinalis" & unique_plot_ID == "NOR.hi.warm.vege.nf.03" ~ "Veronica officinalis",
-    TRUE ~ species
-  ))
+# # 14: ?Veronica officinalis: NOR.hi.warm.vege.nf.03
+# # not sure! Accept fo rnow but check
+# community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+#   mutate(species = case_when(
+#     species == "?Veronica officinalis" & unique_plot_ID == "NOR.hi.warm.vege.nf.03" ~ "Veronica officinalis",
+#     TRUE ~ species
+#   ))
 
 # 19: Ajuga?Bald?: NOR.hi.warm.vege.nf.02
 # maybe it was Ajuga
@@ -955,6 +1011,122 @@ community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |>
 # not recorded in 22 and later
 # delete? 
 
+# Carex ?pilulifera: NOR.hi.ambi.vege.nf.01
+# accept
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Carex ?pilulifera" & unique_plot_ID == "NOR.hi.ambi.vege.nf.01" 
+    ~ "Carex pilulifera",
+    TRUE ~ species
+  ))
+
+# Carex ?capillaris: NOR.hi.ambi.vege.nf.01
+# accept
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Carex ?capillaris" & unique_plot_ID == "NOR.hi.ambi.vege.nf.01" 
+    ~ "Carex cf. capillaris",
+    TRUE ~ species
+  ))
+
+# Picea abies: NOR.hi.ambi.vege.nf.01, hi 1d
+# accept ? in subturf 10 because it was also recorded in 23
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |>
+  mutate(`10` = if_else(
+    species == "Picea abies" & 
+      unique_plot_ID == "NOR.hi.ambi.vege.nf.01" & 
+      year == 2021, 
+    "1", 
+    `10`
+  ))
+
+# Hypericum maculatum in NOR.hi.ambi.vege.wf.02
+# is the focal * because it was the focal in 23 
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Hypericum maculatum" & unique_plot_ID == "NOR.hi.ambi.vege.wf.02" ~ "Hypericum maculatum*",
+    TRUE ~ species
+  ))
+
+# Trifolium pratense in NOR.hi.ambi.vege.wf.02
+# is the focal * because it was the focal in 23 
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Trifolium pratense" & unique_plot_ID == "NOR.hi.ambi.vege.wf.02" ~ "Trifolium pratense*",
+    TRUE ~ species
+  ))
+
+# Sagina sp is Sagina saginoides in NOR.hi.ambi.vege.wf.03
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Sagina sp" & unique_plot_ID == "NOR.hi.ambi.vege.wf.03" ~ "Sagina saginoides",
+    TRUE ~ species
+  ))
+
+
+# community_data_raw_NOR_fixed |>
+#   filter(str_detect(species, "Veronica officinalis")) |>
+#   distinct(species)
+# 
+# veronica <- 
+#   community_data_raw_NOR_fixed |>
+#   filter(str_detect(species, "Veronica")) |>
+#   mutate(
+#     raw = sapply(species, function(x) paste(as.character(charToRaw(x)), collapse = " "))
+#   ) |>
+#   select(species, raw)
+
+
+# ?Veronica officinalis: NOR.hi.warm.vege.nf.03
+# 2021: rosette
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "?Veronica officinalis" 
+    & unique_plot_ID == "NOR.hi.warm.vege.nf.03" ~ "cf. Veronica officinalis",
+    TRUE ~ species
+  ))
+
+# Carex bigelowii?: NOR.hi.warm.vege.nf.03
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Carex bigelowii?" & unique_plot_ID == "NOR.hi.warm.vege.nf.03" ~ "Carex cf. bigelowii",
+    TRUE ~ species
+  ))
+
+# Carex leparina: NOR.hi.warm.vege.nf.03: should be C. leporina
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Carex leparina" & unique_plot_ID == "NOR.hi.warm.vege.nf.03" ~ "Carex leporina",
+    TRUE ~ species
+  ))
+
+# Succisa pratensis*: NOR.hi.warm.vege.wf.01 hi1a
+# 4(dead)
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |>
+  mutate(`3` = if_else(
+    species == "Succisa pratensis*" & 
+      unique_plot_ID == "NOR.hi.warm.vege.wf.01" & 
+      year == 2021, 
+    "4", 
+    `3`
+  ))
+
+# violas: NOR.hi.ambi.vege.nf.03
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Viola sp" & unique_plot_ID == "NOR.hi.ambi.vege.nf.03" ~ "Viola palustris",
+    species == "Viola riviniana?" & unique_plot_ID == "NOR.hi.ambi.vege.nf.03" ~ "Viola cf. riviniana",
+    TRUE ~ species
+  ))
+
+
+
+
+
+
+
+
+
 # turfmapper --------------------------------------------------------------
 # hi 3a = hi 3b !! 
 
@@ -1002,10 +1174,10 @@ community_data_raw_NOR_fixed_long <- community_data_raw_NOR_fixed_long |>
 # set up subturf grid
 grid <- make_grid(ncol = 4)
 
-# test with plot NOR.hi.warm.vege.wf.01 -----------------------------------
+# test with plot  -----------------------------------
 community_data_raw_NOR_fixed_long |>
   mutate(subturf = as.numeric(subturf)) |> 
-  filter(unique_plot_ID %in% c("NOR.hi.warm.vege.wf.01")) |> 
+  filter(unique_plot_ID %in% c("NOR.hi.warm.vege.nf.03")) |> 
   # mutate(subturf = as.numeric(subturf)) |> 
   # mutate(cover = as.numeric(cover)) |> 
   make_turf_plot(
