@@ -1,6 +1,6 @@
 
 
-# RangeX community cover data cleaning  -------------------------------
+# RangeX community cover data cleaning 1 -------------------------------
 
 ## Data used: RangeX_raw_comcov_high_2021.xlsx, 
 ##            RangeX_raw_comcov_low_2021.xlsx,
@@ -237,7 +237,7 @@ community_data_raw_NOR <- left_join(community_data_raw, metadata_NOR_com,
   
 
 
-# delete obviously wrong species names ----------------------------------------------
+# delete tomst and cover as species names ----------------------------------------------
 species <- sort(unique(community_data_raw_NOR$species))
 species
 
@@ -259,7 +259,7 @@ community_data_raw_NOR <- community_data_raw_NOR |>
   mutate(unique_plot_ID = temp_plot_ID) |>
   select(-temp_plot_ID)
 
-# only unique_plot_ID is changed, th other columns stay
+# attention: only unique_plot_ID is changed, the other columns stay
 
 # 2023: luzmul ? ----------------------------------------------------------
 # Luzula multiflora 2023 in NOR.lo.ambi.vege.wf.01, subplot 14: delete ?
@@ -424,32 +424,6 @@ walk2(
 dev.off()
 
 
-
-
-
-# x <- CommunitySubplot %>%
-#   mutate(subplot = as.numeric(subplot),
-#          year_recorder = paste(year, recorder, sep = "_")) %>%
-#   select(-year) %>%
-#   arrange(destSiteID, destPlotID, turfID) %>%
-#   group_by(destSiteID, destPlotID, turfID) %>%
-#   nest() %>%
-#   {map2(
-#     .x = .$data,
-#     .y = glue::glue("Site {.$destSiteID}: plot {.$destPlotID}: turf {.$turfID}"),
-#     .f = ~make_turf_plot(
-#       data = .x,
-#       year = year_recorder,
-#       species = species,
-#       cover = cover,
-#       subturf = subplot,
-#       title = glue::glue(.y),
-#       grid_long = grid)
-#   )} %>%
-#   walk(print)
-
-
-
 # keep only relevant columns for OSF --------------------------------------
 community_data_clean_NOR <- community_data_raw_NOR |> 
   select(unique_plot_ID, date, species, total_cover,
@@ -458,8 +432,7 @@ community_data_clean_NOR <- community_data_raw_NOR |>
          "cover" = "total_cover")
 
 
-# there is a lot of plots where it's more then one day
-# 
+# there is a lot of plots where recording happend on more then one day
 
 # fix date ----------------------------------------------------------------
 # these need fixing
@@ -478,7 +451,6 @@ community_data_clean_NOR <- community_data_raw_NOR |>
 # 29.08./30.08.23
 # 4.8./9.8. 23
 # 3.8./4.8.23
-
 
 community_data_clean_NOR <- community_data_clean_NOR |> 
   mutate(date_measurement = as.character(date_measurement)) |> 
@@ -505,7 +477,6 @@ unique(community_data_clean_NOR$date_measurement)
 
 # cover should stay character because of <1 
 # or should we change <1 to 1? or 0.1?
-
 
 
 # only focals column ------------------------------------------------------
@@ -538,9 +509,6 @@ community_data_clean_NOR <- community_data_clean_NOR |>
                                  species == "Succisa pratensis*" ~ "yes",
                                  species == "Trifolium pratense*" ~ "yes",
                                  TRUE ~ NA_character_))
-
-
-
 
 
 # prepare species data set to check spelling of species names -----------------------------------------
