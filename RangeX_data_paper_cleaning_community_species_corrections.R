@@ -115,13 +115,17 @@
 # hi7a: 2021 Carex filiformis? is synonym of C. montana but that is not natice to Norway- ask Dagmar - might be something else
 # maybe pilulifera?
 
+# hi8d: Hairy Leontodon is autumnalis: subturf 12: 2 and 5 --> make it 7?
 
+# is Taraxacum 2 Hypochaeris radicata? 
 
+# hi9b: Luzmul* in 21 and 22 not found? -> forgot * in 22
 
+# hi9b: digitalizing mistake with viola, ... fixed in original -> check
 
+# hi10b: Equisetum pratense or arvense? 
 
-
-
+# lo3a: Grass sp in 21?
 
 
 # check in the field ------------------------------------------------------
@@ -142,12 +146,16 @@
 # Salix sp in hi8b, NOR.hi.ambi.vege.wf.08 --> Salix glauca x phylicifolia ?
 
 # check Taraxacum sp. and Taraxacum 2 - one is hairy - one not
+# e.g. hi8c
+# is Taraxacum 2 Hypochaeris radicata? 
+# e.g. hi2c, hi6d, hi9c, hi10a
+# and compare with Hypochaeris in hi9b
 
 # NOR.hi.warm.vege.wf.06, hi6A is Ajuga pyramidalis? check in which subplots
 
 # NOR.hi.ambi.vege.wf.01 (hi, 1B) in 23 - Molinia?
 
-# Violas
+# Violas: # e.g. hi8c
 
 # hi 1b: Fern vs Blechnum spicant
 
@@ -165,10 +173,25 @@
 
 # hi4d: Omalotheca norwegica?
 
-# hi5a: euphrasia stricta  23 vigdis
+# hi5a: Euphrasia stricta  23 vigdis
 
 # hi5d: is Antennaria from 21 actually Omalotheca?
 
+# hi 8a ang hi9d: Viola palustris?
+
+# hi 8d: Viola 2 canina or riviniana?
+
+# hi 9d: Equisetum pratense is arvense in 24
+
+# hi10d: Hairy Taraxacum/Leontodon
+
+# hi10d: Carex leporina?
+
+# lo5a: Check Euphrasia is it stricta?
+
+# lo7a: Big grass? 
+
+# lo9a: Viola canina? was recorded in 24 but not in 23 
 
 
 
@@ -1105,20 +1128,6 @@ community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |>
     TRUE ~ species
   ))
 
-
-# community_data_raw_NOR_fixed |>
-#   filter(str_detect(species, "Veronica officinalis")) |>
-#   distinct(species)
-# 
-# veronica <- 
-#   community_data_raw_NOR_fixed |>
-#   filter(str_detect(species, "Veronica")) |>
-#   mutate(
-#     raw = sapply(species, function(x) paste(as.character(charToRaw(x)), collapse = " "))
-#   ) |>
-#   select(species, raw)
-
-
 # ?Veronica officinalis: NOR.hi.warm.vege.nf.03
 # 2021: rosette
 community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
@@ -1311,7 +1320,273 @@ community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |>
     TRUE ~ species
   ))
 
+# hi 8a: Viola NOR.hi.warm.vege.wf.08
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Viola sp" & unique_plot_ID == "NOR.hi.warm.vege.wf.08" ~ "Viola palustris",
+    TRUE ~ species
+  ))
 
+# hi 8b: Viola NOR.hi.ambi.vege.wf.08
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Viola sp" & unique_plot_ID == "NOR.hi.ambi.vege.wf.08" ~ "Viola palustris",
+    TRUE ~ species
+  ))
+
+# hi 8c: Viola NOR.hi.warm.vege.nf.08
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Viola sp" & unique_plot_ID == "NOR.hi.warm.vege.nf.08" ~ "Viola palustris",
+    TRUE ~ species
+  ))
+
+# hi 8c: Viola canina is rviniana in 24: NOR.hi.warm.vege.nf.08
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Viola canina" & unique_plot_ID == "NOR.hi.warm.vege.nf.08" ~ "Viola cf. riviniana",
+    TRUE ~ species
+  ))
+
+# hi 8d: Viola 2 canina is rviniana in 24: NOR.hi.ambi.vege.nf.08
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Viola 2" & unique_plot_ID == "NOR.hi.ambi.vege.nf.08" ~ "Viola cf. riviniana",
+    species == "Viola 2 (canina?)" & unique_plot_ID == "NOR.hi.ambi.vege.nf.08" ~ "Viola cf. riviniana",
+    TRUE ~ species
+  ))
+
+# hi8d: Hairy Leontodon is autumnalis: 2 + 5 = 7 in subturf 12? 
+# NOR.hi.ambi.vege.nf.08
+# and delete hairy leontodon
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |>
+  mutate(`12` = if_else(
+    species == "Leontodon autumnalis" & 
+      unique_plot_ID == "NOR.hi.ambi.vege.nf.08" & 
+      year == 2023, 
+    "7", 
+    `12`
+  ))
+
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |>
+  filter(!(species == "Hairy Leontodon" & unique_plot_ID %in% c("NOR.hi.ambi.vege.nf.08") & year == "2023"))
+
+# hi9b: Luzmul* in 21 and 22 NOR.hi.ambi.vege.wf.09
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Luzula multiflora" & unique_plot_ID == "NOR.hi.ambi.vege.wf.09" & `6` == "1" ~ "Luzula multiflora*",
+    TRUE ~ species
+  ))
+
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Luzula multiflora" & unique_plot_ID == "NOR.hi.ambi.vege.wf.09" & `8` == "4" & year == "2021" ~ "Luzula multiflora*",
+    TRUE ~ species
+  ))
+
+# hi 9b: Viola NOR.hi.ambi.vege.wf.09
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Viola sp" & unique_plot_ID == "NOR.hi.ambi.vege.wf.09" ~ "Viola palustris",
+    TRUE ~ species
+  ))
+
+# hi 9c: Viola NOR.hi.warm.vege.nf.09
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Viola sp" & unique_plot_ID == "NOR.hi.warm.vege.nf.09" ~ "Viola palustris",
+    TRUE ~ species
+  ))
+
+# hi 9d: Equisetum pratense is arvense in 24: Viola NOR.hi.ambi.vege.nf.09
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Equisetum pratense" & unique_plot_ID == "NOR.hi.ambi.vege.nf.09" ~ "Equisetum arvense",
+    TRUE ~ species
+  ))
+
+# hi 10a: Viola NOR.hi.warm.vege.wf.10
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Viola sp" & unique_plot_ID == "NOR.hi.warm.vege.wf.10" ~ "Viola palustris",
+    TRUE ~ species
+  ))
+
+# hi 10b: Viola NOR.hi.ambi.vege.wf.10
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Viola sp" & unique_plot_ID == "NOR.hi.ambi.vege.wf.10" ~ "Viola palustris",
+    TRUE ~ species
+  ))
+
+# hi10b: Hairy Leontodon is autumnalis: 2 + 3 = 5 in subturf 15? 
+# NOR.hi.ambi.vege.wf.10
+# and delete hairy leontodon
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |>
+  mutate(`15` = if_else(
+    species == "Leontodon autumnalis" & 
+      unique_plot_ID == "NOR.hi.ambi.vege.wf.10" & 
+      year == 2023, 
+    "7", 
+    `15`
+  ))
+
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |>
+  filter(!(species == "Hairy Leontodon" & unique_plot_ID %in% c("NOR.hi.ambi.vege.wf.10") & year == "2023"))
+
+# hi 10b: Equisetum pratense is arvense in 23: Viola NOR.hi.ambi.vege.wf.10
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Equisetum pratense" & unique_plot_ID == "NOR.hi.ambi.vege.wf.10" ~ "Equisetum arvense",
+    TRUE ~ species
+  ))
+
+# hi 10c: Viola NOR.hi.warm.vege.nf.10
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Viola sp" & unique_plot_ID == "NOR.hi.warm.vege.nf.10" ~ "Viola palustris",
+    TRUE ~ species
+  ))
+
+# hi 10d: Viola NOR.hi.ambi.vege.nf.10
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Viola sp" & unique_plot_ID == "NOR.hi.ambi.vege.nf.10" ~ "Viola palustris",
+    TRUE ~ species
+  ))
+
+# hi 10d: Carex leporina? NOR.hi.ambi.vege.nf.10
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Carex leporina?" & unique_plot_ID == "NOR.hi.ambi.vege.nf.10" ~ "Carex cf. leporina",
+    TRUE ~ species
+  ))
+
+# lo 1 a: Poa? is maybe Poa pratensis: NOR.lo.ambi.vege.wf.01
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Poa?" & unique_plot_ID == "NOR.lo.ambi.vege.wf.01" ~ "Poa pratensis",
+    TRUE ~ species
+  ))
+
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Viola sp" & unique_plot_ID == "NOR.lo.ambi.vege.wf.01" ~ "Viola palustris",
+    TRUE ~ species
+  ))
+
+# lo2a: Viola NOR.lo.ambi.vege.wf.02
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Viola sp" & unique_plot_ID == "NOR.lo.ambi.vege.wf.02" ~ "Viola palustris",
+    TRUE ~ species
+  ))
+
+# lo3a: Viola NOR.lo.ambi.vege.wf.03
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Viola sp" & unique_plot_ID == "NOR.lo.ambi.vege.wf.03" ~ "Viola palustris",
+    TRUE ~ species
+  ))
+
+# lo3a: Carex cf. leporina NOR.lo.ambi.vege.wf.03
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Carex leporina?" & unique_plot_ID == "NOR.lo.ambi.vege.wf.03" ~ "Carex cf. leporina",
+    TRUE ~ species
+  ))
+
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |>
+  mutate(`11` = if_else(
+    species == "Carex cf. leporina" & 
+      unique_plot_ID == "NOR.lo.ambi.vege.wf.03" & 
+      year == 2023, 
+    "1", 
+    `11`
+  ))
+
+# lo3a: Leontodon
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Leontodon sp" & unique_plot_ID == "NOR.lo.ambi.vege.wf.03" ~ "Leontodon autumnalis",
+    TRUE ~ species
+  ))
+
+# lo4a: Viola NOR.lo.ambi.vege.wf.04
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Viola sp" & unique_plot_ID == "NOR.lo.ambi.vege.wf.04" ~ "Viola palustris",
+    TRUE ~ species
+  ))
+
+# lo5a: Viola NOR.lo.ambi.vege.wf.05
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Viola sp" & unique_plot_ID == "NOR.lo.ambi.vege.wf.05" ~ "Viola palustris",
+    TRUE ~ species
+  ))
+
+# lo6a: Viola NOR.lo.ambi.vege.wf.06
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Viola sp" & unique_plot_ID == "NOR.lo.ambi.vege.wf.06" ~ "Viola palustris",
+    TRUE ~ species
+  ))
+
+# lo7a: Viola NOR.lo.ambi.vege.wf.07
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Viola sp" & unique_plot_ID == "NOR.lo.ambi.vege.wf.07" ~ "Viola palustris",
+    TRUE ~ species
+  ))
+
+# lo7a: Stellaria NOR.lo.ambi.vege.wf.07
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |>
+  mutate(`2` = if_else(
+    species == "Stellaria graminea" & 
+      unique_plot_ID == "NOR.lo.ambi.vege.wf.07" & 
+      year == 2023, 
+    "1", 
+    `2`
+  ))
+
+# lo8a: Viola NOR.lo.ambi.vege.wf.08
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Viola sp" & unique_plot_ID == "NOR.lo.ambi.vege.wf.08" ~ "Viola palustris",
+    TRUE ~ species
+  ))
+
+# lo8a: Filipendula NOR.lo.ambi.vege.wf.08
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |>
+  mutate(`10` = if_else(
+    species == "Filipendula ulmaria" & 
+      unique_plot_ID == "NOR.lo.ambi.vege.wf.08" & 
+      year == 2023, 
+    "2", 
+    `10`
+  ))
+
+# lo9a: Viola NOR.lo.ambi.vege.wf.09
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Viola sp" & unique_plot_ID == "NOR.lo.ambi.vege.wf.09" ~ "Viola palustris",
+    TRUE ~ species
+  ))
+
+# lo9a: Fesuca NOR.lo.ambi.vege.wf.09
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Fesuca pratensis" & unique_plot_ID == "NOR.lo.ambi.vege.wf.09" ~ "Festuca pratensis",
+    TRUE ~ species
+  ))
+
+# lo10a: Viola NOR.lo.ambi.vege.wf.10
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Viola sp" & unique_plot_ID == "NOR.lo.ambi.vege.wf.10" ~ "Viola palustris",
+    TRUE ~ species
+  ))
 
 
 
