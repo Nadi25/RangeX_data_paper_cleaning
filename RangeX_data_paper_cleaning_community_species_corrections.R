@@ -6,19 +6,19 @@
 ##            RangeX_raw_comcov_high_2023.xlsx, 
 ##            RangeX_raw_comcov_low_2023.xlsx,
 ##            RangeX_metadata_plot_NOR.csv
+##            Species_names_to_correct.xlsx
+## source general cleaning script: "RangeX_data_paper_cleaning_community.R"
 ## Date:      11.06.2025
 ## Author:    Nadine Arzt
 ## Purpose:   Cleaning of the species names 2021-2023
 
 
-# comments general ----------------------------------------------------------------
-# I don't understand what the "only_focals" column means
-# Is the cover estimate only based on planted individuals of a focal species 
-# or are there naturally occuring individuals as well?
-# yes = only focals
-# no = additional naturally occuring individuals
-# NA = species with no artificially planted individuals
+# comments general -----------------------------------------------------------
+# what to do with <1 in 21 and 22? 
+# change to 1? leave?
 
+# who is cris?
+# who is JT?
 
 # check and discuss! ----------------------------------------------------------
 # 2021: is hi 3A and 3B switched? changed to b = NOR.hi.warm.vege.wf.03 and a = NOR.hi.ambi.vege.wf.03
@@ -27,6 +27,10 @@
 
 # Circle grass = Festuca pratensis
 # Carex flava = Carex demissa
+# Anthoxanthum nipponicum
+# Cirsium arvense and C. helenioides = C. heterophyllum
+
+# Phleum at high site = alpinum? 
 
 # ?Galium: NOR.lo.ambi.vege.wf.06: lo 6A, 2021-08-30
 
@@ -35,7 +39,6 @@
 # Geranium sylvaticum ? was this confused with e.g. Anemone? 
 # e.g. in hi 5c?
 
-# Cirsium helenoides and Cirsium arvense
 
 # ?Stellaria graminea at high site?: NOR.hi.warm.vege.nf.06, hi 6C and NOR.hi.ambi.vege.wf.07, hi 7B
 
@@ -57,7 +60,6 @@
 
 # Carex sp...: hi 2abc, 3cd, 4a - 2021 - don't know how to figure them out
 
-# Cirsium arvense = C. helenioides = C. heterophyllum
 
 # Euphrasia frigida or stricta? hard to differentiate
 
