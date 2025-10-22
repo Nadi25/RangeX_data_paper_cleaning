@@ -15,8 +15,8 @@ library(ggrepel)
 # Example coordinates (replace with your actual coordinates)
 locations <- data.frame(
   site = c("Norway", "Switzerland", "South Africa", "China"),
-  lat = c(60.5403, 46.888, -28.7550, 35.9),
-  lon = c(6.5676, 9.489, 28.8670, 104.2)
+  lat = c(60.5403, 46.888, -28.7550, 41.994694),
+  lon = c(6.5676, 9.489, 28.8670, 128.013556)
 )
 
 # Convert locations to a simple features (sf) object
@@ -169,12 +169,51 @@ globe2 <- ggplot(data = world) +
   )
 globe2
 
+
+# Add a column for label direction offsets
+locations_sf <- locations_sf |> 
+  mutate(
+    nudge_x = ifelse(site == "China", -1000, 10), # shift china label to the left
+    nudge_y = 0
+  )
+
+globe2 <- ggplot(data = world) +
+  geom_sf(fill = "gray", color = "grey1") +
+  geom_sf(data = locations_sf, aes(color = site), size = 9) +
+  scale_color_manual(values = c("darkgreen", "turquoise4", "red4", "orange3")) +
+  coord_sf(crs = "+proj=ortho +lat_0=30 +lon_0=20") +
+  geom_label_repel(
+    data = locations_sf,
+    aes(
+      x = st_coordinates(locations_sf)[,1],
+      y = st_coordinates(locations_sf)[,2],
+      label = site,
+      color = site
+    ),
+    size = 20,
+    box.padding = 1,
+    max.overlaps = 10,
+    nudge_x = locations_sf$nudge_x,
+    nudge_y = locations_sf$nudge_y,
+    segment.size = 0.8
+  ) +
+  theme_bw() +
+  theme(
+    axis.title = element_blank(),
+    axis.text = element_blank(),
+    legend.position = "none",
+    plot.title = element_text(size = 16, face = "bold"),
+    panel.grid.major = element_line(color = "gray40", size = 0.6),
+    panel.grid.minor = element_line(color = "gray40", size = 0.6),
+    panel.background = element_rect(fill = "#f5f1e1", color = NA)
+  )
+
+globe2
+
 ggsave(filename = "RangeX_map_globe_all_sites_2.png", 
        plot = globe2, 
        path = "Data/", 
        width = 15, height = 15)
-
-
 
 
 
