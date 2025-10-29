@@ -141,7 +141,7 @@ globe
 
 ggsave(filename = "RangeX_map_globe_all_sites.png", 
        plot = globe, 
-       path = "Data", 
+       path = "Data/Map_globe/", 
        width = 15, height = 15)
 
 
@@ -181,6 +181,7 @@ globe2 <- ggplot(data = world) +
   geom_sf(fill = "gray", color = "grey1") +
   geom_sf(data = locations_sf, aes(color = site), size = 9) +
   scale_color_manual(values = c("darkgreen", "turquoise4", "red4", "orange3")) +
+  #coord_sf(crs = "+proj=ortho +lat_0=30 +lon_0=50")+
   coord_sf(crs = "+proj=ortho +lat_0=30 +lon_0=20") +
   geom_label_repel(
     data = locations_sf,
@@ -212,8 +213,58 @@ globe2
 
 ggsave(filename = "RangeX_map_globe_all_sites_2.png", 
        plot = globe2, 
-       path = "Data/", 
+       path = "Data/Map_globe/", 
        width = 15, height = 15)
+
+
+# turn globe to the left --------------------------------------------------
+# change where china label is
+locations_sf <- locations_sf |> 
+  mutate(nudge_x = ifelse(site == "China", -1000, 10), # shift china label to the left
+    nudge_y = -500 )
+  # mutate(nudge_x = ifelse(site == "Switzerland", 1000, 10), nudge_y = 0 )
+
+# globe that is slightly rotated to the left to see China better
+globe2_2 <- ggplot(data = world) +
+  geom_sf(fill = "gray", color = "grey1") +
+  geom_sf(data = locations_sf, aes(color = site), size = 9) +
+  scale_color_manual(values = c("darkgreen", "#00EEEE", "red4", "orange3")) +
+  coord_sf(crs = "+proj=ortho +lat_0=20 +lon_0=55") +  # rotate globe to left
+  geom_label_repel(
+    data = locations_sf,
+    aes(
+      geometry = geometry,  # use geometry directly
+      label = site,
+      color = site
+    ),
+    stat = "sf_coordinates",   # convert sf geometry to coordinates automatically
+    size = 20,
+    box.padding = 1,
+    max.overlaps = 10,
+    nudge_x = locations_sf$nudge_x,
+    nudge_y = locations_sf$nudge_y,
+    segment.size = 0.8
+  ) +
+  theme_bw() +
+  theme(
+    axis.title = element_blank(),
+    axis.text = element_blank(),
+    legend.position = "none",
+    plot.title = element_text(size = 16, face = "bold"),
+    panel.grid.major = element_line(color = "gray40", size = 0.6),
+    panel.grid.minor = element_line(color = "gray40", size = 0.6),
+    panel.background = element_rect(fill = "#f5f1e1", color = NA)
+  )
+
+globe2_2
+
+
+ggsave(filename = "RangeX_map_globe_all_sites_3.png", 
+       plot = globe2_2, 
+       path = "Data/Map_globe/", 
+       width = 15, height = 15)
+
+
 
 
 
@@ -252,7 +303,7 @@ globe3
 
 ggsave(filename = "RangeX_map_globe_NOR_CHE.png", 
        plot = globe3, 
-       path = "Data/", 
+       path = "Data/Map_globe/", 
        width = 15, height = 15)
 
 
