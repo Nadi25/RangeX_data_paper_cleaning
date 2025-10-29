@@ -89,8 +89,14 @@ metadata_NOR <- metadata_NOR |>
          unique_plant_ID = unique_plant_id)
 
 
+
+# add index number to unique_plant_ID -------------------------------------
+metadata_NOR <- metadata_NOR |> 
+  mutate(unique_plant_ID = paste(unique_plant_ID, ind_number, sep = "."))
+
+
 # save clean meta data file for focals ------------------------------------
-# write.csv(metadata_NOR, file =  "Data/RangeX_metadata_focal_NOR.csv")
+# write.csv(metadata_NOR, file =  "Data/Metadata/RangeX_clean_MetadataFocal_NOR.csv")
 
 
 
@@ -156,10 +162,11 @@ metadata_NOR_plot_clean <- metadata_NOR_plot_clean |>
 
 
 # save clean metadata NOR plot --------------------------------------------
-# write.csv(metadata_NOR_plot_clean, file =  "Data/RangeX_metadata_plot_NOR.csv")
+# write.csv(metadata_NOR_plot_clean, file =  "Data/Metadata/RangeX_clean_MetadataPlot_NOR.csv")
 
+metafocal <- read.csv("Data/Metadata/RangeX_clean_MetadataFocal_NOR.csv")
 
-
+metaplot <- read.csv("Data/Metadata/RangeX_clean_MetadataPlot_NOR.csv")
 
 
 
