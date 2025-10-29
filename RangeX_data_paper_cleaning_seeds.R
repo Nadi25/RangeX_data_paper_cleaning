@@ -267,6 +267,26 @@ rx_seed_raw <- left_join(metadata, seed_data,
                                  "species", "treat_warming", "treat_competition"))
 
 
+nrow(metadata) # 1800
+nrow(rx_seed_raw) # 1801
+setdiff(rx_seed_raw$unique_plant_ID, metadata$unique_plant_ID)
+setdiff(metadata$unique_plant_ID, rx_seed_raw$unique_plant_ID)
+
+
+# check for duplicates ----------------------------------------------------
+rx_seed_raw |> 
+  count(unique_plant_ID) |> 
+  filter(n > 1)
+
+# unique_plant_ID n
+# NOR.hi.warm.bare.wf.07.10 2
+
+# delete row with ID = FVG1548 but keep rows with NAs
+rx_seed_raw <- rx_seed_raw |> 
+  filter(ID != "FVG1548" | is.na(ID)) 
+
+
+
 # add counter -------------------------------------------------------------
 rx_seed_raw <- rx_seed_raw |> 
   mutate(counter = ifelse(block_ID_original %in% c(1, 3, 5, 7, 9),
@@ -285,8 +305,15 @@ rx_seed_raw <- rx_seed_raw |>
 rx_seed_raw <- rx_seed_raw |> 
   mutate(flowers_fixed = rowSums(!is.na(across(c(weight_1, weight_2, weight_3, weight_4)))))
 
-rx_seed_raw <- rx_seed_raw |> 
-  mutate(flowers_fixed = if_else(block_ID_original %in% c(2,4,6,8,10),  rowSums(!is.na(across(c(number_infructescence_1, number_infructescence_2, number_infructescence_3))))))
+# rx_seed_raw <- rx_seed_raw |> 
+#   mutate(flowers_fixed = if_else(block_ID_original %in% c(2,4,6,8,10),  rowSums(!is.na(across(c(number_infructescence_1, number_infructescence_2, number_infructescence_3))))))
+
+rx_seed_raw <- rx_seed_raw |>
+  mutate(flowers_fixed = if_else(
+    block_ID_original %in% c(2, 4, 6, 8, 10),
+    rowSums(!is.na(across(c(number_infructescence_1, number_infructescence_2, number_infructescence_3)))),
+    flowers  # what to keep when condition is FALSE
+  ))
 
 
 rx_seed_raw <- rx_seed_raw |> 
