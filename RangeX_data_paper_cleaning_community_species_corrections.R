@@ -191,10 +191,11 @@
 
 # lo5a: Check Euphrasia is it stricta?
 
-# lo7a: Big grass? 
+# lo7a: Big grass? big ligula
 
 # lo9a: Viola canina? was recorded in 24 but not in 23 
 
+# lo8A, 5: is there two types of Angelica?
 
 
 # library -----------------------------------------------------------------
