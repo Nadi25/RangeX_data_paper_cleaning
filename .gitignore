@@ -10,3 +10,26 @@
 
 # no data
 Data/
+
+# I didn't use the MyClim package
+RangeX_data_paper_cleaning_tomst_myClim.R
+
+# TNRS example script not needed
+TNRS_example_script.R
+
+# TNRS function not needed because the right script is wroking differntly
+TNRS_species_check_function.R
+
+# tomst control plotting is now divided into years
+RangeX_data_paper_tomst_control_plotting.R
+
+# not needed
+RangeX_data_paper_combining_functional_traits_17.12.24.R
+
+
+
+
+
+
+
+
