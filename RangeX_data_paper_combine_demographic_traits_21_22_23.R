@@ -2,10 +2,11 @@
 
 ## RangeX combine demographic trait data from 2021, 2022 and 2023
 
-## Data used: RangeX_clean_traits_2021.csv,
-##            RangeX_clean_traits_2022.csv,
-##            RangeX_clean_traits_2023.csv 
+## Data used: RangeX_clean_YearlyDemographics_NOR_2021.csv,
+##            RangeX_clean_YearlyDemographics_NOR_2022.csv,
+##            RangeX_clean_YearlyDemographics_NOR_2023.csv 
 ## Date:      26.10.23
+## Updated:   30.10.25
 ## Author:    Nadine Arzt
 ## Purpose:   combine traits data 2021 + 2022 + 2023
 

@@ -4,9 +4,10 @@
 
 ## Data used: RangeX_raw_traits_high_2021.csv, 
 ##            RangeX_raw_traits_low_2021.csv, 
-##            RangeX_Metadata.csv, 
+##            RangeX_clean_MetadataFocal_NOR.csv, 
 ##            RangeX_YearlyDemographics.csv
 ## Date:      22.06.23
+## Updated:   30.10.25
 ## Author:    Nadine Arzt
 ## Purpose:   Clean the complete raw data file 
 ##            Missing entries? Missing values? 
