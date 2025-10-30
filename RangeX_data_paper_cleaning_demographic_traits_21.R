@@ -200,15 +200,11 @@ traits_21 <- traits_21 %>%
 
 summary(traits_21)
 
-# load metadata file for all countries ------------------------------------------------------
-metadata <- read.csv2("Data/RangeX_Metadata.csv")
+# load metadata file  ------------------------------------------------------
+metadata <- read.csv("Data/Metadata/RangeX_clean_MetadataFocal_NOR.csv")
 head(metadata)
 dput(colnames(metadata))
 
-## filter only NOR
-metadata_NOR <- metadata %>%
-  filter(grepl('NOR', region))
-head(metadata_NOR)
 
 
 # improve traits_2021 data set --------------------------------------------
@@ -229,10 +225,10 @@ traits_21[traits_21$site == "hi" & traits_21$block_ID_original == "4"
 
 # merge metadata with trait data 21 ------------------------------------------
 
-dput(colnames(metadata_NOR))
+dput(colnames(metadata))
 dput(colnames(traits_high_21))
 
-traits_2021 <- left_join(traits_21, metadata_NOR,
+traits_2021 <- left_join(traits_21, metadata,
                          by = c("region", "site", "block_ID_original", "plot_ID_original",
                                 "position_ID_original", "species"))
 
@@ -242,12 +238,14 @@ traits_2021 <- left_join(traits_21, metadata_NOR,
 dput(colnames(traits_2021))
 
 col_order_21 <- c("region", "site", "block_ID_original", "plot_ID_original", 
-                  "position_ID_original", "species", "year", "treat_warming", "treat_competition", 
+                  "position_ID_original", "species", "functional_group", "date","date_planting",
+                  "treat_warming",
+                  "treat_competition", 
                   "added_focals", "block_ID", "position_ID", "unique_plot_ID", 
                   "unique_plant_ID", "height_vegetative_str", "vegetative_width", 
                   "petiole_length1", "petiole_length2", "petiole_length3", 
                   "leaf_length1", "leaf_length2", "leaf_length3", 
-                  "number_tillers", "sam", "date", "notes")
+                  "number_tillers", "sam", "notes")
 
 traits_2021 <- traits_2021[, col_order_21]
 traits_2021
@@ -287,7 +285,7 @@ class(traits_2021$height_vegetative_str)
 # date --------------------------------------------------------------------
 ## change format of date
 traits_2021 <- traits_2021 %>% 
-  mutate(date = as.Date(date, "%d.%m.%y"))
+  mutate(date = as.Date(date, "%d.%m.%Y"))
 
 
 # leaf length -------------------------------------------------------------
@@ -397,12 +395,12 @@ dput(colnames(yearly_demographics))
 
 traits_2021 <- traits_2021 %>%
   dplyr::mutate(
-    collector = NA,
+    collector = "NP", # have Nathan here for now and update later if possible
     height_reproductive_str = NA,
     height_vegetative = NA,
     height_reproductive = NA,
     vegetative_width = NA,
-    vegetative_length = NA,
+    #vegetative_length = NA,
     leaf_width = NA,
     stem_diameter = NA,
     number_leaves = NA,
@@ -432,13 +430,14 @@ length(yearly_demographics) # 23
 
 ## make correct order as in yearly_demographics
 col_order_traits_21 <- c("site", "block_ID_original", "plot_ID_original","unique_plant_ID", 
-                         "species", "date", "year", "collector", "height_vegetative_str", 
+                         "species", "functional_group", "date", "date_planting", "collector",
+                         "height_vegetative_str", 
                          "height_reproductive_str", "height_vegetative", "height_reproductive", 
-                         "vegetative_width", "vegetative_length", "stem_diameter",
+                         "vegetative_width", "stem_diameter",
                          "leaf_length1", "leaf_length2", "leaf_length3", "leaf_width",
                          "petiole_length1", "petiole_length2", "petiole_length3",
                          "number_leaves", "number_tillers", "number_branches", "number_leafclusters", 
-                         "number_flowers", "mean_inflorescence_size", "sam", "herbivory")
+                         "number_flowers", "mean_inflorescence_size", "herbivory")
 
 rangex_traits_21 <- rangex_traits_21[, col_order_traits_21]
 rangex_traits_21
@@ -455,17 +454,18 @@ rangex_traits_21
 # height total = total stretched height minus flower 
 rangex_traits_21_clean <- rangex_traits_21 |> 
   rename("date_measurement" = "date") |> 
-  mutate("date_planting" = NA,
-         "survival" = NA,
-         "height_total" =NA) |> 
-  select(unique_plant_ID, species, date_measurement, date_planting,
+  mutate("survival" = NA,
+         "height_total" = NA,
+         "vegetative_length" = NA,
+         "number_leaf_clusters" = NA) |> 
+  select(unique_plant_ID, species, functional_group, date_measurement, date_planting,
          collector, survival, height_vegetative_str, height_reproductive_str,
          height_vegetative, height_reproductive,
          vegetative_width, height_total, stem_diameter, 
          leaf_length1, leaf_length2, leaf_length3, leaf_width, 
          petiole_length1, petiole_length2, petiole_length3,
          number_leaves, number_tillers, number_branches, number_flowers,
-         mean_inflorescence_size, sam, herbivory)
+         mean_inflorescence_size, herbivory)
 
 
 # survival  ---------------------------------------------------------------
@@ -473,11 +473,41 @@ rangex_traits_21_clean <- rangex_traits_21_clean |>
   mutate(survival = if_else(!is.na(leaf_length1), 1, 0))
 # all survived
 
+
+
+# petiole_length ----------------------------------------------------------
+# create new column with petiole_length based on choosing petiole_length from longest leaf
+# so when longest leaf is leaf_length2 then petiole_length is petiole_length2
+rangex_traits_21_clean <- rangex_traits_21_clean |> 
+  rowwise() |> 
+  mutate(
+    max_leaf_idx = which.max(c(leaf_length1, leaf_length2, leaf_length3)),
+    petiole_length = c(petiole_length1, petiole_length2, petiole_length3)[max_leaf_idx]
+  ) |> 
+  ungroup() |> 
+  select(-max_leaf_idx)
+
+# delete petiole_length1-3
+rangex_traits_21_clean <- rangex_traits_21_clean |> 
+  select(-c(petiole_length1, petiole_length2, petiole_length3))
+
+# correct order
+rangex_traits_21_clean <- rangex_traits_21_clean |> 
+  select("unique_plant_ID", "species", "functional_group", "date_measurement", 
+         "date_planting", "collector", "survival", "height_vegetative_str", 
+         "height_reproductive_str", "height_vegetative", "height_reproductive", 
+         "vegetative_width", "height_total", "stem_diameter", "leaf_length1",  
+         "leaf_length2", "leaf_length3", "leaf_width", "petiole_length", "number_leaves", 
+         "number_tillers", "number_branches", "number_flowers", "mean_inflorescence_size", 
+         "herbivory")
+
 # save csv file -----------------------------------------------------------
-# write.csv(rangex_traits_21_clean, "Data/Data_demographic_traits/RangeX_clean_demographic_traits_2021.csv")
+# write.csv(rangex_traits_21_clean, "Data/Data_demographic_traits/Clean_YearlyDemographics/RangeX_clean_YearlyDemographics_NOR_2021.csv", row.names = FALSE)
 
 ## read cleaned data
-data_21 <- read.csv("Data/Data_demographic_traits/RangeX_clean_demographic_traits_2021.csv")
+data_nor_21 <- read.csv("Data/Data_demographic_traits/RangeX_clean_YearlyDemographics_NOR_2021.csv")
+
+
 
 
 
