@@ -16,25 +16,14 @@ library(ggplot2)
 library("openxlsx")
 
 # load data ---------------------------------------------------------------
-rangex_traits_2021 <- read.csv("Data/Data_demographic_traits/RangeX_clean_traits_2021.csv")
-rangex_traits_2022 <- read.csv("Data/Data_demographic_traits/RangeX_clean_traits_2022.csv")
-rangex_traits_2023 <- read.csv("Data/Data_demographic_traits/RangeX_clean_traits_2023.csv")
+rangex_traits_2021 <- read.csv("Data/Data_demographic_traits/Clean_YearlyDemographics/RangeX_clean_YearlyDemographics_NOR_2021.csv")
+rangex_traits_2022 <- read.csv("Data/Data_demographic_traits/Clean_YearlyDemographics/RangeX_clean_YearlyDemographics_NOR_2022.csv")
+rangex_traits_2023 <- read.csv("Data/Data_demographic_traits/Clean_YearlyDemographics/RangeX_clean_YearlyDemographics_NOR_2023.csv")
 
 head(rangex_traits_2021)
 head(rangex_traits_2022)
 head(rangex_traits_2023)
 
-## delete columns petiole_length2/3 and sam, 
-## because they are not in the yearly demographics table
-## might come back in later in further cleaning
-rangex_traits_2021 <- rangex_traits_2021 %>% 
-  dplyr::select(-petiole_length2, -petiole_length3, -sam) %>% 
-  rename("petiole_length" = "petiole_length1")
-#
-rangex_traits_2022 <- rangex_traits_2022 %>% 
-  dplyr::select(-petiole_length2, -petiole_length3, -sam) %>% 
-  rename("petiole_length" = "petiole_length1")
-#
 
 # combine traits 21 and 22 ------------------------------------------------
 
@@ -63,27 +52,38 @@ dput(colnames(rangex_traits_2022))
 dput(colnames(rangex_traits_2023))
 
 
+
+
 # combine 2021 + 22 + 23 --------------------------------------------------
 rangex_traits_NOR <- rbind(rangex_traits_2021, rangex_traits_2022, rangex_traits_2023)
-head(rangex_traits)
+head(rangex_traits_NOR)
 
 
 
 # names to initials -------------------------------------------------------
+unique(rangex_traits_NOR$collector)
+
 rangex_traits_NOR <- rangex_traits_NOR |>
   mutate(collector = case_when(
-    collector %in% c("Dagmar") ~ "DE",
-    collector %in% c("Nadine") ~ "NA",
-    collector %in% c("Malo") ~ "MF", # Malo Le Fur
-    collector %in% c("Dagmar_Nadine_Lizzy") ~ "DE/NA/ED",
-    collector %in% c("DE, NA, MF") ~ "DE/NA/MF",
+    collector %in% c("Dagmar/Dagmar") ~ "DE",
+    collector %in% c("Dagmar/Lizzy") ~ "DE/ED", #Lizzy = Elisabeth Duke-Moe
+    collector %in% c("Nadine/Aleksandra") ~ "NMA/AP",
+    collector %in% c("Nadine/Lizzy") ~ "NMA/ED",
+    collector %in% c("Malo/Ola") ~ "MF/AP", # Malo Le Fur and Aleksandra Posluszny
+    collector %in% c("Malo/Camille") ~ "MF/CB", # Camille Braastad
+    collector %in% c("Dagmar_Nadine_Lizzy/") ~ "DE/NMA/ED", 
+    collector %in% c("DE, NA, MF/Camille, Aleksandra") ~ "DE/NMA/MF/CB/AP", 
+    collector %in% c("/") ~ NA,
+    collector %in% c("/Lizzy") ~ NA,
     TRUE ~ collector
   ))
 
 
-# save as csv for google drive yearly demographics -------------------------------------------------------------
+# save as csv for OSF yearly demographics -------------------------------------------------------------
+# write.csv(rangex_traits_NOR, "Data/Data_demographic_traits/Clean_YearlyDemographics/RangeX_clean_YearlyDemographics_NOR_2021_2022_2023.csv", row.names = FALSE)
 
-# write.csv(rangex_traits_NOR, "C:/Users/naart3294/OneDrive - University of Bergen/PhD_RangeX/R codes/RangeX_data_paper_cleaning/Data/Data_demographic_traits/RangeX_clean_yearly_size_2021_2022_2023_NOR.csv", row.names = FALSE)
+traits_demo_nor <- read.csv("Data/Data_demographic_traits/Clean_YearlyDemographics/RangeX_clean_YearlyDemographics_NOR_2021_2022_2023.csv")
+
 
 
 
