@@ -153,15 +153,10 @@ class(traits_22$year)
 
 
 
-# load metadata file for all countries ------------------------------------------------------
-metadata <- read.csv2("Data/RangeX_Metadata.csv")
+# load metadata file  ------------------------------------------------------
+metadata <- read.csv("Data/Metadata/RangeX_clean_MetadataFocal_NOR.csv")
 head(metadata)
 dput(colnames(metadata))
-
-## filter only NOR
-metadata_NOR <- metadata %>%
-  filter(grepl('NOR', region))
-head(metadata_NOR)
 
 
 
@@ -176,19 +171,46 @@ traits_2022 <- left_join(traits_22, metadata,
 
 
 
+na_plants <- traits_2022 %>%
+  filter(
+    is.na(height_vegetative_str) &
+      is.na(petiole_length) &
+      is.na(leaf_length) &
+      is.na(leaf_width)
+  ) %>%
+  pull(unique_plant_ID) %>%
+  unique()
+na_plants
+# NOR.lo.ambi.vege.wf.06.14.1: lo 6a f5 cyncri
+
 
 # reorder column names ----------------------------------------------------
 ## to get it in the metadata format
 dput(colnames(traits_2022))
 
 col_order <- c("region", "site", "block_ID_original", "plot_ID_original", 
-               "position_ID_original", "species", "year", "treat_warming", "treat_competition", 
+               "position_ID_original", "species", "functional_group", "date", "date_planting",
+               "treat_warming", "treat_competition", 
                "added_focals", "block_ID", "position_ID", "unique_plot_ID", 
-               "unique_plant_ID", "height_vegetative_str", "petiole_length", "leaf_length", "leaf_width", 
-               "number_flowers", "date", "notes")
+               "unique_plant_ID", "height_vegetative_str", "petiole_length", "leaf_length",
+               "leaf_width", 
+               "number_flowers", "notes")
 
 traits_2022 <- traits_2022[, col_order]
 traits_2022
+
+
+# date --------------------------------------------------------------------
+## change format of date
+traits_2022 <- traits_2022 %>% 
+  mutate(date = as.Date(date, "%d.%m.%Y"))
+
+
+# survival  ---------------------------------------------------------------
+traits_2022 <- traits_2022 |> 
+  mutate(survival = if_else(!is.na(leaf_length) | !is.na(height_vegetative_str), 1, 0))
+# actually matches with a lot of dead? comments or not found
+
 
 
 # data exploration --------------------------------------------------------
@@ -420,29 +442,43 @@ dput(colnames(yearly_demographics))
 
 traits_2022_exploration <- traits_2022_exploration %>%
   dplyr::mutate(
-    collector = NA,
+    collector = "NP", # have Nathan for now and update later
     height_reproductive_str = NA,
     height_vegetative = NA,
     height_reproductive = NA,
     vegetative_width = NA,
-    vegetative_length = NA,
+    height_total = NA,
+    #vegetative_length = NA,
     stem_diameter = NA,
     leaf_length1 = NA,
     leaf_length2 = NA,
     leaf_length3 = NA,
     number_leaves = NA,
-    petiole_length1 = NA, 
-    petiole_length2 = NA,
-    petiole_length3 = NA,
+    # petiole_length1 = NA, 
+    # petiole_length2 = NA,
+    # petiole_length3 = NA,
     number_tillers = NA,
     number_branches = NA,
     number_leafclusters = NA,
     mean_inflorescence_size = NA,
-    sam = NA,
     herbivory = NA
   )
 
 dput(colnames(traits_2022_exploration))
+
+
+na_plants <- traits_2022_exploration %>%
+  filter(
+    is.na(height_vegetative_str) &
+      is.na(petiole_length) &
+      is.na(leaf_length) &
+      is.na(leaf_width) &
+      is.na(number_flowers)
+  ) %>%
+  pull(unique_plant_ID) %>%
+  unique()
+na_plants
+# 36 plants
 
 ## delete "region", "site", "block_ID_original", "plot_ID_original", 
 ## "position_ID_original","treat_warming", "treat_competition", 
@@ -464,13 +500,15 @@ length(yearly_demographics) # 23
 
 ## make correct order as in yearly_demographics
 col_order_traits_22 <- c("site", "block_ID_original", "plot_ID_original","unique_plant_ID", 
-                         "species", "year", "collector", "height_vegetative_str", 
+                         "species", "functional_group", "date", "date_planting", "collector", 
+                         "survival",
+                         "height_vegetative_str", 
                          "height_reproductive_str", "height_vegetative", "height_reproductive", 
-                         "vegetative_width", "vegetative_length", "stem_diameter", "leaf_length", 
-                         "leaf_length1", "leaf_length2", "leaf_length3", "leaf_width", "petiole_length", 
-                         "petiole_length1", "petiole_length2", "petiole_length3",
-                         "number_leaves", "number_tillers", "number_branches", "number_leafclusters", 
-                         "number_flowers", "mean_inflorescence_size", "sam", "herbivory")
+                         "vegetative_width", "height_total", "stem_diameter", "leaf_length", 
+                         "leaf_length1", "leaf_length2", "leaf_length3", "leaf_width", 
+                         "petiole_length", 
+                         "number_leaves", "number_tillers", "number_branches", 
+                         "number_flowers", "mean_inflorescence_size", "herbivory")
 
 rangex_traits_22 <- rangex_traits_22[, col_order_traits_22]
 rangex_traits_22
@@ -479,24 +517,28 @@ rangex_traits_22
 ## same with petiole_length
 rangex_traits_22 <- rangex_traits_22 %>%
   dplyr::mutate(leaf_length1 = dplyr::coalesce(leaf_length1, leaf_length)) %>%
-  dplyr::mutate(petiole_length1 = dplyr::coalesce(petiole_length1, petiole_length)) %>%
-  dplyr::select(-leaf_length, - petiole_length)
+  #dplyr::mutate(petiole_length1 = dplyr::coalesce(petiole_length1, petiole_length)) %>%
+  dplyr::select(-leaf_length)
 
 ## delete site, block_ID_original, plot_ID_original
 rangex_traits_22 <- rangex_traits_22 %>%
   dplyr::select(-site, -block_ID_original, -plot_ID_original)
+
+
+# rename date -------------------------------------------------------------
+rangex_traits_22 <- rangex_traits_22 |> 
+  rename(date_measurement = date)
+
 
 ## now the data frame should have the correct format of yearly_demographics
 
 
 
 # save csv file -----------------------------------------------------------
-
-# write.csv(rangex_traits_22, "C:/Users/nadin/OneDrive - University of Bergen/PhD_RangeX/R codes/RangeX_data_cleaning/Data_traits/RangeX_clean_traits_2022.csv",
-#           row.names = FALSE)
+# write.csv(rangex_traits_22, "Data/Data_demographic_traits/Clean_YearlyDemographics/RangeX_clean_YearlyDemographics_NOR_2022.csv", row.names = FALSE)
 
 ## read cleaned data
-data_22 <- read.csv("Data/Data_demographic_traits/RangeX_clean_traits_2022.csv")
+data_nor_22 <- read.csv("Data/Data_demographic_traits/RangeX_clean_YearlyDemographics_NOR_2022.csv")
 
 
 
