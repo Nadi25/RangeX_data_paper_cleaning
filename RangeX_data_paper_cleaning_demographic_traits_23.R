@@ -13,6 +13,9 @@
 
 # comments ----------------------------------------------------------------
 # one plant has no block_ID_original (f sucpra e4) --> block 6
+# hi 6a, cenig, d9, NOR.hi.warm.vege.wf.06.28.1: height veg str was maybe 154 mm already?
+# NOR.hi.ambi.bare.wf.03.25.1, hi 3f, 38 pimsax probably 13.0 cm instead of 130 cm
+
 
 # load packages -----------------------------------------------------------
 library(tidyverse) ## if you use this you dont need dplyr and stringr, tidyr
@@ -415,23 +418,45 @@ traits_23$herbivory <- ifelse(!is.na(traits_23$herbivory_flower) | !is.na(traits
 
 # dealing with Nathans_height ---------------------------------------------
 ## do it later, not for Ireland
-# mean_inflorescence_size -------------------------------------------------
+# should be total height
+# but what about old and new height measurements
 
 ## Nathan style: total height minus flower stretched (careful: it was changed on 11.07.23 to stretched! 
 ## All plots of 10.07.23 are not stretched  calculate rep stretched minus Nathan stretched to get 
 ## flower length for the first plots (1A,B; 3A,B; 5A,B; 6B; 2B)) 
 
 
-# Calculate the flower length and store it in a new column
-traits_23 <- traits_23 %>%
-  mutate(flower_length = height_reproductive_str - height_nathan_cm)
+# total_height ------------------------------------------------------------
+# is possible for new nathan height
+# so height_total = height_nathan_cm
+traits_23 <- traits_23 |> 
+  mutate(height_total = if_else(nathan_old_new == "new", height_nathan_cm, NA_real_)) 
 
+
+# mean_inflorescence_size -------------------------------------------------
+# Calculate the flower length and store it in a new column
+traits_23 <- traits_23 |> 
+  mutate(
+    mean_inflorescence_size = if_else(
+      nathan_old_new == "new" &
+        !is.na(height_reproductive_str) &
+        !is.na(height_nathan_cm) &
+        (height_reproductive_str - height_nathan_cm) > 0, # has to be a value >0 because it is minus flower
+      abs(height_reproductive_str - height_nathan_cm),
+      NA_real_
+    )
+  )
 
 
 # delete nathan style related columns -------------------------------------
 dput(colnames(traits_23))
 
-traits_23 <- subset(traits_23, select = -c(height_nathan_cm, nathan_old_new, flower_length, comment))
+traits_23 <- subset(traits_23, select = -c(height_nathan_cm, nathan_old_new, comment))
+
+
+
+
+
 
 
 # sort after site, block, plot, position ----------------------------------
@@ -451,19 +476,13 @@ class(traits_23$year)
 
 
 
-# load metadata file for all countries ------------------------------------------------------
-metadata <- read.csv2("Data/RangeX_Metadata.csv")
+# load metadata file ------------------------------------------------------
+metadata <- read.csv("Data/Metadata/RangeX_clean_MetadataFocal_NOR.csv")
 head(metadata)
 dput(colnames(metadata))
 
-## filter only NOR
-metadata_NOR <- metadata %>%
-  filter(grepl('NOR', region))
-head(metadata_NOR)
-
 
 # merge metadata with trait data ------------------------------------------
-
 dput(colnames(metadata))
 dput(colnames(traits_23))
 
@@ -485,21 +504,15 @@ demo_traits_2023 <- demo_traits_2023 %>%
   dplyr::mutate(
     collector = NA,
     vegetative_width = NA,
-    vegetative_length = NA,
     stem_diameter = NA,
     leaf_length2 = NA,
     leaf_length3 = NA,
-    petiole_length1 = NA,
     number_branches = NA,
-    number_leafclusters = NA,
-    mean_inflorescence_size = NA
+    survival = NA
   )
 
 dput(colnames(demo_traits_2023))
 
-## delete "region", "site", "block_ID_original", "plot_ID_original", 
-## "position_ID_original","treat_warming", "treat_competition", 
-## "added_focals", "block_ID", "position_ID", "unique_plot_ID"
 
 ## delete unnecessary columns
 demo_traits_2023 <- demo_traits_2023 %>%
@@ -518,25 +531,24 @@ length(yearly_demographic) # 23
 
 ## make correct order as in yearly_demographics
 col_order_traits_23 <- c("site", "block_ID_original", "plot_ID_original","unique_plant_ID", 
-                         "species", "year", "collector", "observer", "height_vegetative_str", 
+                         "species", "functional_group", "date", "date_planting", "collector", 
+                         "observer", "scribe", "survival", "height_vegetative_str", 
                          "height_reproductive_str", "height_vegetative", "height_reproductive", 
-                         "vegetative_width", "vegetative_length", "stem_diameter",
-                         "leaf_length1", "leaf_length2", "leaf_length3", "leaf_width", "petiole_length", 
-                         "petiole_length1", 
-                         "number_leaves", "number_tillers", "number_branches", "number_leafclusters", 
+                         "vegetative_width", "height_total", "stem_diameter",
+                         "leaf_length1", "leaf_length2", "leaf_length3", "leaf_width", "petiole_length",
+                         "number_leaves", "number_tillers", "number_branches", 
                          "number_flowers", "mean_inflorescence_size", "herbivory")
 
 rangex_traits_23 <- demo_traits_2023[, col_order_traits_23]
 rangex_traits_23
 
 
-## collector = observer
-## put values from leaf_length in column leaf_length1
-## same with petiole_length
-rangex_traits_23 <- rangex_traits_23 %>%
-  dplyr::mutate(collector = dplyr::coalesce(collector, observer)) %>%
-  dplyr::mutate(petiole_length = dplyr::coalesce(petiole_length, petiole_length1)) %>%
-  dplyr::select(-observer, - petiole_length1)
+
+# collector ---------------------------------------------------------------
+## collector = observer + scribe
+rangex_traits_23 <- rangex_traits_23 |> 
+  mutate(collector = paste(observer, scribe, sep = "/")) |> 
+  select(-observer, -scribe)
 
 
 ## delete site, block_ID_original, plot_ID_original
@@ -548,11 +560,58 @@ dput(colnames(rangex_traits_23))
 dput(colnames(yearly_demographic))
 
 
+# date --------------------------------------------------------------------
+## change format of date
+rangex_traits_23 <- rangex_traits_23 |> 
+  mutate(date = as.Date(date, "%d.%m.%Y")) |> 
+  rename(date_measurement = date)
+
+# survival  ---------------------------------------------------------------
+rangex_traits_23 <- rangex_traits_23 |> 
+  mutate(survival = if_else(!is.na(leaf_length1) | !is.na(height_vegetative_str), 1, 0))
+
+
+# filter for survival plants ----------------------------------------------
+not_survived_23 <- rangex_traits_23 |>
+  filter(survival == 0)
+# 166 are dead or not found
+
+
+
+# height should be mm not cm ----------------------------------------------
+# multiply all columns starting with height *10 to get mm
+rangex_traits_23 <- rangex_traits_23 |> 
+  mutate(across(starts_with("height"), ~ .x * 10))
+
+# hi 6a, cenig, d9, NOR.hi.warm.vege.wf.06.28.1: height veg str was maybe 154 mm already?
+
+# NOR.hi.ambi.bare.wf.03.25.1, hi 3f, 38 pimsax probably 13.0 cm instead of 130 cm
+rangex_traits_23 <- rangex_traits_23 |> 
+  mutate(
+    height_vegetative_str = if_else(
+      unique_plant_ID == "NOR.hi.ambi.bare.wf.03.25.1",
+      130,
+      height_vegetative_str
+    )
+  )
+
+# NOR.hi.warm.bare.wf.07.04.1 hi7e, sildio b3 must have been 5 cm veg height  and 8cm rep str
+rangex_traits_23 <- rangex_traits_23 |> 
+  mutate(
+    height_vegetative_str = if_else(
+      unique_plant_ID == "NOR.hi.warm.bare.wf.07.04.1",
+      50,
+      height_vegetative_str
+    )
+  )
+
+
+
 # save csv file -----------------------------------------------------------
-# write.csv(rangex_traits_23, "Data/Data_demographic_traits/RangeX_clean_traits_2023.csv", row.names = FALSE)
+# write.csv(rangex_traits_23, "Data/Data_demographic_traits/Clean_YearlyDemographics/RangeX_clean_YearlyDemographics_NOR_2023.csv", row.names = FALSE)
 
 ## read cleaned data
-data_23 <- read.csv("Data/Data_demographic_traits/RangeX_clean_traits_2023.csv")
+data_nor_23 <- read.csv("Data/Data_demographic_traits/RangeX_clean_YearlyDemographics_NOR_2023.csv")
 
 
 
