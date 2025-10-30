@@ -96,7 +96,8 @@ metadata_NOR <- metadata_NOR |>
 
 
 # save clean meta data file for focals ------------------------------------
-# write.csv(metadata_NOR, file =  "Data/Metadata/RangeX_clean_MetadataFocal_NOR.csv")
+# write.csv(metadata_NOR, file =  "Data/Metadata/RangeX_clean_MetadataFocal_NOR.csv",
+#           row.names = FALSE)
 
 
 
@@ -162,7 +163,8 @@ metadata_NOR_plot_clean <- metadata_NOR_plot_clean |>
 
 
 # save clean metadata NOR plot --------------------------------------------
-# write.csv(metadata_NOR_plot_clean, file =  "Data/Metadata/RangeX_clean_MetadataPlot_NOR.csv")
+# write.csv(metadata_NOR_plot_clean, file =  "Data/Metadata/RangeX_clean_MetadataPlot_NOR.csv",
+#           row.names = FALSE)
 
 metafocal <- read.csv("Data/Metadata/RangeX_clean_MetadataFocal_NOR.csv")
 
