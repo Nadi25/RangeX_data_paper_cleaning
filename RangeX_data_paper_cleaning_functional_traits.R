@@ -356,7 +356,7 @@ functional_traits_NOR <- functional_traits_NOR |>
   mutate(dry_mass = case_when(ID == "GMJ6176" ~ 0.02398, TRUE ~ dry_mass))
 
 # Import metadata ---------------------------------------------------------
-metadata <- read.csv("Data/RangeX_metadata_focal_NOR.csv")
+metadata <- read.csv("Data/Metadata/RangeX_clean_MetadataFocal_NOR.csv")
 head(metadata)
 dput(colnames(metadata))
 
@@ -477,11 +477,11 @@ functional_leaf_traits_NOR_23 <- functional_traits_NOR_23 |>
   select(unique_plant_ID, species, date, wet_mass, dry_mass, leaf_thickness, leaf_area, SLA, LDMC, sto_density_top, sto_density_bot)
 
 functional_leaf_traits_NOR_23 <- functional_leaf_traits_NOR_23 |> 
-  rename("date_collected" = "date")
+  rename("date_collection" = "date")
 
 # date format -------------------------------------------------------------
 functional_leaf_traits_NOR_23 <- functional_leaf_traits_NOR_23 |> 
-  mutate(date_collected  = as.Date(date_collected ))
+  mutate(date_collection  = as.Date(date_collection ))
 
 str(functional_leaf_traits_NOR_23)
 
@@ -493,18 +493,25 @@ dry_wet # all good
 
 # delete samples without measurements -------------------------------------
 functional_leaf_traits_NOR_23_clean <- functional_leaf_traits_NOR_23 |> 
-  filter(!is.na(date_collected))
-length(functional_leaf_traits_NOR_23_clean$date_collected)# 597
+  filter(!is.na(date_collection))
+length(functional_leaf_traits_NOR_23_clean$date_collection)# 597
 
-sum(is.na(functional_leaf_traits_NOR_23$date_collected)) # 1206 now 1203
+sum(is.na(functional_leaf_traits_NOR_23$date_collection)) # 1206 now 1203
 # that's fine, 1203 na + 597 with date = 1800
 str(functional_leaf_traits_NOR_23_clean)
 
 
-# save clean file ---------------------------------------------------------
-# write.csv(functional_leaf_traits_NOR_23_clean, file = "Data/Data_functional_traits/RangeX_clean_functional_traits_NOR_2023.csv")
+# add chemical trait column -----------------------------------------------
+functional_leaf_traits_NOR_23_clean <- functional_leaf_traits_NOR_23_clean |> 
+  mutate(C_N = NA,
+         C13 = NA)
 
-traits_clean <- read.csv("Data/Data_functional_traits/RangeX_clean_functional_traits_NOR_2023.csv")
+
+
+# save clean file ---------------------------------------------------------
+write.csv(functional_leaf_traits_NOR_23_clean, file = "Data/Data_functional_traits/Clean_LeafTraits/RangeX_clean_LeafTraits_2023_NOR.csv", row.names = FALSE)
+
+traits_clean <- read.csv("Data/Data_functional_traits/Clean_LeafTraits/RangeX_clean_LeafTraits_2023_NOR.csv")
 
 
 
