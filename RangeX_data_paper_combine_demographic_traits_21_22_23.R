@@ -2,9 +2,9 @@
 
 ## RangeX combine demographic trait data from 2021, 2022 and 2023
 
-## Data used: RangeX_clean_YearlyDemographics_NOR_2021.csv,
-##            RangeX_clean_YearlyDemographics_NOR_2022.csv,
-##            RangeX_clean_YearlyDemographics_NOR_2023.csv 
+## Data used: RangeX_clean_YearlyDemographics_2021_NOR.csv,
+##            RangeX_clean_YearlyDemographics_2022_NOR.csv,
+##            RangeX_clean_YearlyDemographics_2023_NOR.csv 
 ## Date:      26.10.23
 ## Updated:   30.10.25
 ## Author:    Nadine Arzt
@@ -17,9 +17,9 @@ library(ggplot2)
 library("openxlsx")
 
 # load data ---------------------------------------------------------------
-rangex_traits_2021 <- read.csv("Data/Data_demographic_traits/Clean_YearlyDemographics/RangeX_clean_YearlyDemographics_NOR_2021.csv")
-rangex_traits_2022 <- read.csv("Data/Data_demographic_traits/Clean_YearlyDemographics/RangeX_clean_YearlyDemographics_NOR_2022.csv")
-rangex_traits_2023 <- read.csv("Data/Data_demographic_traits/Clean_YearlyDemographics/RangeX_clean_YearlyDemographics_NOR_2023.csv")
+rangex_traits_2021 <- read.csv("Data/Data_demographic_traits/Clean_YearlyDemographics/RangeX_clean_YearlyDemographics_2021_NOR.csv")
+rangex_traits_2022 <- read.csv("Data/Data_demographic_traits/Clean_YearlyDemographics/RangeX_clean_YearlyDemographics_2022_NOR.csv")
+rangex_traits_2023 <- read.csv("Data/Data_demographic_traits/Clean_YearlyDemographics/RangeX_clean_YearlyDemographics_2023_NOR.csv")
 
 head(rangex_traits_2021)
 head(rangex_traits_2022)
@@ -81,9 +81,9 @@ rangex_traits_NOR <- rangex_traits_NOR |>
 
 
 # save as csv for OSF yearly demographics -------------------------------------------------------------
-# write.csv(rangex_traits_NOR, "Data/Data_demographic_traits/Clean_YearlyDemographics/RangeX_clean_YearlyDemographics_NOR_2021_2022_2023.csv", row.names = FALSE)
+write.csv(rangex_traits_NOR, "Data/Data_demographic_traits/Clean_YearlyDemographics/RangeX_clean_YearlyDemographics_2021_2022_2023_NOR.csv", row.names = FALSE)
 
-traits_demo_nor <- read.csv("Data/Data_demographic_traits/Clean_YearlyDemographics/RangeX_clean_YearlyDemographics_NOR_2021_2022_2023.csv")
+traits_demo_nor <- read.csv("Data/Data_demographic_traits/Clean_YearlyDemographics/RangeX_clean_YearlyDemographics_2021_2022_2023_NOR.csv")
 
 
 
