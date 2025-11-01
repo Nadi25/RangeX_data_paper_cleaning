@@ -436,17 +436,17 @@ traits_23 <- traits_23 |>
 
 # mean_inflorescence_size -------------------------------------------------
 # Calculate the flower length and store it in a new column
-traits_23 <- traits_23 |> 
-  mutate(
-    mean_inflorescence_size = if_else(
-      nathan_old_new == "new" &
-        !is.na(height_reproductive_str) &
-        !is.na(height_nathan_cm) &
-        (height_reproductive_str - height_nathan_cm) > 0, # has to be a value >0 because it is minus flower
-      abs(height_reproductive_str - height_nathan_cm),
-      NA_real_
-    )
-  )
+# traits_23 <- traits_23 |> 
+#   mutate(
+#     mean_inflorescence_size = if_else(
+#       nathan_old_new == "new" &
+#         !is.na(height_reproductive_str) &
+#         !is.na(height_nathan_cm) &
+#         (height_reproductive_str - height_nathan_cm) > 0, # has to be a value >0 because it is minus flower
+#       abs(height_reproductive_str - height_nathan_cm),
+#       NA_real_
+#     )
+#   )
 
 
 # delete nathan style related columns -------------------------------------
@@ -509,7 +509,8 @@ demo_traits_2023 <- demo_traits_2023 %>%
     leaf_length2 = NA,
     leaf_length3 = NA,
     number_branches = NA,
-    survival = NA
+    survival = NA,
+    mean_inflorescence_size = NA
   )
 
 dput(colnames(demo_traits_2023))
@@ -534,9 +535,10 @@ length(yearly_demographic) # 23
 col_order_traits_23 <- c("site", "block_ID_original", "plot_ID_original","unique_plant_ID", 
                          "species", "functional_group", "date", "date_planting", "collector", 
                          "observer", "scribe", "survival", "height_vegetative_str", 
-                         "height_reproductive_str", "height_vegetative", "height_reproductive", 
+                         "height_reproductive_str", "height_vegetative", "height_reproductive",
                          "vegetative_width", "height_total", "stem_diameter",
-                         "leaf_length1", "leaf_length2", "leaf_length3", "leaf_width", "petiole_length",
+                         "leaf_length1", "leaf_length2", "leaf_length3", "leaf_width",
+                         "petiole_length",
                          "number_leaves", "number_tillers", "number_branches", 
                          "number_flowers", "mean_inflorescence_size", "herbivory")
 
@@ -609,10 +611,10 @@ rangex_traits_23 <- rangex_traits_23 |>
 
 
 # save csv file -----------------------------------------------------------
-# write.csv(rangex_traits_23, "Data/Data_demographic_traits/Clean_YearlyDemographics/RangeX_clean_YearlyDemographics_NOR_2023.csv", row.names = FALSE)
+write.csv(rangex_traits_23, "Data/Data_demographic_traits/Clean_YearlyDemographics/RangeX_clean_YearlyDemographics_2023_NOR.csv", row.names = FALSE)
 
 ## read cleaned data
-data_nor_23 <- read.csv("Data/Data_demographic_traits/RangeX_clean_YearlyDemographics_NOR_2023.csv")
+data_nor_23 <- read.csv("Data/Data_demographic_traits/Clean_YearlyDemographics/RangeX_clean_YearlyDemographics_2023_NOR.csv")
 
 
 
