@@ -1808,8 +1808,8 @@ date_NA <- community_data_clean_NOR_plot |>
   filter(is.na(date_measurement))
 
 # save clean data cover plot ----------------------------------------------
-# write.csv(community_data_clean_NOR_plot, "Data/Data_community/RangeX_clean_VegSurveyGeneral_21_22_23_NOR.csv")
-veg_survey_general <- read_csv("Data/Data_community/RangeX_clean_VegSurveyGeneral_21_22_23_NOR.csv")
+#write.csv(community_data_clean_NOR_plot, "Data/Data_community/CleanVegSurvey/RangeX_clean_VegSurveyGeneral_21_22_23_NOR.csv", row.names = FALSE)
+veg_survey_general <- read_csv("Data/Data_community/CleanVegSurvey/RangeX_clean_VegSurveyGeneral_21_22_23_NOR.csv")
 
 
 # VegSurveyNOR ------------------------------------------------------------
@@ -1884,8 +1884,8 @@ date_NA <- community_data_clean_NOR_subplots |>
 
 
 # save clean data cover subplots ----------------------------------------------
-# write.csv(community_data_clean_NOR_subplots, "Data/Data_community/RangeX_clean_VegSurveyNOR_21_22_23_NOR.csv")
-veg_survey_nor <- read_csv("Data/Data_community/RangeX_clean_VegSurveyNOR_21_22_23_NOR.csv")
+#write.csv(community_data_clean_NOR_subplots, "Data/Data_community/CleanVegSurvey/RangeX_clean_VegSurveyNOR_21_22_23_NOR.csv", row.names = FALSE)
+veg_survey_nor <- read_csv("Data/Data_community/CleanVegSurvey/RangeX_clean_VegSurveyNOR_21_22_23_NOR.csv")
 
 
 
