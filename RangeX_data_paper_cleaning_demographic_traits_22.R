@@ -154,6 +154,62 @@ class(traits_22$year)
 
 
 
+
+dput(colnames(traits_22))
+
+
+
+
+# hi 3a and 3b were switched? --------------------------------------------
+# but only the species here
+# so the values are correct? 
+# subset the two plots
+a_species <- traits_22 |> 
+  filter(site == "hi", block_ID_original == 3, plot_ID_original == "a") %>%
+  arrange(position_ID_original) |> 
+  pull(species)
+
+b_species <- traits_22 |> 
+  filter(site == "hi", block_ID_original == 3, plot_ID_original == "b") %>%
+  arrange(position_ID_original) |> 
+  pull(species)
+
+# ensure same positions to pair
+stopifnot(identical(
+  traits_22 %>% filter(site == "hi", block_ID_original == 3, plot_ID_original == "a") %>% arrange(position_ID_original) %>% pull(position_ID_original),
+  traits_22 %>% filter(site == "hi", block_ID_original == 3, plot_ID_original == "b") %>% arrange(position_ID_original) %>% pull(position_ID_original)
+))
+
+# swap species only
+traits_22 <- traits_22 |> 
+  mutate(species = case_when(
+    site == "hi" & block_ID_original == 3 & plot_ID_original == "a" ~ 
+      b_species[match(position_ID_original,
+                      sort(unique(position_ID_original[site == "hi" & block_ID_original == 3 & plot_ID_original == "a"])))],
+    site == "hi" & block_ID_original == 3 & plot_ID_original == "b" ~ 
+      a_species[match(position_ID_original,
+                      sort(unique(position_ID_original[site == "hi" & block_ID_original == 3 & plot_ID_original == "b"])))],
+    TRUE ~ species
+  ))
+
+
+# one didnt match: hi 7a g9, cyncri -------------------------------------------------------
+# is f9 original but crossed out to g9??
+# was not found in 2022 and 23
+# so change back to f9 here
+# hi 3a and 3b were switched? ---------------------------------------------
+traits_22 <- traits_22 |> 
+  mutate(
+    position_ID_original = case_when(
+      site == "hi" & block_ID_original == 7 & plot_ID_original == "a" & species == "cyncri"  ~ "f9",
+      TRUE ~ position_ID_original
+    )
+  )
+
+
+
+
+
 # load metadata file  ------------------------------------------------------
 metadata <- read.csv("Data/Metadata/RangeX_clean_MetadataFocal_NOR.csv")
 head(metadata)
@@ -531,15 +587,25 @@ rangex_traits_22 <- rangex_traits_22 |>
   rename(date_measurement = date)
 
 
+# height veg str is actually height_total ---------------------------------
+# comment from read me: stretched vegetative plant height (not including inflorescence)
+rangex_traits_22 <- rangex_traits_22 |> 
+  mutate(
+    height_total = height_vegetative_str,
+    height_vegetative_str = NA
+  )
+
+
+
 ## now the data frame should have the correct format of yearly_demographics
 
 
 
 # save csv file -----------------------------------------------------------
-# write.csv(rangex_traits_22, "Data/Data_demographic_traits/Clean_YearlyDemographics/RangeX_clean_YearlyDemographics_NOR_2022.csv", row.names = FALSE)
+write.csv(rangex_traits_22, "Data/Data_demographic_traits/Clean_YearlyDemographics/RangeX_clean_YearlyDemographics_2022_NOR.csv", row.names = FALSE)
 
 ## read cleaned data
-data_nor_22 <- read.csv("Data/Data_demographic_traits/RangeX_clean_YearlyDemographics_NOR_2022.csv")
+data_nor_22 <- read.csv("Data/Data_demographic_traits/Clean_YearlyDemographics/RangeX_clean_YearlyDemographics_2022_NOR.csv")
 
 
 
