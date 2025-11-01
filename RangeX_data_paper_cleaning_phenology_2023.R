@@ -53,9 +53,9 @@ colnames(rangex_phenology_raw)
 
 ## rename column names to match with RangeX metadata file
 rangex_phenology_raw <- rangex_phenology_raw |> 
-  rename("block_id_original" = "block_id",
-         "plot_id_original" = "plot_id",
-         "position_id_original" = "position_id")
+  rename("block_ID_original" = "block_id",
+         "plot_ID_original" = "plot_id",
+         "position_ID_original" = "position_id")
 
 
 # change data format ------------------------------------------------------
@@ -69,23 +69,18 @@ rangex_phenology_raw <- rangex_phenology_raw |>
 
 
 # import meta data file ---------------------------------------------------
-metadata <- read.csv2(here("Data/RangeX_Metadata.csv"))
+metadata <- read.csv("Data/Metadata/RangeX_clean_MetadataFocal_NOR.csv")
 head(metadata)
 colnames(metadata)
 
 ## clean column names
-metadata <- clean_names(metadata)
-
-## filter only NOR
-metadata_NOR <- metadata |> 
-  dplyr::filter(grepl('NOR', region))
-head(metadata_NOR)
-str(metadata_NOR)
+# makes ID to id
+#metadata <- clean_names(metadata)
 
 
 # merge metadata and phenology --------------------------------------------
 rangex_phenology_raw <- left_join(rangex_phenology_raw, metadata,
-                                  by = c("region", "site", "block_id_original", "plot_id_original", "position_id_original", "species"))
+                                  by = c("region", "site", "block_ID_original", "plot_ID_original", "position_ID_original", "species"))
 
 
 # combined treatment column -----------------------------------------------
@@ -114,8 +109,8 @@ colnames(rangex_phenology_raw)
 # Fix seeds collected -----------------------------------------------------
 # Arrange the data by unique plant ID and date
 rangex_phenology_clean <- rangex_phenology_raw |> 
-  arrange(unique_plant_id, date) |> 
-  group_by(unique_plant_id)  |> 
+  arrange(unique_plant_ID, date) |> 
+  group_by(unique_plant_ID)  |> 
   mutate(
     # Use cumsum to sum up seeds collected in previous dates
     cumsum_seeds_collected = cumsum(seeds_collected),
@@ -178,15 +173,15 @@ rangex_phenology_clean <- rangex_phenology_clean |>
 # Source demographic traits low and high 23 -------------------------------
 source("RangeX_data_paper_cleaning_demographic_traits_23.R")
 
-demographic_traits_23 <- traits_2023
+demographic_traits_23 <- demo_traits_2023
 
 
-# demographic_traits_23 <- read.csv("Data/Data_demographic_traits/RangeX_clean_traits_2023.csv")
+#demographic_traits_23 <- read.csv("Data/RangeX_clean_traits_2023.csv")
 
 # Merge phenology with demographic traits ---------------------------------
 # rename unique_plant_ID to match
-rangex_phenology_clean <- rangex_phenology_clean |> 
-  rename("unique_plant_ID" = "unique_plant_id")
+# rangex_phenology_clean <- rangex_phenology_clean |> 
+#   rename("unique_plant_ID" = "unique_plant_id")
 
 rangex_phenology_demo_traits <- left_join(rangex_phenology_clean, demographic_traits_23,
                                                 by = c("unique_plant_ID", "species"))
@@ -243,7 +238,7 @@ rangex_phenology_clean_long <- rangex_phenology_clean |>
 rangex_phenology_clean_long <- rangex_phenology_clean_long |>
   mutate(collector = case_when(
     collector %in% c("Dagmar") ~ "DE",
-    collector %in% c("Nadine") ~ "NA",
+    collector %in% c("Nadine") ~ "NMA",
     collector %in% c("Lucas") ~ "LP", # Lucas Parra
     collector %in% c("Ingrid") ~ "IE", # Ingrid Espeland
     collector %in% c("Malo") ~ "MF", # Malo Le Fur
@@ -251,7 +246,7 @@ rangex_phenology_clean_long <- rangex_phenology_clean_long |>
     collector %in% c("Julia Filetti") ~ "JF",
     collector %in% c("Julia") ~ "JS", # Julia Schlick-Steiner
     collector %in% c("Lizzy") ~ "ED", # Elizabeth Duke-Moe
-    collector %in% c("Nadine / Ingrid") ~ "NA/IE",
+    collector %in% c("Nadine / Ingrid") ~ "NMA/IE",
     collector %in% c("Dagmar / Julia Filetti") ~ "DE/JF",
     collector %in% c("Malo / Lucas") ~ "MF/LP",
     collector %in% c("Dagmar / Lizzy") ~ "DE/ED",
@@ -262,11 +257,15 @@ rangex_phenology_clean_long <- rangex_phenology_clean_long |>
     ))
 
 
+# no comment column -------------------------------------------------------
+rangex_phenology_clean_long <- rangex_phenology_clean_long |>
+  select(-comment)
+
 
 # save the clean data -----------------------------------------------------
-# write.csv(rangex_phenology_clean_long, file = "Data/RangeX_clean_phenology_NOR_2023.csv")
+write.csv(rangex_phenology_clean_long, file = "Data/Data_phenology/Clean_Phenology/RangeX_clean_Phenology_2023_NOR.csv", row.names = FALSE)
 
-
+phenology <- read.csv("Data/Data_phenology/Clean_Phenology/RangeX_clean_Phenology_2023_NOR.csv")
 
 
 
