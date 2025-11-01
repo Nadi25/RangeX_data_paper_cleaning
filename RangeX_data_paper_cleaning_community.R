@@ -43,7 +43,7 @@ library(glue)
 
 
 # import general metadata file -------------------------------------------------
-metadata_plot <- read.csv("Data/RangeX_metadata_plot_NOR.csv", header = TRUE)
+metadata_plot <- read.csv("Data/Metadata/RangeX_clean_MetadataPlot_NOR.csv", header = TRUE)
 
 metadata_plot <- metadata_plot |> 
   select(region, site, block_ID_original, plot_ID_original, treat_warming, 
@@ -167,6 +167,8 @@ unique(community_data_raw$recorder)
 unique(community_data_raw$scribe)
 
 
+# c = Christina Perez Sanchez = CPS
+
 community_data_raw <- community_data_raw |>
   mutate(
     recorder = case_when(
@@ -175,9 +177,9 @@ community_data_raw <- community_data_raw |>
       recorder %in% c("Josh", "josh") ~ "JL",
       recorder %in% c("Susanne", "susanne") ~ "SB",
       recorder %in% c("np/de") ~ "NP/DE",
-      recorder %in% c("Nadine") ~ "NA",
-      recorder %in% c("Nadine/Susanne") ~ "NA/SB",
-      recorder %in% c("Dagmar, Nadine, Susanne") ~ "DE/NA/SB",
+      recorder %in% c("Nadine", "NA") ~ "NMA",
+      recorder %in% c("Nadine/Susanne") ~ "NMA/SB",
+      recorder %in% c("Dagmar, Nadine, Susanne") ~ "DE/NMA/SB",
       TRUE ~ recorder
     ),
     scribe = case_when(
@@ -185,17 +187,18 @@ community_data_raw <- community_data_raw |>
       scribe %in% c("Nathan", "nathan", "np") ~ "NP",
       scribe %in% c("josh") ~ "JL",
       scribe %in% c("Susanne") ~ "SB",
-      scribe %in% c("Nadine") ~ "NA",
+      scribe %in% c("Nadine", "NA") ~ "NMA",
       scribe %in% c("np/de") ~ "NP/DE",
-      scribe %in% c("Susanne/Nadine") ~ "SB/NA",
-      scribe %in% c("Dagmar, Nadine, Susanne") ~ "DE/NA/SB",
-      scribe %in% c("Cris", "cris", "C", "c") ~ "C",
+      scribe %in% c("Susanne/Nadine") ~ "SB/NMA",
+      scribe %in% c("Dagmar, Nadine, Susanne") ~ "DE/NMA/SB",
+      scribe %in% c("Cris", "cris", "C", "c") ~ "CPS",
       scribe %in% c("jana") ~ "JR",
-      scribe %in% c("cris/jana") ~ "C/JR",
-      scribe %in% c("Nadine/Julia") ~ "NA/JS",
+      scribe %in% c("cris/jana") ~ "CPS/JR",
+      scribe %in% c("Nadine/Julia") ~ "NMA/JS",
       TRUE ~ scribe
     )
   )
+
 
 # Replace "NULL" values with NA
 community_data_raw <- community_data_raw |> 
@@ -218,14 +221,23 @@ community_data_raw <- community_data_raw |>
                                collector == "VV/VV" ~ "VV",
                                collector == "DE/DE" ~ "DE",
                                collector == "SB/SB" ~ "SB",
-                               collector == "NA/NA" ~ "NA",
+                               collector == "NA/NA" ~ "NMA",
+                               collector == "NMA/NMA" ~ "NMA",
+                               collector == "NA/JL" ~ "NMA/JL",
+                               collector == "NA/CPS" ~ "CPS/CPS",# not me- actual NA
+                               collector == "NP/CPS" ~ "NP/CPS",
                                collector == "NP/DE/NP/DE" ~ "NP/DE",
-                               collector == "NA/NA/JS" ~ "NA/JS",
-                               collector == "NA/DE/NA" ~ "NA/DE",
-                               collector == "VV/NA/NA/VV" ~ "VV/NA",
-                               collector == "NA/SB/SB/NA" ~ "NA/SB",
-                               collector == "DE/NA/SB/DE/NA/SB" ~ "DE/NA/SB",
-                          TRUE ~ collector))
+                               collector == "DE/NP/DE/SB" ~ "DE/NP/SB",
+                               collector == "LS/DE/DE/LS" ~ "DE/LS",
+                               collector == "NP/NP/SB" ~ "NP/SB",
+                               collector == "NMA/NMA/JS" ~ "NMA/JS",
+                               collector == "NA/DE/NMA" ~ "NMA/DE",
+                               collector == "NA/DE/NA" ~ "NMA/DE",
+                               collector == "VV/NA/NA/VV" ~ "VV/NMA",
+                               collector == "NMA/SB/SB/NMA" ~ "NMA/SB",
+                               collector == "DE/NMA/SB/DE/NMA/SB" ~ "DE/NMA/SB",
+                               collector == "NP/C/JR" ~ "NP/CPS/JR",
+                               TRUE ~ collector))
 
 unique(community_data_raw$collector)
 
