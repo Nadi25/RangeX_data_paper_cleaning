@@ -224,6 +224,35 @@ traits_21[traits_21$site == "hi" & traits_21$block_ID_original == "4"
           & traits_21$position_ID_original == "i4", "leaf_length2"] <- 171
 
 
+
+# hi 3a and 3b were switched? ---------------------------------------------
+traits_21 <- traits_21 |> 
+  mutate(
+    plot_ID_original = case_when(
+      site == "hi" & block_ID_original == 3 & plot_ID_original == "a" ~ "b",
+      site == "hi" & block_ID_original == 3 & plot_ID_original == "b" ~ "a",
+      TRUE ~ plot_ID_original
+    )
+  )
+
+
+# one didnt match: hi 7a g9, cyncri -------------------------------------------------------
+# is f9 original but crossed out to g9??
+# was not found in 2022 and 23
+# so change back to f9 here
+# hi 3a and 3b were switched? ---------------------------------------------
+traits_21 <- traits_21 |> 
+  mutate(
+    position_ID_original = case_when(
+      site == "hi" & block_ID_original == 7 & plot_ID_original == "a" & species == "cyncri"  ~ "f9",
+      TRUE ~ position_ID_original
+    )
+  )
+
+
+
+
+
 # merge metadata with trait data 21 ------------------------------------------
 
 dput(colnames(metadata))
@@ -419,6 +448,15 @@ dput(colnames(traits_2021))
 ## "position_ID_original","treat_warming", "treat_competition", 
 ## "added_focals", "block_ID", "position_ID", "unique_plot_ID"
 
+
+
+
+
+
+
+
+
+
 rangex_traits_21 <- traits_2021 %>%
   dplyr::select(-region, -site, -block_ID_original, -plot_ID_original, 
                 -position_ID_original, -treat_warming, -treat_competition, 
@@ -499,14 +537,27 @@ rangex_traits_21_clean <- rangex_traits_21_clean |>
          "height_reproductive_str", "height_vegetative", "height_reproductive", 
          "vegetative_width", "height_total", "stem_diameter", "leaf_length1",  
          "leaf_length2", "leaf_length3", "leaf_width", "petiole_length", "number_leaves", 
-         "number_tillers", "number_branches", "number_flowers", "mean_inflorescence_size", 
+         "number_tillers", "number_branches", "number_flowers", "mean_inflorescence_size",
          "herbivory")
 
+
+
+# height veg str is actually height_total ---------------------------------
+# comment from read me: stretched vegetative plant height (not including inflorescence)
+rangex_traits_21_clean <- rangex_traits_21_clean |> 
+  mutate(
+    height_total = height_vegetative_str,
+    height_vegetative_str = NA
+  )
+
+
+
+
 # save csv file -----------------------------------------------------------
-# write.csv(rangex_traits_21_clean, "Data/Data_demographic_traits/Clean_YearlyDemographics/RangeX_clean_YearlyDemographics_NOR_2021.csv", row.names = FALSE)
+write.csv(rangex_traits_21_clean, "Data/Data_demographic_traits/Clean_YearlyDemographics/RangeX_clean_YearlyDemographics_2021_NOR.csv", row.names = FALSE)
 
 ## read cleaned data
-data_nor_21 <- read.csv("Data/Data_demographic_traits/RangeX_clean_YearlyDemographics_NOR_2021.csv")
+data_nor_21 <- read.csv("Data/Data_demographic_traits/Clean_YearlyDemographics/RangeX_clean_YearlyDemographics_2021_NOR.csv")
 
 
 
