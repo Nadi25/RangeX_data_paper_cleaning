@@ -52,9 +52,8 @@ seed_weight_odd <- read.csv2("Data/Data_seeds/RangeX_raw_seed_weight_odd_NOR_202
 
 seed_weight_even <- read.xlsx("Data/Data_seeds/RangeX_raw_seed_weight_even_NOR_2023.xlsx", sheet = 1)
 
-metadata <- read.csv("Data/RangeX_metadata_focal_NOR.csv")
-metadata <- metadata |> 
-  select(-"X")
+metadata <- read.csv("Data/Metadata/RangeX_clean_MetadataFocal_NOR.csv")
+
 
 # merge odd and even data sets ------------------------------------------
 names(seed_weight_odd)
@@ -147,6 +146,27 @@ seed_weight_odd <- seed_weight_odd %>%
 colnames(seed_weight_odd)
 
 
+# fix date_collected odd --------------------------------------------------
+# some dates collected are 2024 
+# because it was written only e.g. 24.11
+# r changed it to 2024 but it must be 2023
+seed_weight_odd <- seed_weight_odd |>
+  mutate(across(
+    starts_with("collected"),
+    ~ if_else(
+      lubridate::year(.x) == 2024,
+      lubridate::make_date(
+        year = 2023,
+        month = lubridate::month(.x),
+        day = lubridate::day(.x)
+      ),
+      .x
+    )
+  ))
+
+
+
+
 # add number_infructescences columns --------------------------------------
 # odd doesn't have "number_infructescence" which is about how many seedheads were collected per filter
 # but it is written in the comments
@@ -193,6 +213,41 @@ rx_seed_weight_even <- seed_weight_even |>
 
 rx_seed_weight_even <- rx_seed_weight_even |> 
   rename(seeds_number_3 = seeds._number_3)
+
+
+
+# fix date column in even -------------------------------------------------
+# date has a weird format from excel
+# change that by making numeric than specify origin that windows excel uses
+rx_seed_weight_even <- rx_seed_weight_even |>
+  mutate(across(
+    matches("^collected|^date"),
+    ~ case_when(
+      is.numeric(.x) ~ as.Date(.x, origin = "1899-12-30"),
+      TRUE           ~ as.Date(.x, tryFormats = c("%d.%m.%Y", "%Y-%m-%d"))
+    )
+  ))
+
+# the last 2024 in collected columns are typos
+# change them manually
+rx_seed_weight_even <- rx_seed_weight_even |>
+  mutate(across(
+    starts_with("collected"),
+    ~ if_else(
+      lubridate::year(.x) == 2024,
+      lubridate::make_date(
+        year = 2023,
+        month = lubridate::month(.x),
+        day = lubridate::day(.x)
+      ),
+      .x
+    )
+  ))
+
+
+
+
+
 
 # combine even and odd into one data set --------------------------------------------
 seed_data <- rbind(rx_seed_weight_odd, rx_seed_weight_even)
@@ -455,8 +510,7 @@ ggplot(data = seed_number[seed_number$site == "lo",], aes(x = values)) +
 
 
 # save clean data set -----------------------------------------------------
+write.csv(rangex_seed_clean, "Data/Data_seeds/CleanSeedTraits/RangeX_clean_seeds_2023_NOR.csv", row.names = FALSE)
 
-# write.csv(rangex_seed_clean, "Data/Data_seeds/RangeX_clean_seeds_NOR_2023.csv")
-
-seed <- read_csv("Data/Data_seeds/RangeX_clean_seeds_NOR_2023.csv")
+seed <- read_csv("Data/Data_seeds/CleanSeedTraits/RangeX_clean_seeds_2023_NOR.csv")
 
