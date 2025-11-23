@@ -4,7 +4,7 @@
 
 ## Data used: RangeX_raw_functional_traits_2023.csv, 
 ##            RangeX_raw_functional_traits_leaf_area_all_23_NOR_final.csv,
-##            RangeX_Metadata_focal_NOR.csv 
+##            RangeX_clean_MetadataFocal_NOR.csv 
 ##            RangeX_raw_functional_traits_leaf_area_hypmac_recolored.csv
 ## Date:      11.11.24
 ## Author:    Nadine Arzt
