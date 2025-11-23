@@ -201,11 +201,11 @@ traits_22 <- traits_22 |>
 traits_22 <- traits_22 |> 
   mutate(
     position_ID_original = case_when(
-      site == "hi" & block_ID_original == 7 & plot_ID_original == "a" & species == "cyncri"  ~ "f9",
+      site == "hi" & block_ID_original == 7 & plot_ID_original == "a" & species == "cyncri"
+      & position_ID_original == "g9" ~ "f9",
       TRUE ~ position_ID_original
     )
   )
-
 
 
 
@@ -606,26 +606,6 @@ write.csv(rangex_traits_22, "Data/Data_demographic_traits/Clean_YearlyDemographi
 
 ## read cleaned data
 data_nor_22 <- read.csv("Data/Data_demographic_traits/Clean_YearlyDemographics/RangeX_clean_YearlyDemographics_2022_NOR.csv")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
