@@ -1,7 +1,10 @@
 
 # Climate data TOMST loggers NOR 2021-2024 data combination ------------------------------
 
-## Data used: 
+## Data used: RangeX_clean_EnvTMS4_2021_NOR.csv
+##            RangeX_clean_EnvTMS4_2022_NOR.csv
+##            RangeX_clean_EnvTMS4_2023_NOR.csv
+##            RangeX_clean_EnvTMS4_2024_NOR.csv
 ## Date:      21.11.2025
 ## Author:    Nadine Arzt
 ## Purpose:   Combine TOMST logger data 2021 - 2024
