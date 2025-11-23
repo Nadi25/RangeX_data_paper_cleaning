@@ -109,14 +109,20 @@ tomst_21_raw <- tomst_21_raw |>
     )
   )
 
-# calculate soil moisture -----------------------------------------------------------
+# calculate soil moisture VWC -----------------------------------------------------------
 # apply the soil moisture function
+# it calculates VWC (volumetric water content)
 tomst_21_raw <- tomst_21_raw |> 
-  mutate(TMS_moist = calc_soil_moist(rawsoilmoist = Soilmoisture_raw, 
+  mutate(VWC = calc_soil_moist(rawsoilmoist = Soilmoisture_raw, 
                                 soil_temp = TMS_T1, 
                                 soilclass ="silt_loam"))
 # using silt loam even though this might not be correct but comes closest
 
+
+# rename raw soil moisture into TMS_moist ---------------------------------
+# these are the raw moisture count values
+tomst_21_raw <- tomst_21_raw |> 
+  rename(TMS_moist = Soilmoisture_raw)
 
 # combined treatment column -----------------------------------------------
 tomst_21_raw <- tomst_21_raw |> 
@@ -137,7 +143,7 @@ tomst_21_raw_filtered <- tomst_21_raw |>
 
 # plot soil moisture ------------------------------------------------------
 # one line per logger
-ggplot(tomst_21_raw_filtered, aes(x = date_time, y = TMS_moist, color = tomst)) +
+ggplot(tomst_21_raw_filtered, aes(x = date_time, y = VWC, color = tomst)) +
   geom_line() +
   theme(legend.position = "none")
 #
@@ -146,7 +152,7 @@ ggplot(tomst_21_raw_filtered, aes(x = date_time, y = TMS_moist, color = tomst)) 
 # it's still every 15 min
 tomst_21_raw_average <- tomst_21_raw_filtered |> 
   group_by(date_time, treat_combined) |> 
-  summarize(avg_soil_moist = mean(TMS_moist, na.rm = TRUE),,.groups = 'drop')
+  summarize(avg_soil_moist = mean(VWC, na.rm = TRUE),,.groups = 'drop')
 head(tomst_21_raw_average)
 
 # plot all treatments
@@ -157,15 +163,8 @@ soil_moist <- ggplot(tomst_21_raw_average, aes(x = date_time, y = avg_soil_moist
 soil_moist
 
 
-# add column VWC --------------------------------------------------------
-tomst_21_raw_filtered <- tomst_21_raw_filtered |> 
-  mutate(VWC = NA)
-
-
 # import metadata -------------------------------------------------------
-metadata <- read.csv("Data/RangeX_metadata_plot_NOR.csv")
-metadata <- metadata |> 
-  select(-"X")
+metadata <- read.csv("Data/Metadata/RangeX_clean_MetadataPlot_NOR.csv")
 
 
 # fix col names --------------------------------------------------------

@@ -129,9 +129,14 @@ tomst_24_raw <- tomst_24_raw |>
 # RangeX_data_paper_functions.R
 # apply the soil moisture function here
 tomst_24_raw <- tomst_24_raw |> 
-  mutate(TMS_moist = calc_soil_moist(rawsoilmoist = Soilmoisture_raw, 
+  mutate(VWC = calc_soil_moist(rawsoilmoist = Soilmoisture_raw, 
                                      soil_temp = TMS_T1, 
                                      soilclass ="silt_loam"))
+
+# rename raw soil moisture into TMS_moist ---------------------------------
+# these are the raw moisture count values
+tomst_24_raw <- tomst_24_raw |> 
+  rename(TMS_moist = Soilmoisture_raw)
 
 # combined treatment column -----------------------------------------------
 tomst_24_raw <- tomst_24_raw |> 
@@ -149,7 +154,7 @@ tomst_24_raw_filtered <- tomst_24_raw |>
 
 # plot soil moisture ------------------------------------------------------
 # one line per logger
-s <- ggplot(tomst_24_raw_filtered, aes(x = date_time, y = TMS_moist, color = tomst)) +
+s <- ggplot(tomst_24_raw_filtered, aes(x = date_time, y = VWC, color = tomst)) +
   geom_line() +
   theme(legend.position = "none")
 s
@@ -241,14 +246,11 @@ ggplot(tomst_flagged_2, aes(x = date_time, y = TMS_T1, color = temp_outlier)) +
 tomst_24_raw_filtered <- tomst_flagged_2 |>
   filter(!temp_outlier)
 
-# add column VWC ----------------------------------------------------------
-tomst_24_raw_filtered <- tomst_24_raw_filtered |> 
-  mutate(VWC = NA)
+
 
 # import metadata -------------------------------------------------------
-metadata <- read.csv("Data/RangeX_metadata_plot_NOR.csv")
-metadata <- metadata |> 
-  select(-"X")
+metadata <- read.csv("Data/Metadata/RangeX_clean_MetadataPlot_NOR.csv")
+
 
 # fix col names --------------------------------------------------------
 names(metadata)

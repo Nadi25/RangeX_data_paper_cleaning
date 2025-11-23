@@ -139,9 +139,14 @@ tomst_23_raw <- tomst_23_raw |>
 # RangeX_data_paper_functions.R
 # apply the soil moisture function here
 tomst_23_raw <- tomst_23_raw |> 
-  mutate(TMS_moist = calc_soil_moist(rawsoilmoist = Soilmoisture_raw, 
+  mutate(VWC = calc_soil_moist(rawsoilmoist = Soilmoisture_raw, 
                                     soil_temp = TMS_T1, 
                                     soilclass ="silt_loam"))
+
+# rename raw soil moisture into TMS_moist ---------------------------------
+# these are the raw moisture count values
+tomst_23_raw <- tomst_23_raw |> 
+  rename(TMS_moist = Soilmoisture_raw)
 
 
 # combined treatment column -----------------------------------------------
@@ -165,7 +170,7 @@ tomst_23_raw_filtered <- tomst_23_raw |>
 
 # plot soil moisture ------------------------------------------------------
 # one line per logger
-p <- ggplot(tomst_23_raw_filtered, aes(x = date_time, y = TMS_moist, color = tomst)) +
+p <- ggplot(tomst_23_raw_filtered, aes(x = date_time, y = VWC, color = tomst)) +
   geom_line() +
   theme(legend.position = "none")
 p 
@@ -175,7 +180,7 @@ p
 # by finding min in August-September
 out <- tomst_23_raw_filtered |> 
   filter(between(date_time, left = as.Date("2023-08-01"), right =  as.Date("2023-09-20"))) |> 
-  filter(TMS_moist == min(TMS_moist, na.rm = TRUE)) 
+  filter(VWC == min(VWC, na.rm = TRUE)) 
 
 # plot only 94217320
 one_logger <- tomst_23_raw_filtered |> 
@@ -190,7 +195,7 @@ p %+% one_logger
 # it's still every 15 min
 tomst_23_raw_average <- tomst_23_raw_filtered |> 
   group_by(date_time, treat_combined) |> 
-  summarize(avg_soil_moist = mean(TMS_moist, na.rm = TRUE), .groups = 'drop')
+  summarize(avg_soil_moist = mean(VWC, na.rm = TRUE), .groups = 'drop')
 head(tomst_23_raw_average)
 
 # plot all treatments
@@ -208,14 +213,10 @@ ggsave(filename = "RangeX_soil_moisture_23.png",
 # warm has higher soil moist values
 # less transpiration due to OTCs?
 
-# add column VWC ----------------------------------------------------------
-tomst_23_raw_filtered <- tomst_23_raw_filtered |> 
-  mutate(VWC = NA)
 
 # import metadata -------------------------------------------------------
-metadata <- read.csv("Data/RangeX_metadata_plot_NOR.csv")
-metadata <- metadata |> 
-  select(-"X")
+metadata <- read.csv("Data/Metadata/RangeX_clean_MetadataPlot_NOR.csv")
+
 
 # fix col names --------------------------------------------------------
 names(metadata)

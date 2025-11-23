@@ -111,14 +111,21 @@ tomst_22_raw <- tomst_22_raw |>
 # calculate soil moisture -----------------------------------------------------------
 # apply the soil moisture function
 tomst_22_raw <- tomst_22_raw |> 
-  mutate(TMS_moist = calc_soil_moist(rawsoilmoist = Soilmoisture_raw, 
+  mutate(VWC = calc_soil_moist(rawsoilmoist = Soilmoisture_raw, 
                                      soil_temp = TMS_T1, 
                                      soilclass ="silt_loam"))
 # using silt loam even though this might not be correct but comes closest
 
+
+# rename raw soil moisture into TMS_moist ---------------------------------
+# these are the raw moisture count values
+tomst_22_raw <- tomst_22_raw |> 
+  rename(TMS_moist = Soilmoisture_raw)
+
+
 # plot soil moisture ------------------------------------------------------
 # one line per logger
-ggplot(tomst_22_raw, aes(x = date_time, y = TMS_moist, color = tomst)) +
+ggplot(tomst_22_raw, aes(x = date_time, y = VWC, color = tomst)) +
   geom_line() +
   theme(legend.position = "none")
 
@@ -140,7 +147,7 @@ tomst_22_raw_filtered <- tomst_22_raw |>
 
 # plot soil moisture ------------------------------------------------------
 # one line per logger
-ggplot(tomst_22_raw_filtered, aes(x = date_time, y = TMS_moist, color = tomst)) +
+ggplot(tomst_22_raw_filtered, aes(x = date_time, y = VWC, color = tomst)) +
   geom_line() +
   theme(legend.position = "none")
 
@@ -234,14 +241,9 @@ ggplot(tomst_22_raw_filtered, aes(x = date_time, y = TMS_T3, color = tomst)) +
   geom_line() +
   theme(legend.position = "none")
 
-# add column VWC ----------------------------------------------------------
-tomst_22_raw_filtered <- tomst_22_raw_filtered |> 
-  mutate(VWC = NA)
 
 # import metadata -------------------------------------------------------
-metadata <- read.csv("Data/RangeX_metadata_plot_NOR.csv")
-metadata <- metadata |> 
-  select(-"X")
+metadata <- read.csv("Data/Metadata/RangeX_clean_MetadataPlot_NOR.csv")
 
 # fix col names --------------------------------------------------------
 names(metadata)
@@ -292,24 +294,6 @@ rx_tomst_22_clean <- tomst_22_clean |>
 write.csv(rx_tomst_22_clean, "Data/Data_tomst_loggers/CleanEnvTMS4/RangeX_clean_EnvTMS4_2022_NOR.csv", row.names = FALSE)
 
 tms22 <- read_csv("Data/Data_tomst_loggers/CleanEnvTMS4/RangeX_clean_EnvTMS4_2022_NOR.csv")
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
