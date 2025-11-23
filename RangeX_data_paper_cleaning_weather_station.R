@@ -1301,7 +1301,7 @@ climate_all_years <- bind_rows(climate_21, climate_22_spring,
                        climate_24, climate_25_spring)
 
 # save clean data 21-25 -------------------------------------------------
-# write.csv(climate_all_years, "Data/Data_climate_station/RangeX_clean_climate_station_NOR_2021-2025.csv")
+write.csv(climate_all_years, "Data/Data_climate_station/Clean_EnvClimateStation/RangeX_clean_EnvClimateStation_2021-2025_NOR.csv", row.names = FALSE)
 
 
 # calculate monthly averages ----------------------------------------------
