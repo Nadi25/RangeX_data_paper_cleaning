@@ -2,10 +2,10 @@
 
 # RangeX phenology 2023 data cleaning -------------------------------------
 
-## Data used: RangeX_raw_phenology_low_2023.xlsx, 
-##            RangeX_raw_phenology_high_2023.xlsx,
-##            RangeX_Metadata.csv,
-##            RangeX_data_paper_cleaning_demographic_traits_23.R
+## Data used:      RangeX_raw_phenology_low_2023.xlsx, 
+##                 RangeX_raw_phenology_high_2023.xlsx,
+##                 RangeX_clean_MetadataFocal_NOR.csv,
+## Script sourced: RangeX_data_paper_cleaning_demographic_traits_23.R
 ## Date:      09.01.2025
 ## Author:    Nadine Arzt
 ## Purpose:   Cleaning of the complete raw data files of phenology 2023
@@ -260,6 +260,15 @@ rangex_phenology_clean_long <- rangex_phenology_clean_long |>
 # no comment column -------------------------------------------------------
 rangex_phenology_clean_long <- rangex_phenology_clean_long |>
   select(-comment)
+
+
+# rename number_infructescences -------------------------------------------
+rangex_phenology_clean_long <- rangex_phenology_clean_long |> 
+  mutate(phenology_stage = if_else(
+    phenology_stage == "number_infructescences",
+    "No_Infructescences",
+    phenology_stage
+  ))
 
 
 # save the clean data -----------------------------------------------------
