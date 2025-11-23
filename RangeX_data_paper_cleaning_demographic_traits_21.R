@@ -244,7 +244,8 @@ traits_21 <- traits_21 |>
 traits_21 <- traits_21 |> 
   mutate(
     position_ID_original = case_when(
-      site == "hi" & block_ID_original == 7 & plot_ID_original == "a" & species == "cyncri"  ~ "f9",
+      site == "hi" & block_ID_original == 7 & plot_ID_original == "a" & species == "cyncri"
+      & vegetative_width == 10 ~ "f9",
       TRUE ~ position_ID_original
     )
   )
