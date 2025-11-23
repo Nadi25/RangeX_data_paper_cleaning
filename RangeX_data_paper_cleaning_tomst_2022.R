@@ -289,9 +289,9 @@ rx_tomst_22_clean <- tomst_22_clean |>
 
 
 # save clean data ---------------------------------------------------------
-# write.csv(rx_tomst_22_clean, "Data/Data_tomst_loggers/RangeX_clean_tomst_NOR_2022.csv")
+write.csv(rx_tomst_22_clean, "Data/Data_tomst_loggers/CleanEnvTMS4/RangeX_clean_EnvTMS4_2022_NOR.csv", row.names = FALSE)
 
-tomst <- read_csv("Data/Data_tomst_loggers/RangeX_clean_tomst_NOR_2022.csv")
+tms22 <- read_csv("Data/Data_tomst_loggers/CleanEnvTMS4/RangeX_clean_EnvTMS4_2022_NOR.csv")
 
 
 
