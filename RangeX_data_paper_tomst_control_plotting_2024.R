@@ -218,6 +218,16 @@ ggsave(filename = "RangeX_tomst_delta_temp_box_8_15_peak_24.png",
        width = 8, height = 6)
 
 
+delta_peak_2024 <- avg_temp_day_long_peak |>
+  group_by(sensor) |>
+  summarise(
+    mean_delta = mean(delta_temp, na.rm = TRUE),
+    sd_delta   = sd(delta_temp, na.rm = TRUE),
+    median_delta = median(delta_temp, na.rm = TRUE),
+    n = n()
+  )
+delta_peak_2024
+
 
 # delta temp day and night ------------------------------------------------
 avg_temp_daily_long_24 <- tomst_24_raw_filtered |>
@@ -309,12 +319,39 @@ ggsave(filename = "RangeX_tomst_delta_temp_box_peak_24.png",
        path = "Data/Data_tomst_loggers/Graphs/", 
        width = 8, height = 6)
 
+
+delta_peak_day_night_2024 <- avg_temp_daily_long_24_peak |>
+  group_by(sensor) |>
+  summarise(
+    mean_delta = mean(delta_temp, na.rm = TRUE),
+    sd_delta   = sd(delta_temp, na.rm = TRUE),
+    median_delta = median(delta_temp, na.rm = TRUE),
+    n = n()
+  )
+delta_peak_day_night_2024
+
 delta_temp_viol_peak <- ggplot(avg_temp_daily_long_24_peak, aes(x = sensor, y = delta_temp, fill = sensor)) +
   geom_violin(alpha = 0.7) +
   geom_hline(yintercept = 0, linetype = "dashed") +
   labs(x = "", y = "Δ Temperature (warm - ambi)", 
        title = "Daily Warming Effect peak season 24 (High Site)") 
 delta_temp_viol_peak
+
+# check for significance
+delta_temp_signif <- avg_temp_daily_long_24_peak |>
+  group_by(sensor) |>
+  summarise(
+    mean_delta = mean(delta_temp, na.rm = TRUE),
+    sd_delta = sd(delta_temp, na.rm = TRUE),
+    n = sum(!is.na(delta_temp)),
+    p_value = t.test(delta_temp, mu = 0)$p.value
+  )
+
+delta_temp_signif
+
+
+
+
 
 delta_temp_viol_peak_ <- delta_temp_viol_peak + geom_boxplot(width=0.1)+
   scale_fill_manual(values = c("#999999", "#E69F00", "#56B4E9"))+
@@ -511,6 +548,42 @@ delta_soil_moist_peak_box <- ggplot(delta_soil_moisture_average_OTC_peak, aes(x 
   theme(legend.position = "none")+
   scale_fill_manual(values = c("#999999", "#E69F00", "#56B4E9"))
 delta_soil_moist_peak_box
+
+delta_soil_moist_summary <- delta_soil_moisture_average_OTC_peak |>
+  group_by(treat_competition) |>
+  summarise(
+    mean_delta  = mean(delta_s_moist, na.rm = TRUE),
+    median_delta = median(delta_s_moist, na.rm = TRUE),
+    sd_delta    = sd(delta_s_moist, na.rm = TRUE),
+    n_days      = n()
+  )
+
+delta_soil_moist_summary
+
+signif_soil_moist <- delta_soil_moisture_average_OTC_peak |>
+  group_by(treat_competition) |>
+  summarise(
+    t_test = list(t.test(delta_s_moist, mu = 0))
+  ) |>
+  mutate(
+    mean_delta = map_dbl(t_test, ~ .x$estimate),
+    p_value = map_dbl(t_test, ~ .x$p.value)
+  ) |>
+  select(treat_competition, mean_delta, p_value)
+signif_soil_moist
+
+# it is significant
+# # A tibble: 3 x 3
+# treat_competition mean_delta  p_value
+# <chr>                  <dbl>    <dbl>
+#   1 bare                -0.00245 3.49e- 2
+# 2 control             -0.0297  1.47e-59
+# 3 vege                 0.0533  9.67e-74
+
+delta_soil_moist_peak_box +
+  stat_summary(fun = mean, geom = "point", size = 3, color = "black") +
+  stat_summary(fun.data = mean_cl_normal, geom = "errorbar", width = 0.2)
+
 
 delta_soil_moist_peak_violin <- ggplot(delta_soil_moisture_average_OTC_peak, aes(x = treat_competition, y = delta_s_moist, fill = treat_competition)) +
   geom_violin() +
