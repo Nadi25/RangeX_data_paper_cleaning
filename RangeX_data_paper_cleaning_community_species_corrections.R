@@ -17,8 +17,8 @@
 # what to do with <1 in 21 and 22? 
 # change to 1? leave?
 
-# who is cris?
-# who is JT?
+# who is cris? Christina Ferres Sanchez
+# who is JT? Joachim Töpper
 
 # check and discuss! ----------------------------------------------------------
 # 2021: is hi 3A and 3B switched? changed to b = NOR.hi.warm.vege.wf.03 and a = NOR.hi.ambi.vege.wf.03
@@ -35,6 +35,9 @@
 # ?Galium: NOR.lo.ambi.vege.wf.06: lo 6A, 2021-08-30
 
 # ?Melica nutans (grass 2 ): NOR.hi.warm.vege.wf.06, hi 6A: 2021-08-13
+# is most likely sth else but don't know what was meant
+# Danthonia decumbens
+
 
 # Geranium sylvaticum ? was this confused with e.g. Anemone? 
 # e.g. in hi 5c?
@@ -84,7 +87,8 @@
 # sedge 7? 
 
 # hi 1b: Antennaria dioica? only in 21
-# hi 1b: Fern vs Blechnum spicant
+
+# hi 1b: Fern vs Blechnum spicant -> Oreospermum limbosperma said the book when we checked with Vigdis but its actually Thelypteris limbosperma
 
 # hi 1d: Carex ?pilulifera
 
@@ -191,11 +195,14 @@
 
 # lo5a: Check Euphrasia is it stricta?
 
-# lo7a: Big grass? big ligula
+# lo7a: Big grass? big ligula --> no idea
 
 # lo9a: Viola canina? was recorded in 24 but not in 23 
 
-# lo8A, 5: is there two types of Angelica?
+# lo8A, 5: is there two types of Angelica? no
+
+# Viola is overall messy. We tried in 25 to distuguish properly and did it good 
+# but the years before was not so well done
 
 
 # library -----------------------------------------------------------------
@@ -301,7 +308,14 @@ community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |>
 # could it be the same as Hairy poa/festuca? in 23?
 # 154: Melica nutans (grass 2): no value
 # maybe just delete?
+# no it is Danthonia decumbens
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(species == "?Melica nutans (grass 2 )" & unique_plot_ID == "NOR.hi.warm.vege.wf.06" ~ "Danthonia decumbens",
+                             TRUE ~ species))
 
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(species == "Melica nutans (grass 2)" & unique_plot_ID == "NOR.hi.warm.vege.wf.06" ~ "Danthonia decumbens",
+                             TRUE ~ species))
 
 # 7: ?Omalotheca
 # NOR.hi.ambi.vege.wf.03, hi 3B: 2021-08-08
@@ -322,6 +336,11 @@ community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |>
 # NOR.lo.ambi.vege.wf.01: 2021-09-01
 # NOR.lo.ambi.vege.wf.01: 2022-07-21
 # Poa pratensis is in other subplots
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "?Poa" & unique_plot_ID == "NOR.lo.ambi.vege.wf.01" ~ "Poa pratensis",
+    TRUE ~ species
+  ))
 
 # 9: ?Pyrola
 # NOR.hi.ambi.vege.wf.06: 2021-08-11 in subturf 9
@@ -1588,6 +1607,52 @@ community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |>
 community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
   mutate(species = case_when(
     species == "Viola sp" & unique_plot_ID == "NOR.lo.ambi.vege.wf.10" ~ "Viola palustris",
+    TRUE ~ species
+  ))
+
+
+# more fixing 10.12.2025 --------------------------------------------------
+
+# Euphrasia stricta -------------------------------------------------------
+# decided in 2025 that everything is stricta
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Euphrasia frigida" ~ "Euphrasia stricta",
+    TRUE ~ species
+  ))
+#
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Euphrasia" ~ "Euphrasia stricta",
+    TRUE ~ species
+  ))
+
+# Anthoxanthum nipponicum -------------------------------------------------------
+# decided in 2025 that everything A. nipponicum
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Anthoxanthum odoratum" ~ "Anthoxanthum nipponicum",
+    TRUE ~ species
+  ))
+
+
+# Thelypteris limbosperma -------------------------------------------------
+# Oreospermum limbosperma said the book when we checked with Vigdis but its actually Thelypteris limbosperma
+# smells like lemon
+# not sure about hi3a and hi 3b 
+# but change for now
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Fern" ~ "Thelypteris limbosperma",
+    TRUE ~ species
+  ))
+
+
+# Leontodon hairy ---------------------------------------------------------
+# hairy leontodon is Leontodon autumnalis too
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Hairy Taraxacum/Leontodon" & unique_plot_ID == "NOR.hi.ambi.vege.nf.10" ~ "Leontodon autumnalis",
     TRUE ~ species
   ))
 
