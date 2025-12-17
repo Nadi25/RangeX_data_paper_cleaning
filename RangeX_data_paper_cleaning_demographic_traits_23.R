@@ -609,6 +609,80 @@ rangex_traits_23 <- rangex_traits_23 |>
   )
 
 
+# exclude wrong leaf length leuvul -----------------------------------------------
+# exclude leaf length values outside of typical leuvul range
+# that includes e.g. NOR.lo.ambi.bare.wf.02.15.1 = 850 
+# and NOR.lo.ambi.vege.wf.02.24.1 with 400
+# makes it NA
+rangex_traits_23 <- rangex_traits_23 |>
+  mutate(
+    leaf_length1 = if_else(
+      species == "leuvul" & leaf_length1 > 300,
+      NA_real_,
+      leaf_length1
+    )
+  )
+
+
+# exclude leaf width sucpra >100 ------------------------------------------
+rangex_traits_23 <- rangex_traits_23 |>
+  mutate(
+    leaf_width = if_else(
+      species == "sucpra" & leaf_width > 100,
+      NA_real_,
+      leaf_width
+    )
+  )
+
+# exclude height_vegetative_str cennig >500 ------------------------------------------
+# NOR.hi.warm.vege.wf.06.28.1, cennig is 1540mm but maybe that was measured wrong
+# we usually did height vege str as the height of the main bunch of basal leaves
+# but had confusion about measuring it up to the stem leaves
+# still exclude for now
+rangex_traits_23 <- rangex_traits_23 |>
+  mutate(
+    height_vegetative_str = if_else(
+      species == "cennig" & height_vegetative_str > 500,
+      NA_real_,
+      height_vegetative_str
+    )
+  )
+
+
+# NOR.hi.warm.vege.wf.08.07.1 has height_vege_str 20 not 0 ----------------
+rangex_traits_23 <- rangex_traits_23 |>
+  mutate(
+    height_vegetative_str = if_else(
+      unique_plant_ID == "NOR.hi.warm.vege.wf.08.07.1" &
+        height_vegetative_str == 0,
+      20,
+      height_vegetative_str
+    )
+  )
+
+# NOR.hi.ambi.bare.wf.01.04.1 has height_vege_str 20 not 0 ----------------
+rangex_traits_23 <- rangex_traits_23 |>
+  mutate(
+    height_vegetative_str = if_else(
+      unique_plant_ID == "NOR.hi.ambi.bare.wf.01.04.1" &
+        height_vegetative_str == 650,
+      65,
+      height_vegetative_str
+    )
+  )
+
+# exclude height_vegetative_str leuvul >300 ------------------------------------------
+# we usually did height vege str as the height of the main bunch of basal leaves
+# NOR.hi.ambi.vege.wf.03.17.1 is 820mm
+# might be written wrong in original 
+rangex_traits_23 <- rangex_traits_23 |>
+  mutate(
+    height_vegetative_str = if_else(
+      species == "leuvul" & height_vegetative_str > 300,
+      NA_real_,
+      height_vegetative_str
+    )
+  )
 
 # save csv file -----------------------------------------------------------
 write.csv(rangex_traits_23, "Data/Data_demographic_traits/Clean_YearlyDemographics/RangeX_clean_YearlyDemographics_2023_NOR.csv", row.names = FALSE)
