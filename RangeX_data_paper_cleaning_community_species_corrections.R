@@ -1638,12 +1638,13 @@ community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |>
 
 # Thelypteris limbosperma -------------------------------------------------
 # Oreospermum limbosperma said the book when we checked with Vigdis but its actually Thelypteris limbosperma
+# update: no the new blue flora says Oreospermum
 # smells like lemon
 # not sure about hi3a and hi 3b 
 # but change for now
 community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
   mutate(species = case_when(
-    species == "Fern" ~ "Thelypteris limbosperma",
+    species == "Fern" ~ "Oreospermum limbosperma",
     TRUE ~ species
   ))
 
@@ -1656,6 +1657,38 @@ community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |>
     TRUE ~ species
   ))
 
+
+# Molinia cerulea ---------------------------------------------------------
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "cf. Molinia caerulea" & unique_plot_ID == "NOR.hi.ambi.vege.wf.01" ~ "Molinia caerulea",
+    TRUE ~ species
+  ))
+
+
+# Huperzia was likely Selaginella --------------------------------------------------
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Huperzia" & unique_plot_ID == "NOR.hi.warm.vege.wf.06" ~ "Selaginella selaginoides",
+    TRUE ~ species
+  ))
+
+
+# Galium ------------------------------------------------------------------
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Galium" & unique_plot_ID == "NOR.hi.ambi.vege.wf.02" ~ "Galium uliginosum",
+    TRUE ~ species
+  ))
+
+
+
+# Carex filiformis --------------------------------------------------------
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Carex filiformis" & unique_plot_ID == "NOR.hi.warm.vege.wf.07" ~ "Carex pilulifera",
+    TRUE ~ species
+  ))
 
 
 
@@ -1872,9 +1905,37 @@ community_data_clean_NOR_plot <- community_data_clean_NOR_plot |>
 date_NA <- community_data_clean_NOR_plot |> 
   filter(is.na(date_measurement))
 
+
+# fix 12+R2:R25 and X ------------------------------------------------------------
+community_data_clean_NOR_plot <- community_data_clean_NOR_plot |>
+  mutate(
+    cover = case_when(
+      cover == "<1" ~ "0.5",
+      cover == "X"  ~ "1",
+      cover == "12+R2:R25" ~ "12",
+      TRUE ~ cover
+    ),
+    cover = as.numeric(cover)
+  )
+
+# remove rows with 0 in cover ---------------------------------------------
+community_data_clean_NOR_plot <- community_data_clean_NOR_plot |>
+  filter(cover != 0)
+
+# this was where I lost some species because I excluded the cover == "<1" ~ "0.5" line
+# than cover!=0 removed some where it was <1 which was turned to 0 when 
+# cover was made numeric
+
+
+# remove the * from focals ------------------------------------------------
+
+
+
+
 # save clean data cover plot ----------------------------------------------
-#write.csv(community_data_clean_NOR_plot, "Data/Data_community/CleanVegSurvey/RangeX_clean_VegSurveyGeneral_21_22_23_NOR.csv", row.names = FALSE)
+write.csv(community_data_clean_NOR_plot, "Data/Data_community/CleanVegSurvey/RangeX_clean_VegSurveyGeneral_21_22_23_NOR.csv", row.names = FALSE)
 veg_survey_general <- read_csv("Data/Data_community/CleanVegSurvey/RangeX_clean_VegSurveyGeneral_21_22_23_NOR.csv")
+
 
 
 # VegSurveyNOR ------------------------------------------------------------
@@ -1949,7 +2010,7 @@ date_NA <- community_data_clean_NOR_subplots |>
 
 
 # save clean data cover subplots ----------------------------------------------
-#write.csv(community_data_clean_NOR_subplots, "Data/Data_community/CleanVegSurvey/RangeX_clean_VegSurveyNOR_21_22_23_NOR.csv", row.names = FALSE)
+write.csv(community_data_clean_NOR_subplots, "Data/Data_community/CleanVegSurvey/RangeX_clean_VegSurveyNOR_21_22_23_NOR.csv", row.names = FALSE)
 veg_survey_nor <- read_csv("Data/Data_community/CleanVegSurvey/RangeX_clean_VegSurveyNOR_21_22_23_NOR.csv")
 
 
