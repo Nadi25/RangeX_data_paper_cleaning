@@ -1690,6 +1690,13 @@ community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |>
     TRUE ~ species
   ))
 
+# Carex ?capillaris
+community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
+  mutate(species = case_when(
+    species == "Carex ?capillaris" & unique_plot_ID == "NOR.hi.warm.vege.wf.02" ~ "Carex cf. capillaris",
+    TRUE ~ species
+  ))
+
 
 
 # turfmapper --------------------------------------------------------------
