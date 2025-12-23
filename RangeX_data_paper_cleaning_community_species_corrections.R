@@ -1638,13 +1638,13 @@ community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |>
 
 # Thelypteris limbosperma -------------------------------------------------
 # Oreospermum limbosperma said the book when we checked with Vigdis but its actually Thelypteris limbosperma
-# update: no the new blue flora says Oreospermum
+# update: no the new blue flora says Oreopteris
 # smells like lemon
 # not sure about hi3a and hi 3b 
 # but change for now
 community_data_raw_NOR_fixed <- community_data_raw_NOR_fixed |> 
   mutate(species = case_when(
-    species == "Fern" ~ "Oreospermum limbosperma",
+    species == "Fern" ~ "Oreopteris limbosperma",
     TRUE ~ species
   ))
 
